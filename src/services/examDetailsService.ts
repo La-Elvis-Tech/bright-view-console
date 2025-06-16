@@ -33,6 +33,7 @@ export const examDetailsService = {
             item_name: material.item_name,
             quantity_required: material.quantity_required,
             current_stock: material.current_stock,
+            reserved_stock: 0, // Add missing property with default value
             available_stock: material.available_stock,
             sufficient_stock: material.sufficient_stock,
             estimated_cost: material.estimated_cost,

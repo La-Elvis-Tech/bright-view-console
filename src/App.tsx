@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ import Users from '@/pages/Users';
 import Settings from '@/pages/Settings';
 import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
-import Login from '@/pages/Login';
+import { Login } from '@/pages/Login';
 import ResetPassword from '@/pages/ResetPassword';
 import InviteCodes from '@/pages/InviteCodes';
 import ExamTypes from '@/pages/ExamTypes';

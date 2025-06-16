@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -139,14 +139,19 @@ export const useSimulation = () => {
       // Salvar no estado local
       setScenarios(prev => [newScenario, ...prev]);
       
-      // Opcionalmente salvar no Supabase (implementar tabela de cenários se necessário)
+      // Salvar no Supabase
       try {
+        const scenarioForDb = {
+          ...newScenario,
+          createdAt: newScenario.createdAt.toISOString() // Converter Date para string
+        };
+
         await supabase
           .from('system_settings')
           .upsert({
             key: `simulation_scenario_${newScenario.id}`,
             category: 'simulation',
-            value: newScenario,
+            value: scenarioForDb,
             description: `Cenário de simulação: ${newScenario.name}`
           });
       } catch (error) {
@@ -181,7 +186,13 @@ export const useSimulation = () => {
           .like('key', 'simulation_scenario_%');
 
         if (!error && data) {
-          const savedScenarios = data.map(item => item.value as SimulationScenario);
+          const savedScenarios = data.map(item => {
+            const scenarioData = item.value as any;
+            return {
+              ...scenarioData,
+              createdAt: new Date(scenarioData.createdAt)
+            } as SimulationScenario;
+          });
           setScenarios(savedScenarios);
         }
       } catch (error) {
