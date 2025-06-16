@@ -65,7 +65,7 @@ const App = () => (
               } />
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Layout />}>
-                  <Route path="/" element={
+                  <Route index element={
                     <Suspense fallback={<PageFallback />}>
                       <Dashboard />
                     </Suspense>

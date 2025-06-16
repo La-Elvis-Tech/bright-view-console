@@ -43,13 +43,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'supervisor':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'user':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   };
 
@@ -71,13 +71,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   };
 
   return (
-    <TableRow key={user.id}>
+    <TableRow>
       <TableCell className="font-medium">{user.full_name}</TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
         <div className="text-sm">
           {user.position && <div className="font-medium">{user.position}</div>}
-          {user.department && <div className="text-gray-500">{user.department}</div>}
+          {user.department && <div className="text-gray-500 dark:text-gray-400">{user.department}</div>}
           {!user.position && !user.department && (
             <span className="text-gray-400">Não informado</span>
           )}
