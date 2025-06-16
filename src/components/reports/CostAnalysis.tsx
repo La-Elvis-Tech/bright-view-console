@@ -13,14 +13,17 @@ import {
 } from 'recharts';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format } from "date-fns";
+import { useAuthContext } from "@/context/AuthContext";
+import { subMonths } from "date-fns";
 
 const CostAnalysis: React.FC = () => {
+  const { profile } = useAuthContext();
+
   // Buscar dados reais de custos por tipo de exame
   const { data: examCosts = [] } = useQuery({
-    queryKey: ['exam-costs'],
+    queryKey: ['exam-costs', profile?.unit_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('appointments')
         .select(`
           id,
@@ -30,6 +33,11 @@ const CostAnalysis: React.FC = () => {
         `)
         .eq('status', 'Concluído');
 
+      if (profile?.unit_id) {
+        query = query.eq('unit_id', profile.unit_id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
       // Agrupar por tipo de exame e calcular média de custos
@@ -54,12 +62,13 @@ const CostAnalysis: React.FC = () => {
         }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
-    }
+    },
+    enabled: !!profile
   });
 
   // Buscar dados de consumo por categoria (Pareto)
   const { data: paretoData = [] } = useQuery({
-    queryKey: ['inventory-pareto'],
+    queryKey: ['inventory-pareto', profile?.unit_id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('inventory_movements')
@@ -68,17 +77,22 @@ const CostAnalysis: React.FC = () => {
           total_cost,
           quantity,
           movement_type,
-          inventory_items(name, cost_per_unit, inventory_categories(name))
+          inventory_items!inner(name, cost_per_unit, unit_id, inventory_categories(name))
         `)
         .eq('movement_type', 'saida')
         .gte('created_at', subMonths(new Date(), 3).toISOString());
 
       if (error) throw error;
 
+      // Filtrar por unidade se necessário
+      const filteredData = profile?.unit_id 
+        ? data.filter(movement => movement.inventory_items.unit_id === profile.unit_id)
+        : data;
+
       // Agrupar por item e calcular custos totais
       const costsByItem: { [key: string]: number } = {};
       
-      data?.forEach(movement => {
+      filteredData?.forEach(movement => {
         const itemName = movement.inventory_items?.name || 'Item Desconhecido';
         const cost = movement.total_cost || 0;
         costsByItem[itemName] = (costsByItem[itemName] || 0) + cost;
@@ -100,7 +114,8 @@ const CostAnalysis: React.FC = () => {
           percentage: Math.round(cumulativePercentage)
         };
       });
-    }
+    },
+    enabled: !!profile
   });
 
   // Buscar dados de consumo por unidade (radar)
@@ -112,7 +127,7 @@ const CostAnalysis: React.FC = () => {
         .select(`
           id,
           total_cost,
-          inventory_items(units(name, code))
+          inventory_items!inner(units(name, code))
         `)
         .eq('movement_type', 'saida')
         .gte('created_at', subMonths(new Date(), 6).toISOString());
@@ -137,35 +152,6 @@ const CostAnalysis: React.FC = () => {
     }
   });
 
-  // Dados de backup caso não haja dados reais
-  const defaultExamCosts = [
-    { name: "Coleta de Sangue", value: 45.5 },
-    { name: "Ultrassom", value: 125.3 },
-    { name: "Raio-X", value: 78.9 },
-    { name: "Tomografia", value: 245.6 },
-    { name: "Mamografia", value: 156.8 },
-  ];
-
-  const defaultParetoData = [
-    { name: "Reagente X", value: 45, percentage: 45 },
-    { name: "Equipamento Y", value: 25, percentage: 70 },
-    { name: "Descartável Z", value: 15, percentage: 85 },
-    { name: "Vidraria A", value: 10, percentage: 95 },
-    { name: "Outros", value: 5, percentage: 100 },
-  ];
-
-  const defaultRadarData = [
-    { name: "Unidade Principal", gastosK: 722 },
-    { name: "Filial Norte", gastosK: 295 },
-    { name: "Filial Sul", gastosK: 911 },
-    { name: "Filial Leste", gastosK: 396 },
-    { name: "Filial Oeste", gastosK: 1059 },
-  ];
-
-  const finalExamCosts = examCosts.length > 0 ? examCosts : defaultExamCosts;
-  const finalParetoData = paretoData.length > 0 ? paretoData : defaultParetoData;
-  const finalRadarData = radarData.length > 0 ? radarData : defaultRadarData;
-
   return (
     <div className="space-y-6">
       <Card className="bg-white dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800">
@@ -175,12 +161,18 @@ const CostAnalysis: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <DashboardChart
-            type="bar"
-            data={finalExamCosts}
-            title="Custo por Tipo de Exame"
-            description="Média de custos por procedimento realizado"
-          />
+          {examCosts.length > 0 ? (
+            <DashboardChart
+              type="bar"
+              data={examCosts}
+              title="Custo por Tipo de Exame"
+              description="Média de custos por procedimento realizado"
+            />
+          ) : (
+            <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+              Nenhum dado de custo disponível
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -192,12 +184,18 @@ const CostAnalysis: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <DashboardChart
-              type="progress"
-              data={finalParetoData.map(item => ({ name: item.name, value: item.value }))}
-              title="80/20 dos Gastos"
-              description="20% dos itens representam 80% dos custos"
-            />
+            {paretoData.length > 0 ? (
+              <DashboardChart
+                type="progress"
+                data={paretoData.map(item => ({ name: item.name, value: item.value }))}
+                title="80/20 dos Gastos"
+                description="20% dos itens representam 80% dos custos"
+              />
+            ) : (
+              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                Nenhum dado de consumo disponível
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -208,42 +206,41 @@ const CostAnalysis: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" minHeight={100} height={500} maxHeight={500}>
-              <RadarChart
-                cx="50%" cy="50%" outerRadius={140} data={finalRadarData}
-              >
-                <PolarGrid />
-                <PolarAngleAxis 
-                  dataKey="name"
-                  tick={{ fontSize: 14, fill: '#a2a6ad', fontWeight: 500 }}
-                  tickFormatter={(value) => {
-                    const words = value.split(" ");
-                    if (words.length >= 2) {
-                      return words.slice(-2).join(" ");
-                    }
-                    return words[0];
-                  }}
-                />
-                <PolarRadiusAxis 
-                  tick={{ fontSize: 12, fill: '#a2a6ad', fontWeight: 500 }}
-                />
-                <Radar
-                  name="Gastos (em milhares R$)"
-                  dataKey="gastosK"
-                  stroke="#4e63bd"
-                  fill="#322d9e"
-                  fillOpacity={0.7}
-                />
-                <Legend
-                  iconSize={10}
-                  iconType="circle"
-                  layout="vertical"
-                  verticalAlign="bottom"
-                  align="left"
-                  wrapperStyle={{ paddingRight: 20, fontSize: 14, fontWeight: 500 }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+            {radarData.length > 0 ? (
+              <ResponsiveContainer width="100%" minHeight={100} height={300} maxHeight={300}>
+                <RadarChart
+                  cx="50%" cy="50%" outerRadius={80} data={radarData}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis 
+                    dataKey="name"
+                    tick={{ fontSize: 12, fill: '#a2a6ad', fontWeight: 500 }}
+                  />
+                  <PolarRadiusAxis 
+                    tick={{ fontSize: 10, fill: '#a2a6ad', fontWeight: 500 }}
+                  />
+                  <Radar
+                    name="Gastos (em milhares R$)"
+                    dataKey="gastosK"
+                    stroke="#4e63bd"
+                    fill="#322d9e"
+                    fillOpacity={0.7}
+                  />
+                  <Legend
+                    iconSize={8}
+                    iconType="circle"
+                    layout="vertical"
+                    verticalAlign="bottom"
+                    align="center"
+                    wrapperStyle={{ fontSize: 12, fontWeight: 500 }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                Nenhum dado por unidade disponível
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

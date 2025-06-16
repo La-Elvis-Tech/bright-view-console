@@ -5,6 +5,8 @@ import { ExamDetails, ExamMaterial } from '@/types/examDetails';
 export const examDetailsService = {
   async getExamDetails(examTypeId: string): Promise<ExamDetails | null> {
     try {
+      console.log('Buscando detalhes do exame:', examTypeId);
+
       // Buscar dados básicos do exame
       const { data: examData, error: examError } = await supabase
         .from('exam_types')
@@ -12,8 +14,13 @@ export const examDetailsService = {
         .eq('id', examTypeId)
         .single();
 
-      if (examError) throw examError;
+      if (examError) {
+        console.error('Erro ao buscar exame:', examError);
+        throw examError;
+      }
       if (!examData) return null;
+
+      console.log('Dados do exame encontrados:', examData);
 
       // Buscar materiais necessários para o exame
       const { data: materialsData, error: materialsError } = await supabase
@@ -22,11 +29,25 @@ export const examDetailsService = {
           p_blood_exams: []
         });
 
-      if (materialsError) throw materialsError;
+      if (materialsError) {
+        console.error('Erro ao buscar materiais:', materialsError);
+        // Se não conseguir buscar materiais, continuar sem eles
+      }
 
-      const materials: ExamMaterial[] = materialsData || [];
+      const materials: ExamMaterial[] = materialsData?.map(material => ({
+        inventory_item_id: material.inventory_item_id,
+        item_name: material.item_name,
+        quantity_required: material.quantity_required,
+        current_stock: material.current_stock,
+        reserved_stock: material.reserved_stock || 0,
+        available_stock: material.available_stock,
+        sufficient_stock: material.sufficient_stock,
+        estimated_cost: material.estimated_cost,
+        material_type: material.material_type
+      })) || [];
+
       const totalMaterialCost = materials.reduce((sum, material) => sum + material.estimated_cost, 0);
-      const materialsAvailable = materials.every(material => material.sufficient_stock);
+      const materialsAvailable = materials.length === 0 || materials.every(material => material.sufficient_stock);
 
       return {
         id: examData.id,
@@ -44,19 +65,24 @@ export const examDetailsService = {
         materials_available: materialsAvailable
       };
     } catch (error) {
-      console.error('Error fetching exam details:', error);
+      console.error('Erro ao buscar detalhes do exame:', error);
       throw error;
     }
   },
 
   async getAllExamsWithMaterials(): Promise<ExamDetails[]> {
     try {
-      // Buscar informações do usuário para filtrar por unidade
+      console.log('Buscando todos os exames com materiais...');
+
+      // Buscar informações do usuário
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Erro ao buscar usuário:', userError);
+        throw userError;
+      }
 
       if (!user) {
-        console.warn('No user found, returning empty array');
+        console.warn('Usuário não encontrado');
         return [];
       }
 
@@ -68,41 +94,74 @@ export const examDetailsService = {
         .single();
 
       if (profileError) {
-        console.error('Error fetching user profile:', profileError);
-        // Se não conseguir buscar o perfil, retorna array vazio
+        console.error('Erro ao buscar perfil do usuário:', profileError);
         return [];
       }
 
+      console.log('Perfil do usuário:', profile);
+
+      // Buscar exames filtrados por unidade
       let query = supabase
         .from('exam_types')
         .select('*')
         .eq('active', true)
         .order('name');
 
-      // Filtrar por unidade do usuário se disponível
       if (profile?.unit_id) {
         query = query.eq('unit_id', profile.unit_id);
+        console.log('Filtrando por unidade:', profile.unit_id);
       }
 
       const { data: exams, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar exames:', error);
+        throw error;
+      }
 
-      const examDetails = await Promise.all(
-        (exams || []).map(async (exam) => {
+      console.log('Exames encontrados:', exams?.length || 0);
+
+      if (!exams || exams.length === 0) {
+        return [];
+      }
+
+      // Buscar detalhes de cada exame
+      const examDetails = await Promise.allSettled(
+        exams.map(async (exam) => {
           try {
-            const details = await this.getExamDetails(exam.id);
-            return details;
+            return await this.getExamDetails(exam.id);
           } catch (error) {
-            console.error(`Error fetching details for exam ${exam.id}:`, error);
-            return null;
+            console.error(`Erro ao buscar detalhes do exame ${exam.id}:`, error);
+            // Retornar dados básicos se não conseguir buscar materiais
+            return {
+              id: exam.id,
+              name: exam.name,
+              description: exam.description,
+              category: exam.category,
+              duration_minutes: exam.duration_minutes,
+              cost: exam.cost,
+              preparation: {
+                requires_preparation: exam.requires_preparation,
+                preparation_instructions: exam.preparation_instructions
+              },
+              materials: [],
+              total_material_cost: 0,
+              materials_available: true
+            } as ExamDetails;
           }
         })
       );
 
-      return examDetails.filter(Boolean) as ExamDetails[];
+      const successfulResults = examDetails
+        .filter((result): result is PromiseFulfilledResult<ExamDetails | null> => 
+          result.status === 'fulfilled' && result.value !== null
+        )
+        .map(result => result.value);
+
+      console.log('Exames processados com sucesso:', successfulResults.length);
+      return successfulResults;
     } catch (error) {
-      console.error('Error fetching all exams with materials:', error);
+      console.error('Erro ao buscar todos os exames:', error);
       throw error;
     }
   },
@@ -128,7 +187,7 @@ export const examDetailsService = {
         totalCost: examDetails.total_material_cost
       };
     } catch (error) {
-      console.error('Error validating exam materials:', error);
+      console.error('Erro ao validar materiais do exame:', error);
       throw error;
     }
   }
