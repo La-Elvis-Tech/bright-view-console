@@ -23,140 +23,129 @@ export const useReportsData = (selectedUnitId?: string) => {
     queryFn: async (): Promise<ReportData> => {
       console.log('Buscando dados de relatórios para unidade:', unitFilter);
 
-      try {
-        // Buscar agendamentos
-        let appointmentsQuery = supabase
-          .from('appointments')
-          .select(`
-            id,
-            patient_name,
-            scheduled_date,
-            cost,
-            status,
-            created_at,
-            exam_types(name, category, cost),
-            doctors(name, specialty),
-            units(name, code)
-          `)
-          .order('scheduled_date', { ascending: false });
+      // Buscar agendamentos
+      let appointmentsQuery = supabase
+        .from('appointments')
+        .select(`
+          id,
+          patient_name,
+          scheduled_date,
+          cost,
+          status,
+          created_at,
+          exam_types(name, category, cost),
+          doctors(name, specialty),
+          units(name, code)
+        `)
+        .order('scheduled_date', { ascending: false });
 
-        if (unitFilter) {
-          appointmentsQuery = appointmentsQuery.eq('unit_id', unitFilter);
-        }
-
-        const { data: appointments, error: appointmentsError } = await appointmentsQuery;
-        if (appointmentsError) {
-          console.error('Erro ao buscar agendamentos:', appointmentsError);
-        }
-
-        // Buscar inventário
-        let inventoryQuery = supabase
-          .from('inventory_items')
-          .select(`
-            id,
-            name,
-            current_stock,
-            min_stock,
-            cost_per_unit,
-            expiry_date,
-            created_at,
-            inventory_categories(name),
-            units(name)
-          `)
-          .eq('active', true);
-
-        if (unitFilter) {
-          inventoryQuery = inventoryQuery.eq('unit_id', unitFilter);
-        }
-
-        const { data: inventory, error: inventoryError } = await inventoryQuery;
-        if (inventoryError) {
-          console.error('Erro ao buscar inventário:', inventoryError);
-        }
-
-        // Buscar movimentações de estoque
-        const { data: movements, error: movementsError } = await supabase
-          .from('inventory_movements')
-          .select(`
-            id,
-            movement_type,
-            quantity,
-            total_cost,
-            created_at,
-            reason,
-            inventory_items(name, unit_id, inventory_categories(name))
-          `)
-          .gte('created_at', subMonths(new Date(), 12).toISOString())
-          .order('created_at', { ascending: false });
-
-        if (movementsError) {
-          console.error('Erro ao buscar movimentações:', movementsError);
-        }
-
-        // Filtrar movimentações por unidade se necessário
-        const filteredMovements = unitFilter && movements
-          ? movements.filter(movement => 
-              movement.inventory_items?.unit_id === unitFilter
-            )
-          : movements || [];
-
-        // Buscar alertas
-        const { data: alerts, error: alertsError } = await supabase
-          .from('stock_alerts')
-          .select(`
-            id,
-            title,
-            alert_type,
-            priority,
-            status,
-            created_at,
-            inventory_items(name, unit_id)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (alertsError) {
-          console.error('Erro ao buscar alertas:', alertsError);
-        }
-
-        // Filtrar alertas por unidade se necessário
-        const filteredAlerts = unitFilter && alerts
-          ? alerts.filter(alert => 
-              alert.inventory_items?.unit_id === unitFilter
-            )
-          : alerts || [];
-
-        // Buscar unidades
-        const { data: units, error: unitsError } = await supabase
-          .from('units')
-          .select('*')
-          .eq('active', true);
-
-        if (unitsError) {
-          console.error('Erro ao buscar unidades:', unitsError);
-        }
-
-        return {
-          appointments: appointments || [],
-          inventory: inventory || [],
-          movements: filteredMovements,
-          alerts: filteredAlerts,
-          units: units || []
-        };
-      } catch (error) {
-        console.error('Error fetching reports data:', error);
-        return {
-          appointments: [],
-          inventory: [],
-          movements: [],
-          alerts: [],
-          units: []
-        };
+      if (unitFilter) {
+        appointmentsQuery = appointmentsQuery.eq('unit_id', unitFilter);
       }
+
+      const { data: appointments, error: appointmentsError } = await appointmentsQuery;
+      if (appointmentsError) {
+        console.error('Erro ao buscar agendamentos:', appointmentsError);
+      }
+
+      // Buscar inventário
+      let inventoryQuery = supabase
+        .from('inventory_items')
+        .select(`
+          id,
+          name,
+          current_stock,
+          min_stock,
+          cost_per_unit,
+          expiry_date,
+          created_at,
+          inventory_categories(name),
+          units(name)
+        `)
+        .eq('active', true);
+
+      if (unitFilter) {
+        inventoryQuery = inventoryQuery.eq('unit_id', unitFilter);
+      }
+
+      const { data: inventory, error: inventoryError } = await inventoryQuery;
+      if (inventoryError) {
+        console.error('Erro ao buscar inventário:', inventoryError);
+      }
+
+      // Buscar movimentações de estoque
+      let movementsQuery = supabase
+        .from('inventory_movements')
+        .select(`
+          id,
+          movement_type,
+          quantity,
+          total_cost,
+          created_at,
+          reason,
+          inventory_items(name, unit_id, inventory_categories(name))
+        `)
+        .gte('created_at', subMonths(new Date(), 6).toISOString())
+        .order('created_at', { ascending: false });
+
+      const { data: movements, error: movementsError } = await movementsQuery;
+      if (movementsError) {
+        console.error('Erro ao buscar movimentações:', movementsError);
+      }
+
+      // Filtrar movimentações por unidade se necessário
+      const filteredMovements = unitFilter && movements
+        ? movements.filter(movement => 
+            movement.inventory_items?.unit_id === unitFilter
+          )
+        : movements || [];
+
+      // Buscar alertas
+      let alertsQuery = supabase
+        .from('stock_alerts')
+        .select(`
+          id,
+          title,
+          alert_type,
+          priority,
+          status,
+          created_at,
+          inventory_items(name, unit_id)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const { data: alerts, error: alertsError } = await alertsQuery;
+      if (alertsError) {
+        console.error('Erro ao buscar alertas:', alertsError);
+      }
+
+      // Filtrar alertas por unidade se necessário
+      const filteredAlerts = unitFilter && alerts
+        ? alerts.filter(alert => 
+            alert.inventory_items?.unit_id === unitFilter
+          )
+        : alerts || [];
+
+      // Buscar unidades
+      const { data: units, error: unitsError } = await supabase
+        .from('units')
+        .select('*')
+        .eq('active', true);
+
+      if (unitsError) {
+        console.error('Erro ao buscar unidades:', unitsError);
+      }
+
+      return {
+        appointments: appointments || [],
+        inventory: inventory || [],
+        movements: filteredMovements,
+        alerts: filteredAlerts,
+        units: units || []
+      };
     },
     refetchInterval: 5 * 60 * 1000, // Atualizar a cada 5 minutos
-    retry: 2,
-    retryDelay: 1000,
   });
 };
 
@@ -280,7 +269,7 @@ const calculateInventoryByCategory = (inventory: any[]) => {
 const calculateMovementsByType = (movements: any[]) => {
   const typeCount: { [key: string]: number } = {};
   movements.forEach(movement => {
-    const type = movement.movement_type === 'entrada' ? 'Entrada' : 'Saída';
+    const type = movement.movement_type;
     typeCount[type] = (typeCount[type] || 0) + 1;
   });
 

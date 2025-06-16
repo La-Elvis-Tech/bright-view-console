@@ -29,6 +29,54 @@ code {
     monospace;
 }
 
+/* Custom Scrollbar Styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+  background-clip: content-box;
+}
+
+/* Remove scrollbar arrows */
+*::-webkit-scrollbar-button {
+  display: none;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -92,5 +140,173 @@ code {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Calendar Styles for Dark Mode */
+.rbc-calendar-dark {
+  background-color: rgb(31 41 55);
+  color: rgb(243 244 246);
+}
+
+.rbc-calendar-dark .rbc-month-view {
+  background-color: rgb(31 41 55);
+}
+
+.rbc-calendar-dark .rbc-header {
+  background-color: rgb(55 65 81);
+  color: rgb(243 244 246);
+  border-bottom: 1px solid rgb(75 85 99);
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+.rbc-calendar-dark .rbc-day-bg {
+  background-color: rgb(31 41 55);
+  border: 1px solid rgb(55 65 81);
+}
+
+.rbc-calendar-dark .rbc-day-bg:hover {
+  background-color: rgb(55 65 81);
+}
+
+.rbc-calendar-dark .rbc-off-range-bg {
+  background-color: rgb(17 24 39);
+}
+
+.rbc-calendar-dark .rbc-today {
+  background-color: rgb(30 58 138) !important;
+}
+
+.rbc-calendar-dark .rbc-date-cell {
+  color: rgb(209 213 219);
+  padding: 8px;
+}
+
+.rbc-calendar-dark .rbc-date-cell.rbc-off-range {
+  color: rgb(107 114 128);
+}
+
+.rbc-calendar-dark .rbc-button-link {
+  color: rgb(243 244 246);
+}
+
+.rbc-calendar-dark .rbc-toolbar {
+  background-color: rgb(55 65 81);
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgb(75 85 99);
+}
+
+.rbc-calendar-dark .rbc-toolbar button {
+  background-color: rgb(75 85 99);
+  color: rgb(243 244 246);
+  border: 1px solid rgb(107 114 128);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 2px;
+  transition: all 0.2s;
+}
+
+.rbc-calendar-dark .rbc-toolbar button:hover {
+  background-color: rgb(107 114 128);
+}
+
+.rbc-calendar-dark .rbc-toolbar button.rbc-active {
+  background-color: rgb(59 130 246);
+  border-color: rgb(59 130 246);
+}
+
+/* Light Mode Calendar Styles */
+.rbc-calendar-light .rbc-header {
+  background-color: rgb(248 250 252);
+  color: rgb(31 41 55);
+  border-bottom: 1px solid rgb(229 231 235);
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+.rbc-calendar-light .rbc-day-bg {
+  border: 1px solid rgb(229 231 235);
+}
+
+.rbc-calendar-light .rbc-day-bg:hover {
+  background-color: rgb(248 250 252);
+}
+
+.rbc-calendar-light .rbc-today {
+  background-color: rgb(219 234 254) !important;
+}
+
+.rbc-calendar-light .rbc-toolbar {
+  background-color: rgb(248 250 252);
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgb(229 231 235);
+}
+
+.rbc-calendar-light .rbc-toolbar button {
+  background-color: white;
+  color: rgb(55 65 81);
+  border: 1px solid rgb(209 213 219);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 2px;
+  transition: all 0.2s;
+}
+
+.rbc-calendar-light .rbc-toolbar button:hover {
+  background-color: rgb(243 244 246);
+}
+
+.rbc-calendar-light .rbc-toolbar button.rbc-active {
+  background-color: rgb(59 130 246);
+  color: white;
+  border-color: rgb(59 130 246);
+}
+
+/* Common Calendar Styles */
+.rbc-calendar {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.rbc-event {
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.rbc-event:focus {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+.rbc-show-more {
+  background-color: rgb(59 130 246) !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .rbc-toolbar .rbc-btn-group {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .rbc-toolbar button {
+    font-size: 12px;
+    padding: 6px 10px;
   }
 }

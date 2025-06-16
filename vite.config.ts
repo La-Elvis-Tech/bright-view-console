@@ -23,14 +23,15 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  css: {
-    postcss: {
-      plugins: [],
-    },
-  },
   build: {
     target: 'esnext',
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -46,7 +47,5 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'recharts'],
-    force: true,
   },
-  clearScreen: false,
 }));

@@ -10,43 +10,23 @@ export const examDetailsService = {
         .from('exam_types')
         .select('*')
         .eq('id', examTypeId)
-        .eq('active', true)
         .single();
 
       if (examError) throw examError;
       if (!examData) return null;
 
-      // Buscar materiais necessários para o exame usando a função do banco
-      let materials: ExamMaterial[] = [];
-      let totalMaterialCost = 0;
-      let materialsAvailable = true;
+      // Buscar materiais necessários para o exame
+      const { data: materialsData, error: materialsError } = await supabase
+        .rpc('calculate_detailed_exam_materials', {
+          p_exam_type_id: examTypeId,
+          p_blood_exams: []
+        });
 
-      try {
-        const { data: materialsData, error: materialsError } = await supabase
-          .rpc('calculate_exam_materials', {
-            p_exam_type_id: examTypeId
-          });
+      if (materialsError) throw materialsError;
 
-        if (!materialsError && materialsData) {
-          materials = materialsData.map((material: any) => ({
-            inventory_item_id: material.inventory_item_id,
-            item_name: material.item_name,
-            quantity_required: material.quantity_required,
-            current_stock: material.current_stock,
-            reserved_stock: 0, // Add missing property with default value
-            available_stock: material.available_stock,
-            sufficient_stock: material.sufficient_stock,
-            estimated_cost: material.estimated_cost,
-            material_type: 'consumable'
-          }));
-          
-          totalMaterialCost = materials.reduce((sum, material) => sum + material.estimated_cost, 0);
-          materialsAvailable = materials.every(material => material.sufficient_stock);
-        }
-      } catch (error) {
-        console.warn('Error fetching materials for exam:', error);
-        // Continue without materials data
-      }
+      const materials: ExamMaterial[] = materialsData || [];
+      const totalMaterialCost = materials.reduce((sum, material) => sum + material.estimated_cost, 0);
+      const materialsAvailable = materials.every(material => material.sufficient_stock);
 
       return {
         id: examData.id,
@@ -89,6 +69,7 @@ export const examDetailsService = {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
+        // Se não conseguir buscar o perfil, retorna array vazio
         return [];
       }
 
@@ -107,7 +88,6 @@ export const examDetailsService = {
 
       if (error) throw error;
 
-      // Buscar detalhes para cada exame
       const examDetails = await Promise.all(
         (exams || []).map(async (exam) => {
           try {
@@ -115,22 +95,7 @@ export const examDetailsService = {
             return details;
           } catch (error) {
             console.error(`Error fetching details for exam ${exam.id}:`, error);
-            // Retornar dados básicos do exame mesmo sem materiais
-            return {
-              id: exam.id,
-              name: exam.name,
-              description: exam.description,
-              category: exam.category,
-              duration_minutes: exam.duration_minutes,
-              cost: exam.cost,
-              preparation: {
-                requires_preparation: exam.requires_preparation,
-                preparation_instructions: exam.preparation_instructions
-              },
-              materials: [],
-              total_material_cost: 0,
-              materials_available: true
-            };
+            return null;
           }
         })
       );
