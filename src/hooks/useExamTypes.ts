@@ -37,10 +37,16 @@ export const useExamTypes = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
-      setExamTypes(data || []);
+      if (error) {
+        console.error('Error fetching exam types:', error);
+        setExamTypes([]);
+      } else {
+        console.log('Exam types fetched:', data?.length || 0);
+        setExamTypes(data || []);
+      }
     } catch (error: any) {
       console.error('Error fetching exam types:', error);
+      setExamTypes([]);
     } finally {
       setLoading(false);
     }
@@ -49,6 +55,8 @@ export const useExamTypes = () => {
   useEffect(() => {
     if (profile) {
       fetchExamTypes();
+    } else {
+      setLoading(false);
     }
   }, [profile?.unit_id]);
 
