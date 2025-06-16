@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ExamsStats from '@/components/exams/ExamsStats';
 import ExamDetailsCard from '@/components/exams/ExamDetailsCard';
@@ -35,7 +35,7 @@ const Requests = () => {
   const examTypes = detailedExams || [];
 
   const categories = [
-    { id: 'all', name: 'Todos', count: examTypes.length },
+    { id: 'all', name: 'Todas as Categorias', count: examTypes.length },
     { id: 'Hematologia', name: 'Hematologia', count: examTypes.filter(e => e.category === 'Hematologia').length },
     { id: 'Bioquímica', name: 'Bioquímica', count: examTypes.filter(e => e.category === 'Bioquímica').length },
     { id: 'Endocrinologia', name: 'Endocrinologia', count: examTypes.filter(e => e.category === 'Endocrinologia').length },
@@ -70,56 +70,70 @@ const Requests = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-          Tipos de Exames
+    <div className="space-y-8 p-6">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+          Catálogo de Exames
         </h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Gerencie os tipos de exames disponíveis na sua unidade
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Explore e agende os exames disponíveis na sua unidade
         </p>
       </div>
 
+      {/* Stats */}
       <ExamsStats examTypes={examTypes} />
 
       {/* Filters */}
-      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-3 transform text-neutral-400" size={18} />
+      <Card className="bg-white/50 dark:bg-neutral-950/30 border-neutral-200 dark:border-neutral-800 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
               <Input
-                placeholder="Buscar exame..."
-                className="pl-10 w-full rounded-md bg-white dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700"
+                placeholder="Buscar por nome do exame..."
+                className="pl-10 bg-white dark:bg-neutral-900/50 border-neutral-300 dark:border-neutral-700 focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-2 rounded-md transition-colors ${
-                    selectedCategory === category.id
-                      ? "bg-indigo-600 text-white dark:bg-indigo-500"
-                      : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                  }`}
-                  onClick={() => setSelectedCategory(category.id)}
-                >
-                  {category.name}
-                  <Badge variant="secondary" className="ml-1 text-xs bg-white/20 text-current border-none">
-                    {category.count}
-                  </Badge>
-                </button>
-              ))}
+            {/* Category Filter */}
+            <div className="lg:w-80">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-white dark:bg-neutral-900/50 border-neutral-300 dark:border-neutral-700 focus:border-indigo-500 dark:focus:border-indigo-400">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id} className="focus:bg-indigo-50 dark:focus:bg-indigo-900/20">
+                      <div className="flex items-center justify-between w-full">
+                        <span>{category.name}</span>
+                        <Badge variant="secondary" className="ml-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                          {category.count}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Results Header */}
+      {filteredExams.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-neutral-600 dark:text-neutral-400">
+            {filteredExams.length} {filteredExams.length === 1 ? 'exame encontrado' : 'exames encontrados'}
+          </p>
+        </div>
+      )}
+
       {/* Exams Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredExams.map((exam) => (
           <ExamDetailsCard
             key={exam.id}
@@ -132,21 +146,22 @@ const Requests = () => {
         ))}
       </div>
 
+      {/* Empty State */}
       {filteredExams.length === 0 && !isLoading && (
-        <div className="text-center py-12">
-          <div className="text-neutral-400 dark:text-neutral-500 mb-4">
-            <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <div className="text-center py-16">
+          <div className="mx-auto w-24 h-24 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-6">
+            <Search className="h-10 w-10 text-neutral-400" />
           </div>
-          <p className="text-neutral-600 dark:text-neutral-400 text-lg font-medium mb-2">
+          <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
             {examTypes.length === 0 
-              ? "Nenhum exame encontrado na sua unidade"
-              : "Nenhum exame encontrado com os filtros aplicados"
+              ? "Nenhum exame disponível"
+              : "Nenhum resultado encontrado"
             }
-          </p>
-          <p className="text-neutral-500 dark:text-neutral-400 text-sm">
+          </h3>
+          <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto">
             {examTypes.length === 0 
               ? "Entre em contato com o administrador para adicionar exames à sua unidade."
-              : "Tente ajustar os filtros ou termo de busca."
+              : "Tente ajustar os filtros ou termo de busca para encontrar o que procura."
             }
           </p>
         </div>
