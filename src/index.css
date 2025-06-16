@@ -1,94 +1,136 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+:root {
+  --lab-blue: #1e40af;
+  --lab-blue-light: #3b82f6;
+  --lab-blue-dark: #1e3a8a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom Scrollbar Styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+  background-clip: content-box;
+}
+
+/* Remove scrollbar arrows */
+*::-webkit-scrollbar-button {
+  display: none;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 221.2 83.2% 53.3%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -96,8 +138,175 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Calendar Styles for Dark Mode */
+.rbc-calendar-dark {
+  background-color: rgb(31 41 55);
+  color: rgb(243 244 246);
+}
+
+.rbc-calendar-dark .rbc-month-view {
+  background-color: rgb(31 41 55);
+}
+
+.rbc-calendar-dark .rbc-header {
+  background-color: rgb(55 65 81);
+  color: rgb(243 244 246);
+  border-bottom: 1px solid rgb(75 85 99);
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+.rbc-calendar-dark .rbc-day-bg {
+  background-color: rgb(31 41 55);
+  border: 1px solid rgb(55 65 81);
+}
+
+.rbc-calendar-dark .rbc-day-bg:hover {
+  background-color: rgb(55 65 81);
+}
+
+.rbc-calendar-dark .rbc-off-range-bg {
+  background-color: rgb(17 24 39);
+}
+
+.rbc-calendar-dark .rbc-today {
+  background-color: rgb(30 58 138) !important;
+}
+
+.rbc-calendar-dark .rbc-date-cell {
+  color: rgb(209 213 219);
+  padding: 8px;
+}
+
+.rbc-calendar-dark .rbc-date-cell.rbc-off-range {
+  color: rgb(107 114 128);
+}
+
+.rbc-calendar-dark .rbc-button-link {
+  color: rgb(243 244 246);
+}
+
+.rbc-calendar-dark .rbc-toolbar {
+  background-color: rgb(55 65 81);
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgb(75 85 99);
+}
+
+.rbc-calendar-dark .rbc-toolbar button {
+  background-color: rgb(75 85 99);
+  color: rgb(243 244 246);
+  border: 1px solid rgb(107 114 128);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 2px;
+  transition: all 0.2s;
+}
+
+.rbc-calendar-dark .rbc-toolbar button:hover {
+  background-color: rgb(107 114 128);
+}
+
+.rbc-calendar-dark .rbc-toolbar button.rbc-active {
+  background-color: rgb(59 130 246);
+  border-color: rgb(59 130 246);
+}
+
+/* Light Mode Calendar Styles */
+.rbc-calendar-light .rbc-header {
+  background-color: rgb(248 250 252);
+  color: rgb(31 41 55);
+  border-bottom: 1px solid rgb(229 231 235);
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+.rbc-calendar-light .rbc-day-bg {
+  border: 1px solid rgb(229 231 235);
+}
+
+.rbc-calendar-light .rbc-day-bg:hover {
+  background-color: rgb(248 250 252);
+}
+
+.rbc-calendar-light .rbc-today {
+  background-color: rgb(219 234 254) !important;
+}
+
+.rbc-calendar-light .rbc-toolbar {
+  background-color: rgb(248 250 252);
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgb(229 231 235);
+}
+
+.rbc-calendar-light .rbc-toolbar button {
+  background-color: white;
+  color: rgb(55 65 81);
+  border: 1px solid rgb(209 213 219);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 2px;
+  transition: all 0.2s;
+}
+
+.rbc-calendar-light .rbc-toolbar button:hover {
+  background-color: rgb(243 244 246);
+}
+
+.rbc-calendar-light .rbc-toolbar button.rbc-active {
+  background-color: rgb(59 130 246);
+  color: white;
+  border-color: rgb(59 130 246);
+}
+
+/* Common Calendar Styles */
+.rbc-calendar {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.rbc-event {
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.rbc-event:focus {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+.rbc-show-more {
+  background-color: rgb(59 130 246) !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .rbc-toolbar .rbc-btn-group {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .rbc-toolbar button {
+    font-size: 12px;
+    padding: 6px 10px;
   }
 }
