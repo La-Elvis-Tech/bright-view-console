@@ -147,7 +147,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         patient_name: formData.patient_name,
         patient_email: formData.patient_email || undefined,
         patient_phone: formData.patient_phone || undefined,
-        exam_type_id: selectedExam_type_id: selectedExamType,
+        exam_type_id: selectedExamType,
         doctor_id: selectedDoctor,
         unit_id: doctorUnitId,
         scheduled_date: appointmentDate.toISOString(),
