@@ -38,9 +38,19 @@ export const useExamTypes = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setExamTypes(data || []);
+      
+      // Filter out exam types with empty or invalid IDs
+      const validExamTypes = (data || []).filter(examType => 
+        examType.id && 
+        typeof examType.id === 'string' && 
+        examType.id.trim() !== ''
+      );
+
+      console.log('Fetched exam types:', validExamTypes.length, 'for unit:', profile?.unit_id);
+      setExamTypes(validExamTypes);
     } catch (error: any) {
       console.error('Error fetching exam types:', error);
+      setExamTypes([]);
     } finally {
       setLoading(false);
     }
