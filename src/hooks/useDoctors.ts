@@ -39,8 +39,15 @@ export const useDoctors = () => {
         throw error;
       }
 
-      console.log('Fetched doctors:', data?.length || 0, 'for unit:', profile?.unit_id);
-      setDoctors(data || []);
+      // Filter out doctors with empty or invalid IDs
+      const validDoctors = (data || []).filter(doctor => 
+        doctor.id && 
+        typeof doctor.id === 'string' && 
+        doctor.id.trim() !== ''
+      );
+
+      console.log('Fetched doctors:', validDoctors.length, 'for unit:', profile?.unit_id);
+      setDoctors(validDoctors);
     } catch (error: any) {
       console.error('Error fetching doctors:', error);
       setDoctors([]);
