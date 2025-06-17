@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Clock, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Clock, User, Calendar } from 'lucide-react';
 
 interface TimeSlot {
   time: string;
@@ -26,7 +27,7 @@ interface EnhancedAvailableTimesGridProps {
   selectedDoctor: string;
   doctors: Doctor[];
   onDoctorChange: (doctorId: string) => void;
-  selectedTimeSlot?: string;
+  selectedTimeSlot: string;
 }
 
 const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
@@ -38,147 +39,120 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
   onDoctorChange,
   selectedTimeSlot
 }) => {
-  const formatDoctorName = (name: string) => {
-    const parts = name.split(' ');
-    if (parts.length === 1) return name;
-    return `Dr. ${parts[0]} ${parts[parts.length - 1]}`;
-  };
+  const filteredSlots = selectedDoctor 
+    ? timeSlots.filter(slot => slot.doctorId === selectedDoctor)
+    : timeSlots;
 
-  const groupedSlots = timeSlots.reduce((acc, slot) => {
-    if (!acc[slot.time]) {
-      acc[slot.time] = [];
+  const getTimeSlotStyle = (slot: TimeSlot) => {
+    const isSelected = selectedTimeSlot === slot.time && (!selectedDoctor || slot.doctorId === selectedDoctor);
+    
+    if (isSelected) {
+      return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200 dark:ring-blue-800 shadow-md';
     }
-    acc[slot.time].push(slot);
-    return acc;
-  }, {} as Record<string, TimeSlot[]>);
-
-  const timeKeys = Object.keys(groupedSlots).sort();
+    
+    if (!slot.available || slot.hasConflict) {
+      return 'bg-red-500 text-white cursor-not-allowed opacity-75 border-red-600';
+    }
+    
+    return 'bg-white hover:bg-neutral-50 text-neutral-900 border-neutral-200 hover:border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700';
+  };
 
   return (
     <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
       <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
-        <CardTitle className="text-lg font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-          <div className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-            <Clock className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100">
+              Horários Disponíveis
+            </CardTitle>
           </div>
-          <div>
-            <div className="text-base">Horários Disponíveis</div>
-            <div className="text-xs font-normal text-neutral-500 dark:text-neutral-400">
-              {selectedDate.toLocaleDateString('pt-BR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">
+            {format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}
           </div>
-        </CardTitle>
-
-        <div className="mt-4">
-          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2 mb-2">
-            <User className="h-4 w-4" />
-            Filtrar por Médico (opcional)
-          </label>
-          <Select value={selectedDoctor} onValueChange={onDoctorChange}>
-            <SelectTrigger className="w-full bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600">
-              <SelectValue placeholder="Todos os médicos" />
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600">
-              <SelectItem value="all">Todos os médicos</SelectItem>
-              {doctors.map((doctor) => (
-                <SelectItem key={doctor.id} value={doctor.id}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{formatDoctorName(doctor.name)}</span>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {doctor.specialty || 'Clínica Geral'}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
-      </CardHeader>
-
-      <CardContent className="p-4">
-        {timeKeys.length === 0 ? (
-          <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-            <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg font-medium">Nenhum horário disponível</p>
-            <p className="text-sm">Tente selecionar outro dia ou médico</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-            {timeKeys.map((time) => {
-              const slots = groupedSlots[time];
-              const availableSlot = slots.find(s => s.available);
-              const hasConflict = slots.some(s => s.hasConflict);
-              const isSelected = selectedTimeSlot === time;
-              
-              if (!availableSlot && !selectedDoctor) return null;
-              
-              const slot = selectedDoctor && selectedDoctor !== "all"
-                ? slots.find(s => s.doctorId === selectedDoctor) 
-                : availableSlot;
-              
-              if (!slot) return null;
-
-              return (
-                <Button
-                  key={`${time}-${slot.doctorId}`}
-                  variant={isSelected ? "default" : slot.available ? "outline" : "secondary"}
-                  size="sm"
-                  disabled={!slot.available}
-                  onClick={() => onSelectTime(time, slot.doctorId)}
-                  className={`
-                    h-auto p-2 flex flex-col items-center text-center transition-all duration-200
-                    ${isSelected 
-                      ? 'bg-blue-500 text-white border-blue-600 shadow-md ring-2 ring-blue-200' 
-                      : ''
-                    }
-                    ${hasConflict && !slot.available 
-                      ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300' 
-                      : ''
-                    }
-                    ${slot.available && !isSelected
-                      ? 'hover:bg-neutral-50 hover:border-neutral-300 dark:hover:bg-neutral-800'
-                      : ''
-                    }
-                  `}
-                >
-                  <div className="font-medium text-sm">
-                    {time}
-                  </div>
-                  {slot.doctorName && (
-                    <div className="text-xs opacity-75 mt-1 line-clamp-2">
-                      {formatDoctorName(slot.doctorName)}
-                    </div>
-                  )}
-                  {hasConflict && !slot.available && (
-                    <div className="text-xs text-red-600 dark:text-red-400 mt-1">
-                      Ocupado
-                    </div>
-                  )}
-                </Button>
-              );
-            })}
+        
+        {doctors.length > 1 && (
+          <div className="pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Filtrar por médico:
+              </span>
+            </div>
+            <Select value={selectedDoctor} onValueChange={onDoctorChange}>
+              <SelectTrigger className="w-full bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700">
+                <SelectValue placeholder="Todos os médicos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os médicos</SelectItem>
+                {doctors.map((doctor) => (
+                  <SelectItem key={doctor.id} value={doctor.id}>
+                    {doctor.name} - {doctor.specialty}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
+      </CardHeader>
 
-        <div className="mt-4 flex flex-wrap gap-4 text-xs text-neutral-500 dark:text-neutral-400">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span>Selecionado</span>
+      <CardContent className="p-6">
+        {filteredSlots.length === 0 ? (
+          <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+            <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">Nenhum horário disponível</p>
+            <p className="text-sm">Não há horários disponíveis para a data selecionada.</p>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-50 border border-red-200 rounded"></div>
-            <span>Ocupado</span>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-white border border-neutral-200 rounded"></div>
+                <span className="text-neutral-600 dark:text-neutral-400">Disponível</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                <span className="text-neutral-600 dark:text-neutral-400">Selecionado</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded"></div>
+                <span className="text-neutral-600 dark:text-neutral-400">Ocupado</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+              {filteredSlots.map((slot) => (
+                <button
+                  key={`${slot.time}-${slot.doctorId || 'all'}`}
+                  onClick={() => {
+                    if (slot.available && !slot.hasConflict) {
+                      onSelectTime(slot.time, slot.doctorId);
+                    }
+                  }}
+                  disabled={!slot.available || slot.hasConflict}
+                  className={`
+                    p-3 rounded-lg text-sm font-medium transition-all duration-200 border-2
+                    ${getTimeSlotStyle(slot)}
+                    ${(!slot.available || slot.hasConflict) ? '' : 'hover:scale-105 active:scale-95'}
+                  `}
+                  title={
+                    !slot.available || slot.hasConflict 
+                      ? `Horário ocupado${slot.doctorName ? ` - ${slot.doctorName}` : ''}`
+                      : `Disponível${slot.doctorName ? ` - ${slot.doctorName}` : ''}`
+                  }
+                >
+                  <div className="font-semibold">{slot.time}</div>
+                  {slot.doctorName && !selectedDoctor && (
+                    <div className="text-xs opacity-80 truncate mt-1">
+                      {slot.doctorName.split(' ')[0]}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-white border border-neutral-300 rounded"></div>
-            <span>Disponível</span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
