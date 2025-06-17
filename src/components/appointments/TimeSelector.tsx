@@ -27,7 +27,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           <SelectValue placeholder="Selecione o horário" />
         </SelectTrigger>
         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-          {availableTimes.map((time) => (
+          {availableTimes.filter(time => time && time.trim() !== '').map((time) => (
             <SelectItem 
               key={time} 
               value={time}
