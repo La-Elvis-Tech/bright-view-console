@@ -16,6 +16,17 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   availableTimes,
   disabled = false
 }) => {
+  // Filter and validate times more thoroughly
+  const validTimes = availableTimes.filter(time => 
+    time && 
+    typeof time === 'string' && 
+    time.trim() !== '' &&
+    time.length > 0
+  );
+
+  console.log('TimeSelector - Available times:', availableTimes);
+  console.log('TimeSelector - Valid times after filtering:', validTimes);
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -27,15 +38,21 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           <SelectValue placeholder="Selecione o horário" />
         </SelectTrigger>
         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-          {availableTimes.filter(time => time && time.trim() !== '').map((time) => (
-            <SelectItem 
-              key={time} 
-              value={time}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {time}
-            </SelectItem>
-          ))}
+          {validTimes.length > 0 ? (
+            validTimes.map((time) => (
+              <SelectItem 
+                key={time} 
+                value={time}
+                className="hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                {time}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="p-2 text-sm text-gray-500 dark:text-gray-400">
+              Nenhum horário disponível
+            </div>
+          )}
         </SelectContent>
       </Select>
     </div>
