@@ -25,8 +25,26 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(u
 export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useSupabaseAuth();
 
+  const contextValue: SupabaseAuthContextType = {
+    user: auth.user,
+    session: auth.session,
+    profile: auth.profile,
+    userRole: auth.userRole,
+    loading: auth.loading,
+    initializing: auth.initializing,
+    signUp: auth.signUp,
+    signIn: auth.signIn,
+    signOut: auth.signOut,
+    resetPassword: auth.resetPassword,
+    updateProfile: auth.updateProfile,
+    hasRole: auth.hasRole,
+    isAdmin: auth.isAdmin,
+    isSupervisor: auth.isSupervisor,
+    isAuthenticated: auth.isAuthenticated,
+  };
+
   return (
-    <SupabaseAuthContext.Provider value={auth}>
+    <SupabaseAuthContext.Provider value={contextValue}>
       {children}
     </SupabaseAuthContext.Provider>
   );

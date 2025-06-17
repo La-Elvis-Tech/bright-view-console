@@ -31,6 +31,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
   isSupervisor: () => boolean;
+  hasRole: (role: 'admin' | 'user' | 'supervisor') => boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -196,6 +197,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return profile?.status === 'active' && user?.id ? true : false;
   };
 
+  const hasRole = (role: 'admin' | 'user' | 'supervisor') => {
+    return profile?.status === 'active' && user?.id ? true : false;
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -207,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     isAdmin,
     isSupervisor,
+    hasRole,
     refreshProfile,
   };
 

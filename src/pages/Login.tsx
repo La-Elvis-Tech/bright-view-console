@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 import { useTheme } from '../hooks/use-theme';
-import { User,Lock } from 'lucide-react';
+import { User, Lock } from 'lucide-react';
 // Importação do gradiente animado
 import { BgradientAnim } from "@/components/soft-gradient-background-animation";
 
@@ -12,7 +12,7 @@ export const Login = () => {
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const authContext = useContext(AuthContext);
+  const authContext = useAuthContext();
   const { theme } = useTheme();
   const nav = useNavigate();
 
