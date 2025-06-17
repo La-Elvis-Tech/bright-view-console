@@ -206,7 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     session,
     profile,
     loading,
-    isAuthenticated: !!session && !!user && profile?.status === 'active',
+    isAuthenticated: !!session && !!user,
     signIn,
     signUp,
     signOut,

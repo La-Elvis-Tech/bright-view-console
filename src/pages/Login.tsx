@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
@@ -10,30 +11,34 @@ export const Login = () => {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const authContext = useAuthContext();
+  const { signIn } = useAuthContext();
   const { theme } = useTheme();
   const nav = useNavigate();
-
-  // Função signin fictícia para compatibilidade
-  const signin = (username: string, password: string) => {
-    return username === 'admin' && password === 'admin';
-  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(false);
+    setErrorMessage('');
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (signin(u, p)) {
-      nav('/', { replace: true });
-    } else {
+    try {
+      const { data, error } = await signIn(u, p);
+      
+      if (error) {
+        setError(true);
+        setErrorMessage(error.message || 'Erro no login. Verifique suas credenciais.');
+      } else if (data) {
+        nav('/', { replace: true });
+      }
+    } catch (err: any) {
       setError(true);
+      setErrorMessage(err.message || 'Erro no login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -106,7 +111,7 @@ export const Login = () => {
                       theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
                     }`}
                   >
-                    Nome de Usuário
+                    Email
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -114,15 +119,17 @@ export const Login = () => {
                     </div>
                     <input
                       id="username"
+                      type="email"
                       className={`w-full pl-12 py-4 backdrop-blur-sm border rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 ${
                         theme === 'dark'
                           ? 'bg-white/10 border-white/20 text-white placeholder-gray-500 focus:border-blue-500'
                           : 'bg-white/50 border-blue-200/50 text-gray-900 placeholder-gray-500 focus:border-blue-500'
                       }`}
-                      placeholder="joao@dasa2025"
+                      placeholder="seu@email.com"
                       value={u}
                       onChange={e => setU(e.target.value)}
                       disabled={isLoading}
+                      required
                     />
                   </div>
                 </div>
@@ -153,6 +160,7 @@ export const Login = () => {
                       value={p}
                       onChange={e => setP(e.target.value)}
                       disabled={isLoading}
+                      required
                     />
                     <button
                       type="button"
@@ -183,7 +191,7 @@ export const Login = () => {
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    Credenciais inválidas. Por favor, tente novamente.
+                    {errorMessage || 'Credenciais inválidas. Por favor, tente novamente.'}
                   </div>
                 )}
 

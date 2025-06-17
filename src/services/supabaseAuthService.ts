@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { authLogger } from '@/utils/authLogger';
 
@@ -15,40 +16,7 @@ export const supabaseAuthService = {
     authLogger.info('Sign in attempt initiated', { email });
     
     try {
-      // Verificar status do usuário ANTES do login
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('status, full_name')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        // PGRST116 = no rows returned, que é aceitável
-        authLogger.error('Error checking user profile', { email, error: profileError.message });
-        throw new Error('Erro ao verificar dados do usuário.');
-      }
-
-      if (!profileData) {
-        authLogger.warning('User profile not found', { email });
-        throw new Error('Usuário não encontrado no sistema.');
-      }
-
-      if (profileData.status === 'pending') {
-        authLogger.warning('Login denied - account pending', { email });
-        throw new Error('Sua conta ainda está pendente de aprovação. Aguarde a aprovação de um administrador.');
-      }
-
-      if (profileData.status === 'inactive') {
-        authLogger.warning('Login denied - account inactive', { email });
-        throw new Error('Sua conta foi desativada. Entre em contato com um administrador.');
-      }
-
-      if (profileData.status === 'suspended') {
-        authLogger.warning('Login denied - account suspended', { email });
-        throw new Error('Sua conta foi suspensa. Entre em contato com um administrador.');
-      }
-
-      // Só permite login se status for 'active'
+      // Primeiro tentar fazer login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -69,6 +37,38 @@ export const supabaseAuthService = {
         }
         
         throw new Error(error.message || 'Erro no login. Tente novamente.');
+      }
+
+      // Verificar status do usuário APÓS o login bem-sucedido
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('status, full_name')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          authLogger.error('Error checking user profile after login', { email, error: profileError.message });
+          throw new Error('Erro ao verificar dados do usuário.');
+        }
+
+        if (!profileData) {
+          authLogger.warning('User profile not found after login', { email });
+          throw new Error('Perfil do usuário não encontrado no sistema.');
+        }
+
+        if (profileData.status === 'pending') {
+          authLogger.warning('Login allowed but account pending', { email });
+          // Permitir login mas o ProtectedRoute irá lidar com o status pending
+        } else if (profileData.status === 'inactive') {
+          authLogger.warning('Login denied - account inactive', { email });
+          await supabase.auth.signOut(); // Fazer logout
+          throw new Error('Sua conta foi desativada. Entre em contato com um administrador.');
+        } else if (profileData.status === 'suspended') {
+          authLogger.warning('Login denied - account suspended', { email });
+          await supabase.auth.signOut(); // Fazer logout
+          throw new Error('Sua conta foi suspensa. Entre em contato com um administrador.');
+        }
       }
 
       authLogger.info('Sign in successful', { email, userId: data.user?.id });
@@ -165,9 +165,9 @@ export const supabaseAuthService = {
         return null;
       }
 
-      // Verificar se o usuário está ativo
-      if (profile.status !== 'active') {
-        authLogger.warning('User with inactive status detected', { 
+      // Verificar se o usuário está ativo (permitir pending para mostrar tela apropriada)
+      if (profile.status === 'inactive' || profile.status === 'suspended') {
+        authLogger.warning('User with inactive/suspended status detected', { 
           userId: user.id, 
           email: user.email, 
           status: profile.status 
