@@ -283,7 +283,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     <SelectValue placeholder="Selecione o médico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredDoctors.map((doctor) => (
+                    {filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{doctor.name}</span>
@@ -317,7 +317,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredExamTypes.map((type) => (
+                    {filteredExamTypes.filter(type => type.id && type.id.trim() !== '').map((type) => (
                       <SelectItem key={type.id} value={type.id}>
                         {type.name}
                         {type.category && ` - ${type.category}`}
