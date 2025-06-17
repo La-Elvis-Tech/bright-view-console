@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { LogIn, UserPlus } from 'lucide-react';
+import { authLogger } from '@/utils/authLogger';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,16 @@ const Auth = () => {
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
+    authLogger.info('Auth page loaded', { 
+      isAuthenticated, 
+      profileStatus: profile?.status, 
+      fromPath: from 
+    });
+
     if (isAuthenticated && profile?.status === 'active') {
+      authLogger.info('User already authenticated and active, redirecting', { 
+        fromPath: from 
+      });
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, profile?.status, navigate, from]);
@@ -51,16 +62,25 @@ const Auth = () => {
     try {
       setLoading(true);
       setAuthError('');
-      await signIn(loginEmail, loginPassword);
       
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Bem-vindo ao Sistema DASA Labs.',
-      });
+      authLogger.info('Login form submitted', { email: loginEmail });
       
-      navigate(from, { replace: true });
+      const { data, error } = await signIn(loginEmail, loginPassword);
+      
+      if (error) {
+        setAuthError(error.message || 'Erro no login. Verifique suas credenciais.');
+        return;
+      }
+
+      if (data?.user) {
+        authLogger.info('Login successful, redirecting', { 
+          email: loginEmail, 
+          fromPath: from 
+        });
+        navigate(from, { replace: true });
+      }
     } catch (error: any) {
-      console.error('Login error:', error);
+      authLogger.error('Login form error', { email: loginEmail, error: error.message });
       setAuthError(error.message || 'Erro no login. Verifique suas credenciais.');
     } finally {
       setLoading(false);
@@ -73,11 +93,13 @@ const Auth = () => {
 
     if (registerPassword !== confirmPassword) {
       setAuthError('As senhas não coincidem.');
+      authLogger.warning('Registration failed - password mismatch', { email: registerEmail });
       return;
     }
 
     if (registerPassword.length < 6) {
       setAuthError('A senha deve ter pelo menos 6 caracteres.');
+      authLogger.warning('Registration failed - password too short', { email: registerEmail });
       return;
     }
 
@@ -85,21 +107,33 @@ const Auth = () => {
       setLoading(true);
       setAuthError('');
       
-      await signUp(registerEmail, registerPassword, registerName);
-      
-      toast({
-        title: 'Cadastro realizado com sucesso!',
-        description: 'Verifique seu email para confirmar a conta. Após a confirmação, aguarde a aprovação de um administrador.',
+      authLogger.info('Registration form submitted', { 
+        email: registerEmail, 
+        name: registerName 
       });
       
-      // Reset form
-      setRegisterName('');
-      setRegisterEmail('');
-      setRegisterPassword('');
-      setConfirmPassword('');
-      setActiveTab('login');
+      const { data, error } = await signUp(registerEmail, registerPassword, registerName);
+      
+      if (error) {
+        setAuthError(error.message || 'Erro no cadastro. Tente novamente.');
+        return;
+      }
+
+      if (data) {
+        authLogger.info('Registration successful', { email: registerEmail });
+        
+        // Reset form
+        setRegisterName('');
+        setRegisterEmail('');
+        setRegisterPassword('');
+        setConfirmPassword('');
+        setActiveTab('login');
+      }
     } catch (error: any) {
-      console.error('Register error:', error);
+      authLogger.error('Registration form error', { 
+        email: registerEmail, 
+        error: error.message 
+      });
       setAuthError(error.message || 'Erro no cadastro. Tente novamente.');
     } finally {
       setLoading(false);
@@ -113,17 +147,18 @@ const Auth = () => {
     try {
       setLoading(true);
       setAuthError('');
-      await resetPassword(resetEmail);
       
-      toast({
-        title: 'Email enviado!',
-        description: 'Verifique seu email para redefinir a senha. O link será válido por 1 hora.',
-      });
+      authLogger.info('Password reset form submitted', { email: resetEmail });
+      
+      await resetPassword(resetEmail);
       
       setShowResetForm(false);
       setResetEmail('');
     } catch (error: any) {
-      console.error('Reset password error:', error);
+      authLogger.error('Password reset form error', { 
+        email: resetEmail, 
+        error: error.message 
+      });
       setAuthError(error.message || 'Não foi possível enviar o email de recuperação.');
     } finally {
       setLoading(false);
@@ -141,6 +176,7 @@ const Auth = () => {
         onBackToLogin={() => {
           setShowResetForm(false);
           setAuthError('');
+          authLogger.info('User returned to login from password reset');
         }}
       />
     );
@@ -166,6 +202,7 @@ const Auth = () => {
         <Tabs value={activeTab} onValueChange={(value) => {
           setActiveTab(value);
           setAuthError('');
+          authLogger.info('Auth tab changed', { newTab: value });
         }}>
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-neutral-100/80 dark:bg-neutral-800/80 p-1 rounded-lg backdrop-blur-sm">
             <TabsTrigger 
@@ -204,6 +241,7 @@ const Auth = () => {
                     onForgotPassword={() => {
                       setShowResetForm(true);
                       setAuthError('');
+                      authLogger.info('User clicked forgot password');
                     }}
                   />
                 </CardContent>

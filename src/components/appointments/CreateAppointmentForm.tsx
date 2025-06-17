@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSupabaseAppointments, type MaterialValidation as MaterialValidationType } from '@/hooks/useSupabaseAppointments';
+import { useAppointmentLogic } from '@/hooks/useAppointmentLogic';
+import { useAuthContext } from '@/context/AuthContext';
 import MaterialValidation from './MaterialValidation';
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,13 +40,22 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   prefilledData 
 }) => {
   const { 
-    examTypes, 
-    doctors, 
-    units, 
     createAppointment, 
     calculateExamMaterials, 
-    loading: dataLoading 
+    loading: dataLoading,
+    units
   } = useSupabaseAppointments();
+
+  const {
+    selectedDoctor,
+    selectedExamType,
+    filteredDoctors,
+    filteredExamTypes,
+    handleDoctorChange,
+    handleExamTypeChange
+  } = useAppointmentLogic();
+
+  const { profile, isAdmin, isSupervisor } = useAuthContext();
   const { toast } = useToast();
   
   const [isCreating, setIsCreating] = useState(false);
@@ -55,15 +66,23 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     patient_name: '',
     patient_email: '',
     patient_phone: '',
-    exam_type_id: '',
     date: prefilledData?.date || '',
     time: prefilledData?.time || '',
-    doctor_id: prefilledData?.doctorId || '',
-    unit_id: '',
+    unit_id: profile?.unit_id || '',
     duration_minutes: 30,
     cost: 0,
     notes: ''
   });
+
+  // Unidades disponíveis baseadas no perfil do usuário
+  const availableUnits = React.useMemo(() => {
+    // Se é admin/supervisor, pode escolher qualquer unidade
+    if (isAdmin() || isSupervisor()) {
+      return []; // Será preenchido pelo hook useSupabaseAppointments
+    }
+    // Usuário comum só pode agendar na sua unidade
+    return profile?.unit_id ? [{ id: profile.unit_id, name: 'Sua Unidade', code: '' }] : [];
+  }, [profile?.unit_id, isAdmin, isSupervisor]);
 
   // Atualizar formulário quando prefilledData mudar
   useEffect(() => {
@@ -72,23 +91,23 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         ...prev,
         date: prefilledData.date,
         time: prefilledData.time,
-        doctor_id: prefilledData.doctorId
       }));
+      handleDoctorChange(prefilledData.doctorId);
     }
-  }, [prefilledData]);
+  }, [prefilledData, handleDoctorChange]);
 
   // Calcular materiais quando o tipo de exame mudar
   useEffect(() => {
-    if (formData.exam_type_id) {
+    if (selectedExamType) {
       setLoadingMaterials(true);
-      calculateExamMaterials(formData.exam_type_id)
+      calculateExamMaterials(selectedExamType)
         .then(setMaterialValidation)
         .catch(() => setMaterialValidation(null))
         .finally(() => setLoadingMaterials(false));
     } else {
       setMaterialValidation(null);
     }
-  }, [formData.exam_type_id, calculateExamMaterials]);
+  }, [selectedExamType, calculateExamMaterials]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,8 +140,8 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         patient_name: formData.patient_name,
         patient_email: formData.patient_email || undefined,
         patient_phone: formData.patient_phone || undefined,
-        exam_type_id: formData.exam_type_id,
-        doctor_id: formData.doctor_id,
+        exam_type_id: selectedExamType,
+        doctor_id: selectedDoctor,
         unit_id: formData.unit_id,
         scheduled_date: appointmentDate.toISOString(),
         duration_minutes: formData.duration_minutes,
@@ -138,15 +157,15 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         patient_name: '',
         patient_email: '',
         patient_phone: '',
-        exam_type_id: '',
         date: '',
         time: '',
-        doctor_id: '',
-        unit_id: '',
+        unit_id: profile?.unit_id || '',
         duration_minutes: 30,
         cost: 0,
         notes: ''
       });
+      handleDoctorChange('');
+      handleExamTypeChange('');
       setMaterialValidation(null);
 
     } catch (error) {
@@ -165,10 +184,10 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
 
   const canSubmit = materialValidation?.canSchedule && 
     formData.patient_name && 
-    formData.exam_type_id && 
+    selectedExamType && 
     formData.date && 
     formData.time && 
-    formData.doctor_id && 
+    selectedDoctor && 
     formData.unit_id;
 
   return (
@@ -248,18 +267,52 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                 />
               </div>
 
+              {/* Médico */}
+              <div className="space-y-2">
+                <Label htmlFor="doctor_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  <User className="h-4 w-4" />
+                  Médico *
+                </Label>
+                <Select value={selectedDoctor} onValueChange={handleDoctorChange}>
+                  <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
+                    <SelectValue placeholder="Selecione o médico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredDoctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{doctor.name}</span>
+                          <span className="text-sm text-neutral-500">
+                            {doctor.specialty || 'Clínica Geral'}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {filteredDoctors.length === 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    Nenhum médico disponível para sua unidade.
+                  </p>
+                )}
+              </div>
+
               {/* Tipo de exame */}
               <div className="space-y-2">
                 <Label htmlFor="exam_type_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   <Stethoscope className="h-4 w-4" />
                   Tipo de Exame *
                 </Label>
-                <Select value={formData.exam_type_id} onValueChange={(value) => handleInputChange('exam_type_id', value)}>
+                <Select 
+                  value={selectedExamType} 
+                  onValueChange={handleExamTypeChange}
+                  disabled={!selectedDoctor}
+                >
                   <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {examTypes.map((type) => (
+                    {filteredExamTypes.map((type) => (
                       <SelectItem key={type.id} value={type.id}>
                         {type.name}
                         {type.category && ` - ${type.category}`}
@@ -267,6 +320,11 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedDoctor && filteredExamTypes.length === 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    Nenhum exame disponível para esta especialidade.
+                  </p>
+                )}
               </div>
 
               {/* Data */}
@@ -301,46 +359,27 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                 />
               </div>
 
-              {/* Médico */}
-              <div className="space-y-2">
-                <Label htmlFor="doctor_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  <User className="h-4 w-4" />
-                  Médico *
-                </Label>
-                <Select value={formData.doctor_id} onValueChange={(value) => handleInputChange('doctor_id', value)}>
-                  <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
-                    <SelectValue placeholder="Selecione o médico" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.name}
-                        {doctor.specialty && ` - ${doctor.specialty}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Unidade */}
-              <div className="space-y-2">
-                <Label htmlFor="unit_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  <MapPin className="h-4 w-4" />
-                  Unidade *
-                </Label>
-                <Select value={formData.unit_id} onValueChange={(value) => handleInputChange('unit_id', value)}>
-                  <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
-                    <SelectValue placeholder="Selecione a unidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map((unit) => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.name} ({unit.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Unidade - só mostra se usuário pode escolher */}
+              {(isAdmin() || isSupervisor()) && (
+                <div className="space-y-2">
+                  <Label htmlFor="unit_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <MapPin className="h-4 w-4" />
+                    Unidade *
+                  </Label>
+                  <Select value={formData.unit_id} onValueChange={(value) => handleInputChange('unit_id', value)}>
+                    <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
+                      <SelectValue placeholder="Selecione a unidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {units.map((unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                          {unit.name} ({unit.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Custo */}
               <div className="space-y-2">

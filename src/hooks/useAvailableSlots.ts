@@ -1,13 +1,14 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { addDays, format, isAfter, isBefore, startOfDay, getDay } from 'date-fns';
+import { addDays, format, isAfter, isBefore, startOfDay, getDay, isSameDay } from 'date-fns';
 
 interface TimeSlot {
   time: string;
   available: boolean;
   doctorName?: string;
   doctorId?: string;
+  hasConflict?: boolean;
 }
 
 interface Doctor {
@@ -28,7 +29,7 @@ export const useAvailableSlots = () => {
 
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 9; hour < 19; hour++) {
+    for (let hour = 7; hour < 19; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         slots.push(timeString);
@@ -107,6 +108,7 @@ export const useAvailableSlots = () => {
           scheduled_date,
           duration_minutes,
           doctor_id,
+          status,
           doctors(name)
         `)
         .gte('scheduled_date', targetDate.toISOString())
@@ -139,6 +141,18 @@ export const useAvailableSlots = () => {
           
           if (!isDoctorWorking) continue;
 
+          // Verificar conflitos mais precisamente
+          const hasConflict = appointments?.some(apt => {
+            if (apt.doctor_id !== doctor.id) return false;
+            
+            const aptDate = new Date(apt.scheduled_date);
+            const aptTime = aptDate.toTimeString().slice(0, 5);
+            
+            return isSameDay(aptDate, date) && 
+                   aptTime === timeSlot && 
+                   apt.status !== 'Cancelado';
+          });
+
           const isOccupied = appointments?.some(apt => {
             if (apt.doctor_id !== doctor.id) return false;
             
@@ -147,7 +161,8 @@ export const useAvailableSlots = () => {
             
             return (
               (isAfter(slotDateTime, aptDate) || slotDateTime.getTime() === aptDate.getTime()) &&
-              isBefore(slotDateTime, aptEndTime)
+              isBefore(slotDateTime, aptEndTime) &&
+              apt.status !== 'Cancelado'
             );
           });
 
@@ -156,6 +171,7 @@ export const useAvailableSlots = () => {
             available: !isOccupied,
             doctorName: doctor.name,
             doctorId: doctor.id,
+            hasConflict: hasConflict || isOccupied
           });
         }
       }

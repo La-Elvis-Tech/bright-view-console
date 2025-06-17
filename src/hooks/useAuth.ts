@@ -1,340 +1,270 @@
-
 import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { authLogger } from '@/utils/authLogger';
+
+export interface User {
+  id: string;
+  email: string;
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+  };
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+  };
+  created_at?: string;
+}
 
 export interface Profile {
   id: string;
   full_name: string;
   email: string;
-  status: 'active' | 'pending' | 'suspended';
-  department?: string;
-  position?: string;
   phone?: string;
+  position?: string;
+  department?: string;
   avatar_url?: string;
+  status: 'active' | 'inactive' | 'pending';
   unit_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export type UserRole = 'admin' | 'supervisor' | 'user';
+export interface AuthState {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  role: 'admin' | 'user' | 'supervisor' | null;
+}
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initializing, setInitializing] = useState(true);
-  const { toast } = useToast();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    loading: true,
+    role: null
+  });
 
-  const fetchProfile = async (userId: string) => {
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          authLogger.error('Error getting session', { error: error.message });
+          setAuthState(prev => ({ ...prev, loading: false }));
+          return;
+        }
+
+        if (session?.user) {
+          authLogger.info('User authenticated, fetching profile and role', {
+            userId: session.user.id,
+            email: session.user.email
+          });
+
+          const profile = await fetchUserProfile(session.user.id);
+          const role = await fetchUserRole(session.user.id);
+
+          setAuthState({
+            user: session.user as User,
+            profile,
+            role,
+            loading: false
+          });
+        } else {
+          authLogger.info('No active session found');
+          setAuthState(prev => ({ ...prev, loading: false }));
+        }
+      } catch (error: any) {
+        authLogger.error('Error during initial auth check', { error: error.message });
+        setAuthState(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        authLogger.info('Auth state change', {
+          event,
+          userEmail: session?.user?.email,
+          hasSession: !!session
+        });
+
+        if (session?.user) {
+          authLogger.info('User authenticated, fetching profile and role', {
+            userId: session.user.id,
+            email: session.user.email
+          });
+
+          const profile = await fetchUserProfile(session.user.id);
+          const role = await fetchUserRole(session.user.id);
+
+          setAuthState({
+            user: session.user as User,
+            profile,
+            role,
+            loading: false
+          });
+        } else {
+          authLogger.info('User signed out');
+          setAuthState({
+            user: null,
+            profile: null,
+            role: null,
+            loading: false
+          });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
     try {
+      authLogger.info('Fetching user profile', { userId });
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        return { data: null, error };
+      if (error) {
+        authLogger.error('Error fetching profile', { userId, error: error.message });
+        return null;
       }
-      
-      if (data) {
-        const mappedProfile: Profile = {
-          ...data,
-          status: data.status === 'inactive' ? 'suspended' : data.status
-        };
-        
-        setProfile(mappedProfile);
-        return { data: mappedProfile, error: null };
-      }
-      
-      return { data: null, error: null };
+
+      authLogger.info('Profile fetched successfully', {
+        userId,
+        email: data.email,
+        status: data.status
+      });
+
+      return data as Profile;
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
-      return { data: null, error };
+      authLogger.error('Exception fetching profile', { userId, error: error.message });
+      return null;
     }
   };
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<'admin' | 'user' | 'supervisor' | null> => {
     try {
+      authLogger.info('Fetching user role', { userId });
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .order('granted_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user role:', error);
-        return { data: null, error };
-      }
-      
-      const userRole = data?.role || 'user';
-      setRole(userRole);
-      return { data: userRole, error: null };
-    } catch (error: any) {
-      console.error('Error fetching user role:', error);
-      return { data: null, error };
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state change:', event, session?.user?.email);
-            
-            if (!mounted) return;
-
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-              setTimeout(async () => {
-                if (mounted) {
-                  await fetchProfile(session.user.id);
-                  await fetchUserRole(session.user.id);
-                }
-              }, 0);
-            } else {
-              setProfile(null);
-              setRole(null);
-            }
-            
-            setLoading(false);
-            setInitializing(false);
-          }
-        );
-
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          setTimeout(async () => {
-            if (mounted) {
-              await fetchProfile(currentSession.user.id);
-              await fetchUserRole(currentSession.user.id);
-            }
-          }, 0);
-        }
-        
-        setLoading(false);
-        setInitializing(false);
-
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-          setInitializing(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      
       if (error) {
-        console.error('Sign in error:', error);
-        toast({
-          title: 'Erro no login',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return { data: null, error };
+        authLogger.error('Error fetching role', { userId, error: error.message });
+        return null;
       }
 
-      console.log('Sign in successful:', data.user?.email);
-      return { data, error: null };
-    } catch (error: any) {
-      console.error('Sign in catch error:', error);
-      toast({
-        title: 'Erro no login',
-        description: error.message || 'Erro desconhecido',
-        variant: 'destructive',
-      });
-      return { data: null, error };
-    } finally {
-      setLoading(false);
-    }
-  };
+      const role = data?.[0]?.role || null;
+      authLogger.info('User role fetched', { userId, role });
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
-      
-      if (error) {
-        console.error('Sign up error:', error);
-        toast({
-          title: 'Erro no cadastro',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return { data: null, error };
-      }
-
-      console.log('Sign up successful:', data.user?.email);
-      toast({
-        title: 'Cadastro realizado',
-        description: 'Verifique seu email para confirmar a conta.',
-      });
-      
-      return { data, error: null };
+      return role;
     } catch (error: any) {
-      console.error('Sign up catch error:', error);
-      toast({
-        title: 'Erro no cadastro',
-        description: error.message || 'Erro desconhecido',
-        variant: 'destructive',
-      });
-      return { data: null, error };
-    } finally {
-      setLoading(false);
+      authLogger.error('Exception fetching role', { userId, error: error.message });
+      return null;
     }
   };
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Sign out error:', error);
-        toast({
-          title: 'Erro ao sair',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return { error };
-      }
-
-      console.log('Sign out successful');
-      return { error: null };
+      authLogger.info('User signing out');
+      await supabase.auth.signOut();
     } catch (error: any) {
-      console.error('Sign out catch error:', error);
-      toast({
-        title: 'Erro ao sair',
-        description: error.message || 'Erro desconhecido',
-        variant: 'destructive',
-      });
-      return { error };
+      authLogger.error('Error signing out', { error: error.message });
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!authState.user?.id) return null;
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      authLogger.info('Updating user profile', { userId: authState.user.id, updates });
       
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', authState.user.id)
+        .select()
+        .single();
+
       if (error) {
-        console.error('Reset password error:', error);
-        toast({
-          title: 'Erro',
-          description: error.message,
-          variant: 'destructive',
+        authLogger.error('Error updating profile', { 
+          userId: authState.user.id, 
+          error: error.message 
         });
-        return { error };
+        return null;
       }
 
-      console.log('Reset password email sent');
-      toast({
-        title: 'Email enviado',
-        description: 'Verifique seu email para redefinir a senha.',
-      });
-      
-      return { error: null };
+      // Update local state
+      setAuthState(prev => ({
+        ...prev,
+        profile: data as Profile
+      }));
+
+      authLogger.info('Profile updated successfully', { userId: authState.user.id });
+      return data as Profile;
     } catch (error: any) {
-      console.error('Reset password catch error:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro desconhecido',
-        variant: 'destructive',
+      authLogger.error('Exception updating profile', { 
+        userId: authState.user.id, 
+        error: error.message 
       });
-      return { error };
+      return null;
     }
   };
 
-  const hasRole = (requiredRole: UserRole): boolean => {
-    return role === requiredRole;
+  // Helper functions
+  const isAuthenticated = (): boolean => {
+    return !!authState.user && authState.profile?.status === 'active';
   };
 
   const isAdmin = (): boolean => {
-    return role === 'admin';
+    return authState.role === 'admin';
   };
 
   const isSupervisor = (): boolean => {
-    return role === 'supervisor' || role === 'admin';
+    return authState.role === 'supervisor';
   };
 
-  // Novos métodos para verificar status do usuário
   const isPending = (): boolean => {
-    return profile?.status === 'pending';
+    return authState.profile?.status === 'pending';
   };
 
-  const isActive = (): boolean => {
-    return profile?.status === 'active';
-  };
-
-  const isSuspended = (): boolean => {
-    return profile?.status === 'suspended';
+  const isInactive = (): boolean => {
+    return authState.profile?.status === 'inactive';
   };
 
   return {
-    user,
-    session,
-    profile,
-    role,
-    loading,
-    initializing,
-    signIn,
-    signUp,
+    // State
+    user: authState.user,
+    profile: authState.profile,
+    role: authState.role,
+    loading: authState.loading,
+    
+    // Actions
     signOut,
-    resetPassword,
-    refreshProfile: () => user && fetchProfile(user.id),
-    refreshRole: () => user && fetchUserRole(user.id),
-    isAuthenticated: !!session,
-    userRole: role,
-    hasRole,
+    updateProfile,
+    
+    // Helpers
+    isAuthenticated,
     isAdmin,
     isSupervisor,
     isPending,
-    isActive,
-    isSuspended,
+    isInactive,
+    
+    // Internal functions (for testing/debugging)
+    fetchUserProfile,
+    fetchUserRole
   };
 };

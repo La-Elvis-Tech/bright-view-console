@@ -64,7 +64,7 @@ const Settings = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block bg-neutral-100 rounded-lg dark:bg-neutral-800 p-1">
+          <div className="hidden sm:block bg-neutral-100 rounded-lg dark:bg-neutral-800 p-0">
             <ThemeToggle />
           </div>
           <Button

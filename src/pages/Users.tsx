@@ -34,12 +34,12 @@ const UsersPage = () => {
 
       {/* Tabs para separar usuários pendentes e ativos */}
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="pending" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-neutral-800 border border-hidden">
+          <TabsTrigger value="pending" className="flex items-center gap-2 data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm">
             <UserCheck className="h-4 w-4" />
             Usuários Pendentes
           </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
+          <TabsTrigger value="active" className="flex items-center gap-2 data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm">
             <UsersIcon className="h-4 w-4" />
             Usuários Ativos
           </TabsTrigger>

@@ -87,7 +87,7 @@ const Layout = () => {
           paddingLeft: isMobile ? "0px" : isCollapsed ? "80px" : "260px",
         }}
       >
-        <div className="p-4 sm:p-6 min-h-full ml-6">
+        <div className="p-4 sm:p-6 min-h-full sm:ml-0 md:ml-4 xl:ml-6">
           <Outlet />
         </div>
       </div>

@@ -86,7 +86,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
 
       {/* Texto central */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-xs xl:text-base text-gray-500 dark:text-gray-400">
+        <span className="text-xs xl:text-sm text-gray-500 dark:text-gray-400 px-6 text-center">
           {title}
         </span>
         <span className="text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-100">

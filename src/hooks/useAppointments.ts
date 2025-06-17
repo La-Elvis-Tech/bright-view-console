@@ -2,16 +2,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthContext } from '@/context/AuthContext';
 import { SupabaseAppointment } from '@/types/appointment';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<SupabaseAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { profile, isAdmin, isSupervisor } = useAuthContext();
 
   const fetchAppointments = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('appointments')
         .select(`
           *,
@@ -20,6 +22,13 @@ export const useAppointments = () => {
           units(name, code)
         `)
         .order('scheduled_date', { ascending: false });
+
+      // Se não é admin/supervisor, filtrar por unidade
+      if (!isAdmin() && !isSupervisor() && profile?.unit_id) {
+        query = query.eq('unit_id', profile.unit_id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -41,13 +50,15 @@ export const useAppointments = () => {
 
   useEffect(() => {
     const loadAppointments = async () => {
-      setLoading(true);
-      await fetchAppointments();
-      setLoading(false);
+      if (profile) {
+        setLoading(true);
+        await fetchAppointments();
+        setLoading(false);
+      }
     };
 
     loadAppointments();
-  }, []);
+  }, [profile?.unit_id, isAdmin, isSupervisor]);
 
   return {
     appointments,

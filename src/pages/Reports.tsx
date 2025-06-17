@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -26,12 +27,23 @@ const Reports = () => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [reportType, setReportType] = useState("weekly");
-  const [selectedUnit, setSelectedUnit] = useState<string>("all");
+  const [selectedUnit, setSelectedUnit] = useState<string>("default");
   const [filters, setFilters] = useState({});
   
   const { profile, hasRole } = useAuthContext();
-  // Pass undefined to useReportsData when "all" is selected, otherwise pass the selectedUnit
-  const unitFilter = selectedUnit === "all" ? undefined : selectedUnit;
+  
+  // Lógica corrigida para o filtro de unidade:
+  // - Se selectedUnit é "default", usar undefined para que o hook use a unidade do perfil
+  // - Se selectedUnit é "all", passar "all" apenas para admins/supervisores
+  // - Caso contrário, usar o selectedUnit específico
+  const unitFilter = selectedUnit === "default" 
+    ? undefined 
+    : selectedUnit === "all" && (hasRole('admin') || hasRole('supervisor'))
+    ? "all"
+    : selectedUnit !== "default"
+    ? selectedUnit
+    : undefined;
+
   const { data: reportData, isLoading } = useReportsData(unitFilter);
   const metrics = reportData ? useReportMetrics(reportData) : null;
 
@@ -104,9 +116,10 @@ const Reports = () => {
                 <span className="text-sm font-medium">Unidade:</span>
                 <Select value={selectedUnit} onValueChange={setSelectedUnit}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Todas as unidades" />
+                    <SelectValue placeholder="Selecione uma unidade" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="default">Minha Unidade</SelectItem>
                     <SelectItem value="all">Todas as unidades</SelectItem>
                     {reportData.units.map((unit) => (
                       <SelectItem key={unit.id} value={unit.id}>
@@ -387,11 +400,11 @@ const Reports = () => {
         </TabsContent>
 
         <TabsContent value="performance" className="mt-0">
-          <PerformanceMetrics />
+          <PerformanceMetrics selectedUnitId={unitFilter === "all" ? undefined : unitFilter} />
         </TabsContent>
 
         <TabsContent value="cost-analysis" className="mt-0">
-          <CostAnalysis />
+          <CostAnalysis selectedUnitId={unitFilter === "all" ? undefined : unitFilter} />
         </TabsContent>
 
         <TabsContent value="export" className="mt-0">

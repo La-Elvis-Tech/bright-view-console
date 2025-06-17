@@ -43,7 +43,7 @@ const AvailableTimesGrid: React.FC<AvailableTimesGridProps> = ({
   const formatDoctorName = (name: string) => {
     const parts = name.split(' ');
     if (parts.length === 1) return `Dr. ${name}`;
-    return `Dr. ${parts[0]}`;
+    return `${parts[0]} ${parts[parts.length - 1]}`;
   };
 
   const renderTimeGrid = (slots: TimeSlot[], title: string) => (
@@ -91,7 +91,7 @@ const AvailableTimesGrid: React.FC<AvailableTimesGridProps> = ({
   return (
     <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
       <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
-        <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
+        <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100 flex items-center gap-3 mb-2">
           <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
             <Clock className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
           </div>

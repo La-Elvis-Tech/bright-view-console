@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import AppointmentCalendar from './AppointmentCalendar';
 import CreateAppointmentForm from './CreateAppointmentForm';
 import DoctorManagement from './DoctorManagement';
 import ExamTypeManagement from './ExamTypeManagement';
 import AppointmentsStats from './AppointmentsStats';
+import AppointmentTabs from './AppointmentTabs';
 import { useSupabaseAppointments } from '@/hooks/useSupabaseAppointments';
 import { useToast } from '@/hooks/use-toast';
 import { SkeletonAppointments } from '@/components/ui/skeleton-appointments';
@@ -31,9 +30,6 @@ const AppointmentsDashboard: React.FC = () => {
     doctors, 
     units, 
     loading,
-    createAppointment,
-    updateAppointment,
-    deleteAppointment,
     createDoctor,
     updateDoctor,
     deleteDoctor,
@@ -148,58 +144,39 @@ const AppointmentsDashboard: React.FC = () => {
         />
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-          <TabsTrigger 
-            value="calendar"
-            className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Calendário
-          </TabsTrigger>
-          <TabsTrigger 
-            value="doctors"
-            className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Médicos ({doctors.length})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="exam-types"
-            className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            Tipos de Exames ({examTypes.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="calendar">
-          <AppointmentCalendar
-            appointments={appointments}
-            onSelectAppointment={handleSelectAppointment}
-            onSelectSlot={handleSelectSlot}
-          />
-        </TabsContent>
-
-        <TabsContent value="doctors">
-          <DoctorManagement
-            doctors={doctors}
-            units={units}
-            onCreateDoctor={handleCreateDoctor}
-            onUpdateDoctor={handleUpdateDoctor}
-            onDeleteDoctor={handleDeleteDoctor}
-          />
-        </TabsContent>
-
-        <TabsContent value="exam-types">
-          <ExamTypeManagement
-            examTypes={examTypes}
-            onCreateExamType={handleCreateExamType}
-            onUpdateExamType={handleUpdateExamType}
-            onDeleteExamType={handleDeleteExamType}
-          />
-        </TabsContent>
-      </Tabs>
+      <AppointmentTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        doctorsCount={doctors.length}
+        examTypesCount={examTypes.length}
+      >
+        {{
+          calendar: (
+            <AppointmentCalendar
+              appointments={appointments}
+              onSelectAppointment={handleSelectAppointment}
+              onSelectSlot={handleSelectSlot}
+            />
+          ),
+          doctors: (
+            <DoctorManagement
+              doctors={doctors}
+              units={units}
+              onCreateDoctor={createDoctor}
+              onUpdateDoctor={updateDoctor}
+              onDeleteDoctor={deleteDoctor}
+            />
+          ),
+          examTypes: (
+            <ExamTypeManagement
+              examTypes={examTypes}
+              onCreateExamType={createExamType}
+              onUpdateExamType={updateExamType}
+              onDeleteExamType={deleteExamType}
+            />
+          )
+        }}
+      </AppointmentTabs>
     </div>
   );
 };

@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
       className="space-y-6 dark:text-gray-100"
     >
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+        <h1 className="text-3xl sm:text-3xl font-bold text-gray-800 dark:text-white">
           Dashboard
         </h1>
         <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
@@ -89,10 +89,10 @@ const Dashboard: React.FC = () => {
           <div className="dashboard-card h-[400px]">
             <UnitSelectorCard />
           </div>
+          <div className="dashboard-chart">
+        <RiskAlertsCard />
+      </div>
           
-          <div className="dashboard-card">
-            <InventoryGauges />
-          </div>
         </div>
 
         {/* Coluna central - Analytics avançados */}
@@ -121,30 +121,13 @@ const Dashboard: React.FC = () => {
             <RecentActivities />
           </div>
 
-          <div className="dashboard-card">
+          {/*<div className="dashboard-card">
             <DemandForecastCard />
-          </div>
+          </div>*/}
         </div>
       </div>
-
-      {/* Seção de alertas de risco */}
-      <div className="dashboard-chart">
-        <RiskAlertsCard />
-      </div>
-
-      {/* Gráfico de consumo */}
       <div className="dashboard-card">
-        <DashboardChart
-          type="bar"
-          data={consumptionData || []}
-          title="Consumo de Materiais"
-          description="Materiais consumidos nos últimos 7 meses"
-        />
-      </div>
-
-      {/* Tabela de estoque baixo - largura total */}
-      <div className="dashboard-chart">
-        <LowStockTable />
+            <InventoryGauges />
       </div>
     </div>
   );

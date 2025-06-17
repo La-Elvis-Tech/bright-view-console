@@ -118,7 +118,7 @@ const ActiveUsersTable = () => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-8">
+        <CardContent className="flex items-center justify-center py-8 bg-white dark:bg-neutral-900">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto"></div>
             <p className="mt-2 text-gray-500 dark:text-gray-400">Carregando usuários...</p>
@@ -129,7 +129,7 @@ const ActiveUsersTable = () => {
   }
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-green-500" />

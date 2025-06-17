@@ -20,7 +20,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ items }) => {
       value: totalItems.toString(),
       icon: Package,
       color: 'text-lab-blue',
-      bgColor: 'bg-lab-lightBlue',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
     },
     {
       title: 'Valor Total',
@@ -52,7 +52,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ items }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
         <Card key={index} className="border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row justify-between space-y-0 pb-0">
             <CardTitle className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
               {stat.title}
             </CardTitle>

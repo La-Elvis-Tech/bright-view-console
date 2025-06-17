@@ -16,12 +16,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/context/AuthContext";
 import { subMonths } from "date-fns";
 
-const CostAnalysis: React.FC = () => {
+interface CostAnalysisProps {
+  selectedUnitId?: string;
+}
+
+const CostAnalysis: React.FC<CostAnalysisProps> = ({ selectedUnitId }) => {
   const { profile } = useAuthContext();
+  const unitFilter = selectedUnitId || profile?.unit_id;
 
   // Buscar dados reais de custos por tipo de exame
   const { data: examCosts = [] } = useQuery({
-    queryKey: ['exam-costs', profile?.unit_id],
+    queryKey: ['exam-costs', unitFilter],
     queryFn: async () => {
       let query = supabase
         .from('appointments')
@@ -33,8 +38,8 @@ const CostAnalysis: React.FC = () => {
         `)
         .eq('status', 'Concluído');
 
-      if (profile?.unit_id) {
-        query = query.eq('unit_id', profile.unit_id);
+      if (unitFilter) {
+        query = query.eq('unit_id', unitFilter);
       }
 
       const { data, error } = await query;
@@ -58,7 +63,7 @@ const CostAnalysis: React.FC = () => {
       return Object.entries(costsByType)
         .map(([name, { total, count }]) => ({
           name,
-          value: count > 0 ? total / count : 0
+          value: count > 0 ? Math.round(total / count) : 0
         }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
@@ -68,7 +73,7 @@ const CostAnalysis: React.FC = () => {
 
   // Buscar dados de consumo por categoria (Pareto)
   const { data: paretoData = [] } = useQuery({
-    queryKey: ['inventory-pareto', profile?.unit_id],
+    queryKey: ['inventory-pareto', unitFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('inventory_movements')
@@ -79,14 +84,14 @@ const CostAnalysis: React.FC = () => {
           movement_type,
           inventory_items!inner(name, cost_per_unit, unit_id, inventory_categories(name))
         `)
-        .eq('movement_type', 'saida')
+        .eq('movement_type', 'out')
         .gte('created_at', subMonths(new Date(), 3).toISOString());
 
       if (error) throw error;
 
       // Filtrar por unidade se necessário
-      const filteredData = profile?.unit_id 
-        ? data.filter(movement => movement.inventory_items.unit_id === profile.unit_id)
+      const filteredData = unitFilter 
+        ? data.filter(movement => movement.inventory_items.unit_id === unitFilter)
         : data;
 
       // Agrupar por item e calcular custos totais
@@ -120,8 +125,40 @@ const CostAnalysis: React.FC = () => {
 
   // Buscar dados de consumo por unidade (radar)
   const { data: radarData = [] } = useQuery({
-    queryKey: ['consumption-by-unit'],
+    queryKey: ['consumption-by-unit', unitFilter],
     queryFn: async () => {
+      // Se há filtro de unidade, mostrar apenas essa unidade
+      if (unitFilter) {
+        const { data: unitData, error: unitError } = await supabase
+          .from('units')
+          .select('name, code')
+          .eq('id', unitFilter)
+          .single();
+
+        if (unitError) throw unitError;
+
+        const { data: movements, error } = await supabase
+          .from('inventory_movements')
+          .select(`
+            id,
+            total_cost,
+            inventory_items!inner(unit_id)
+          `)
+          .eq('movement_type', 'out')
+          .eq('inventory_items.unit_id', unitFilter)
+          .gte('created_at', subMonths(new Date(), 6).toISOString());
+
+        if (error) throw error;
+
+        const totalCost = movements?.reduce((sum, m) => sum + (m.total_cost || 0), 0) || 0;
+
+        return [{
+          name: unitData.name,
+          gastosK: Math.round(totalCost / 1000)
+        }];
+      }
+
+      // Sem filtro de unidade, mostrar todas
       const { data, error } = await supabase
         .from('inventory_movements')
         .select(`
@@ -129,7 +166,7 @@ const CostAnalysis: React.FC = () => {
           total_cost,
           inventory_items!inner(units(name, code))
         `)
-        .eq('movement_type', 'saida')
+        .eq('movement_type', 'out')
         .gte('created_at', subMonths(new Date(), 6).toISOString());
 
       if (error) throw error;

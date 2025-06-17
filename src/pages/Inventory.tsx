@@ -351,7 +351,7 @@ const Inventory = () => {
         </div>
       </div>
 
-      <InventoryStockHealth 
+      {/*<InventoryStockHealth 
         items={inventoryItems} 
         expiringItems={inventoryItems.filter(item => {
           if (!item.expiry_date) return false;
@@ -360,7 +360,7 @@ const Inventory = () => {
           thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
           return expiryDate <= thirtyDaysFromNow;
         })} 
-      />
+      />*/}
 
       <InventoryTable
         items={filteredItems}

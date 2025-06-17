@@ -6,18 +6,27 @@ import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format, startOfMonth, endOfMonth } from "date-fns";
+import { subMonths, format } from "date-fns";
 
-const PerformanceMetrics: React.FC = () => {
+interface PerformanceMetricsProps {
+  selectedUnitId?: string;
+}
+
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ selectedUnitId }) => {
   // Buscar dados reais vs previstos dos últimos 6 meses
   const { data: realVsPredicted = [] } = useQuery({
-    queryKey: ['real-vs-predicted'],
+    queryKey: ['real-vs-predicted', selectedUnitId],
     queryFn: async () => {
-      const { data: appointments, error } = await supabase
+      let query = supabase
         .from('appointments')
         .select('scheduled_date, status, cost, exam_types(cost)')
         .gte('scheduled_date', subMonths(new Date(), 6).toISOString());
 
+      if (selectedUnitId) {
+        query = query.eq('unit_id', selectedUnitId);
+      }
+
+      const { data: appointments, error } = await query;
       if (error) throw error;
 
       // Agrupar por mês
@@ -51,9 +60,9 @@ const PerformanceMetrics: React.FC = () => {
 
   // Buscar anomalias reais do sistema
   const { data: anomalies = [] } = useQuery({
-    queryKey: ['system-anomalies'],
+    queryKey: ['system-anomalies', selectedUnitId],
     queryFn: async () => {
-      const { data: alerts, error } = await supabase
+      let query = supabase
         .from('stock_alerts')
         .select(`
           id,
@@ -62,15 +71,21 @@ const PerformanceMetrics: React.FC = () => {
           created_at,
           current_value,
           threshold_value,
-          inventory_items(name)
+          inventory_items!inner(name, unit_id)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
+      const { data: alerts, error } = await query;
       if (error) throw error;
 
-      return alerts?.map(alert => {
+      // Filtrar por unidade se necessário
+      const filteredAlerts = selectedUnitId 
+        ? alerts?.filter(alert => alert.inventory_items?.unit_id === selectedUnitId)
+        : alerts;
+
+      return filteredAlerts?.slice(0, 5).map(alert => {
         const deviation = alert.current_value && alert.threshold_value ? 
           Math.round(((alert.current_value - alert.threshold_value) / alert.threshold_value) * 100) : 
           Math.floor(Math.random() * 60) + 20; // Valor simulado se não houver dados
@@ -117,18 +132,17 @@ const PerformanceMetrics: React.FC = () => {
 
   // Dados de backup se não houver dados reais
   const defaultRealVsPredicted = [
-    { name: "Jan", real: 180000, predicted: 175000 },
-    { name: "Fev", real: 195000, predicted: 190000 },
-    { name: "Mar", real: 220000, predicted: 205000 },
-    { name: "Abr", real: 185000, predicted: 195000 },
-    { name: "Mai", real: 210000, predicted: 215000 },
-    { name: "Jun", real: 235000, predicted: 225000 },
+    { name: "Jan", real: 18000, predicted: 17500 },
+    { name: "Fev", real: 19500, predicted: 19000 },
+    { name: "Mar", real: 22000, predicted: 20500 },
+    { name: "Abr", real: 18500, predicted: 19500 },
+    { name: "Mai", real: 21000, predicted: 21500 },
+    { name: "Jun", real: 23500, predicted: 22500 },
   ];
 
   const defaultAnomalies = [
-    { item: "Reagente X", deviation: "+45%", date: "15/06", type: "high" },
-    { item: "Luvas Nitrila", deviation: "-30%", date: "22/06", type: "low" },
-    { item: "Etanol", deviation: "+60%", date: "28/06", type: "critical" },
+    { item: "Reagente Glicose Teste", deviation: "+25%", date: "15/06", type: "high" },
+    { item: "Tubos de Ensaio Teste", deviation: "-15%", date: "22/06", type: "low" },
   ];
 
   const finalRealVsPredicted = realVsPredicted.length > 0 ? realVsPredicted : defaultRealVsPredicted;

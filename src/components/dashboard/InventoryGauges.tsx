@@ -26,7 +26,7 @@ const InventoryGauges: React.FC = () => {
       <p className="px-6 py-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-300">
         Itens disponíveis no estoque
       </p>
-      <CardContent className="grid grid-cols-2 gap-4 md:gap-6 my-0 md:my-3 mt-2 md:mt-0">
+      <CardContent className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 my-0 md:my-3 mt-2 md:mt-0">
         {inventoryData?.map((item) => (
           <div key={item.name}>
             <div className="block sm:inline lg:hidden">
@@ -52,7 +52,7 @@ const InventoryGauges: React.FC = () => {
                 <GaugeChart
                   title={item.name}
                   value={item.value}
-                  size={180}
+                  size={190}
                 />
               </div>
             </div>

@@ -70,10 +70,10 @@ const Requests = () => {
   }
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 ">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+      <div className="text-left">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
           Catálogo de Exames
         </h1>
         <p className="text-neutral-600 dark:text-neutral-400">

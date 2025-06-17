@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/context/AuthContext';
@@ -13,10 +12,15 @@ export interface ReportData {
 }
 
 export const useReportsData = (selectedUnitId?: string) => {
-  const { profile } = useAuthContext();
+  const { profile, hasRole } = useAuthContext();
   
-  // Determinar qual unidade usar para filtrar os dados
-  const unitFilter = selectedUnitId || profile?.unit_id;
+  // Lógica corrigida: 
+  // - Se usuário é admin/supervisor e selectedUnitId = "all", não filtrar por unidade
+  // - Se usuário é admin/supervisor e selectedUnitId está definido, usar selectedUnitId
+  // - Se usuário comum ou não há selectedUnitId, usar profile.unit_id
+  const unitFilter = (hasRole('admin') || hasRole('supervisor')) && selectedUnitId === "all" 
+    ? undefined 
+    : selectedUnitId || profile?.unit_id;
 
   return useQuery({
     queryKey: ['reports-data', unitFilter],
@@ -39,7 +43,7 @@ export const useReportsData = (selectedUnitId?: string) => {
             units(name, code)
           `)
           .order('scheduled_date', { ascending: false })
-          .limit(100);
+          .limit(200);
 
         if (unitFilter) {
           appointmentsQuery = appointmentsQuery.eq('unit_id', unitFilter);
@@ -65,7 +69,7 @@ export const useReportsData = (selectedUnitId?: string) => {
             units(name)
           `)
           .eq('active', true)
-          .limit(200);
+          .limit(300);
 
         if (unitFilter) {
           inventoryQuery = inventoryQuery.eq('unit_id', unitFilter);
@@ -76,7 +80,7 @@ export const useReportsData = (selectedUnitId?: string) => {
           console.error('Erro ao buscar inventário:', inventoryError);
         }
 
-        // Buscar movimentações de estoque
+        // Buscar movimentações de estoque - corrigir o filtro de unidade
         const { data: movements, error: movementsError } = await supabase
           .from('inventory_movements')
           .select(`
@@ -90,7 +94,7 @@ export const useReportsData = (selectedUnitId?: string) => {
           `)
           .gte('created_at', subMonths(new Date(), 6).toISOString())
           .order('created_at', { ascending: false })
-          .limit(200);
+          .limit(300);
 
         if (movementsError) {
           console.error('Erro ao buscar movimentações:', movementsError);
@@ -103,7 +107,7 @@ export const useReportsData = (selectedUnitId?: string) => {
             )
           : movements || [];
 
-        // Buscar alertas
+        // Buscar alertas - corrigir o filtro de unidade
         const { data: alerts, error: alertsError } = await supabase
           .from('stock_alerts')
           .select(`
@@ -116,7 +120,7 @@ export const useReportsData = (selectedUnitId?: string) => {
             inventory_items!inner(name, unit_id)
           `)
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(150);
 
         if (alertsError) {
           console.error('Erro ao buscar alertas:', alertsError);
@@ -130,13 +134,18 @@ export const useReportsData = (selectedUnitId?: string) => {
           : alerts || [];
 
         // Buscar unidades (apenas se usuário tem permissão)
-        const { data: units, error: unitsError } = await supabase
-          .from('units')
-          .select('*')
-          .eq('active', true);
+        let units = [];
+        if (hasRole('admin') || hasRole('supervisor')) {
+          const { data: unitsData, error: unitsError } = await supabase
+            .from('units')
+            .select('*')
+            .eq('active', true);
 
-        if (unitsError) {
-          console.error('Erro ao buscar unidades:', unitsError);
+          if (unitsError) {
+            console.error('Erro ao buscar unidades:', unitsError);
+          } else {
+            units = unitsData || [];
+          }
         }
 
         const reportData = {
@@ -144,7 +153,7 @@ export const useReportsData = (selectedUnitId?: string) => {
           inventory: inventory || [],
           movements: filteredMovements,
           alerts: filteredAlerts,
-          units: units || []
+          units: units
         };
 
         console.log('Dados do relatório carregados:', {
@@ -152,7 +161,8 @@ export const useReportsData = (selectedUnitId?: string) => {
           inventory: reportData.inventory.length,
           movements: reportData.movements.length,
           alerts: reportData.alerts.length,
-          units: reportData.units.length
+          units: reportData.units.length,
+          unitFilter
         });
 
         return reportData;
@@ -216,7 +226,7 @@ export const useReportMetrics = (data: ReportData) => {
   };
 };
 
-// Funções auxiliares para cálculos
+// Funções auxiliares para cálculos - corrigidas para usar dados reais
 const calculateWeeklyRevenue = (appointments: any[]) => {
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -293,7 +303,15 @@ const calculateInventoryByCategory = (inventory: any[]) => {
 const calculateMovementsByType = (movements: any[]) => {
   const typeCount: { [key: string]: number } = {};
   movements.forEach(movement => {
-    const type = movement.movement_type;
+    let type = movement.movement_type;
+    // Traduzir os tipos para português
+    switch(type) {
+      case 'in': type = 'Entrada'; break;
+      case 'out': type = 'Saída'; break;
+      case 'adjustment': type = 'Ajuste'; break;
+      case 'transfer': type = 'Transferência'; break;
+      default: type = movement.movement_type;
+    }
     typeCount[type] = (typeCount[type] || 0) + 1;
   });
 
