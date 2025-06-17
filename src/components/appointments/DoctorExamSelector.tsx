@@ -101,7 +101,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               <SelectValue placeholder="Selecione o médico" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-              {filteredDoctors.map((doctor) => (
+              {filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').map((doctor) => (
                 <SelectItem 
                   key={doctor.id} 
                   value={doctor.id}
@@ -117,7 +117,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {selectedExamType && filteredDoctors.length === 0 && (
+          {selectedExamType && filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').length === 0 && (
             <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               Nenhum médico disponível para este exame.
@@ -136,7 +136,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               <SelectValue placeholder="Selecione o tipo de exame" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-              {filteredExamTypes.map((examType) => (
+              {filteredExamTypes.filter(examType => examType.id && examType.id.trim() !== '').map((examType) => (
                 <SelectItem 
                   key={examType.id} 
                   value={examType.id}
@@ -152,7 +152,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {selectedDoctor && filteredExamTypes.length === 0 && (
+          {selectedDoctor && filteredExamTypes.filter(examType => examType.id && examType.id.trim() !== '').length === 0 && (
             <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               Nenhum exame disponível para esta especialidade médica.
