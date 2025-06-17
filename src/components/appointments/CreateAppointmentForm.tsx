@@ -74,6 +74,25 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     notes: ''
   });
 
+  // Filter and validate data more thoroughly
+  const validDoctors = filteredDoctors.filter(doctor => 
+    doctor && 
+    doctor.id && 
+    typeof doctor.id === 'string' && 
+    doctor.id.trim() !== '' &&
+    doctor.name &&
+    doctor.name.trim() !== ''
+  );
+
+  const validExamTypes = filteredExamTypes.filter(examType => 
+    examType && 
+    examType.id && 
+    typeof examType.id === 'string' && 
+    examType.id.trim() !== '' &&
+    examType.name &&
+    examType.name.trim() !== ''
+  );
+
   // Atualizar formulário quando prefilledData mudar
   useEffect(() => {
     if (prefilledData) {
@@ -283,7 +302,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     <SelectValue placeholder="Selecione o médico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').map((doctor) => (
+                    {validDoctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{doctor.name}</span>
@@ -295,7 +314,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                {filteredDoctors.length === 0 && (
+                {validDoctors.length === 0 && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     Nenhum médico disponível para sua unidade.
                   </p>
@@ -317,7 +336,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredExamTypes.filter(type => type.id && type.id.trim() !== '').map((type) => (
+                    {validExamTypes.map((type) => (
                       <SelectItem key={type.id} value={type.id}>
                         {type.name}
                         {type.category && ` - ${type.category}`}
@@ -325,7 +344,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedDoctor && filteredExamTypes.length === 0 && (
+                {selectedDoctor && validExamTypes.length === 0 && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     Nenhum exame disponível para esta especialidade.
                   </p>

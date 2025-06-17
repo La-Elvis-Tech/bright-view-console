@@ -26,6 +26,25 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
   const [filteredDoctors, setFilteredDoctors] = useState(doctors);
   const [filteredExamTypes, setFilteredExamTypes] = useState(examTypes);
 
+  // Filter and validate data more thoroughly
+  const validDoctors = filteredDoctors.filter(doctor => 
+    doctor && 
+    doctor.id && 
+    typeof doctor.id === 'string' && 
+    doctor.id.trim() !== '' &&
+    doctor.name &&
+    doctor.name.trim() !== ''
+  );
+
+  const validExamTypes = filteredExamTypes.filter(examType => 
+    examType && 
+    examType.id && 
+    typeof examType.id === 'string' && 
+    examType.id.trim() !== '' &&
+    examType.name &&
+    examType.name.trim() !== ''
+  );
+
   // Atualizar listas filtradas quando seleções mudarem
   useEffect(() => {
     if (selectedDoctor && !selectedExamType) {
@@ -101,7 +120,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               <SelectValue placeholder="Selecione o médico" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-              {filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').map((doctor) => (
+              {validDoctors.map((doctor) => (
                 <SelectItem 
                   key={doctor.id} 
                   value={doctor.id}
@@ -117,7 +136,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {selectedExamType && filteredDoctors.filter(doctor => doctor.id && doctor.id.trim() !== '').length === 0 && (
+          {selectedExamType && validDoctors.length === 0 && (
             <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               Nenhum médico disponível para este exame.
@@ -136,7 +155,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               <SelectValue placeholder="Selecione o tipo de exame" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
-              {filteredExamTypes.filter(examType => examType.id && examType.id.trim() !== '').map((examType) => (
+              {validExamTypes.map((examType) => (
                 <SelectItem 
                   key={examType.id} 
                   value={examType.id}
@@ -152,7 +171,7 @@ const DoctorExamSelector: React.FC<DoctorExamSelectorProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {selectedDoctor && filteredExamTypes.filter(examType => examType.id && examType.id.trim() !== '').length === 0 && (
+          {selectedDoctor && validExamTypes.length === 0 && (
             <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
               Nenhum exame disponível para esta especialidade médica.
