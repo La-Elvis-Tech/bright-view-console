@@ -20,28 +20,37 @@ export const useDoctors = () => {
 
   const fetchDoctors = async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from('doctors')
         .select('*')
         .eq('active', true)
         .order('name');
 
-      // Se não é admin/supervisor, filtrar por unidade
+      // Se não é admin/supervisor, filtrar por unidade do usuário
       if (!isAdmin() && !isSupervisor() && profile?.unit_id) {
         query = query.eq('unit_id', profile.unit_id);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching doctors:', error);
+        throw error;
+      }
+
+      console.log('Fetched doctors:', data?.length || 0, 'for unit:', profile?.unit_id);
       setDoctors(data || []);
     } catch (error: any) {
       console.error('Error fetching doctors:', error);
+      setDoctors([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (profile) {
+    if (profile !== null) {
       fetchDoctors();
     }
   }, [profile?.unit_id, isAdmin, isSupervisor]);

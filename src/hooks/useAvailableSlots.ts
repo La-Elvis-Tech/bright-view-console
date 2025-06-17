@@ -15,6 +15,7 @@ interface Doctor {
   id: string;
   name: string;
   specialty: string;
+  unit_id?: string;
 }
 
 interface DoctorSchedule {
@@ -38,34 +39,14 @@ export const useAvailableSlots = () => {
     return slots;
   };
 
-  // Horários padrão baseados no médico (temporário até implementar tabela doctor_schedules)
   const getDefaultDoctorSchedules = (doctorId: string): DoctorSchedule[] => {
-    const scheduleMap: Record<string, DoctorSchedule[]> = {
-      // Dr. João Silva (Cardiologia) - Segunda a Sexta, 8:00-17:00
-      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa': [
-        { day_of_week: 1, start_time: '08:00', end_time: '17:00', is_available: true },
-        { day_of_week: 2, start_time: '08:00', end_time: '17:00', is_available: true },
-        { day_of_week: 3, start_time: '08:00', end_time: '17:00', is_available: true },
-        { day_of_week: 4, start_time: '08:00', end_time: '17:00', is_available: true },
-        { day_of_week: 5, start_time: '08:00', end_time: '17:00', is_available: true },
-      ],
-      // Dra. Maria Santos (Dermatologia) - Segunda a Sexta, 9:00-18:00
-      'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb': [
-        { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_available: true },
-        { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_available: true },
-        { day_of_week: 3, start_time: '09:00', end_time: '18:00', is_available: true },
-        { day_of_week: 4, start_time: '09:00', end_time: '18:00', is_available: true },
-        { day_of_week: 5, start_time: '09:00', end_time: '18:00', is_available: true },
-      ],
-    };
-
-    // Se o médico não estiver no mapa, usar horário padrão
-    return scheduleMap[doctorId] || [
-      { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_available: true },
-      { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_available: true },
-      { day_of_week: 3, start_time: '09:00', end_time: '18:00', is_available: true },
-      { day_of_week: 4, start_time: '09:00', end_time: '18:00', is_available: true },
-      { day_of_week: 5, start_time: '09:00', end_time: '18:00', is_available: true },
+    // Horários padrão para todos os médicos: Segunda a Sexta, 8:00-18:00
+    return [
+      { day_of_week: 1, start_time: '08:00', end_time: '18:00', is_available: true },
+      { day_of_week: 2, start_time: '08:00', end_time: '18:00', is_available: true },
+      { day_of_week: 3, start_time: '08:00', end_time: '18:00', is_available: true },
+      { day_of_week: 4, start_time: '08:00', end_time: '18:00', is_available: true },
+      { day_of_week: 5, start_time: '08:00', end_time: '18:00', is_available: true },
     ];
   };
 
@@ -141,7 +122,6 @@ export const useAvailableSlots = () => {
           
           if (!isDoctorWorking) continue;
 
-          // Verificar conflitos mais precisamente
           const hasConflict = appointments?.some(apt => {
             if (apt.doctor_id !== doctor.id) return false;
             
@@ -153,25 +133,12 @@ export const useAvailableSlots = () => {
                    apt.status !== 'Cancelado';
           });
 
-          const isOccupied = appointments?.some(apt => {
-            if (apt.doctor_id !== doctor.id) return false;
-            
-            const aptDate = new Date(apt.scheduled_date);
-            const aptEndTime = new Date(aptDate.getTime() + (apt.duration_minutes * 60000));
-            
-            return (
-              (isAfter(slotDateTime, aptDate) || slotDateTime.getTime() === aptDate.getTime()) &&
-              isBefore(slotDateTime, aptEndTime) &&
-              apt.status !== 'Cancelado'
-            );
-          });
-
           availableSlots.push({
             time: timeSlot,
-            available: !isOccupied,
+            available: !hasConflict,
             doctorName: doctor.name,
             doctorId: doctor.id,
-            hasConflict: hasConflict || isOccupied
+            hasConflict: hasConflict
           });
         }
       }

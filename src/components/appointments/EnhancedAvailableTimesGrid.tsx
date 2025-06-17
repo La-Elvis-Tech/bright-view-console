@@ -47,14 +47,14 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
     const isSelected = selectedTimeSlot === slot.time && (!selectedDoctor || slot.doctorId === selectedDoctor);
     
     if (isSelected) {
-      return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200 dark:ring-blue-800 shadow-md';
+      return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200 dark:ring-blue-800 shadow-md transform scale-105';
     }
     
     if (!slot.available || slot.hasConflict) {
       return 'bg-red-500 text-white cursor-not-allowed opacity-75 border-red-600';
     }
     
-    return 'bg-white hover:bg-neutral-50 text-neutral-900 border-neutral-200 hover:border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700';
+    return 'bg-white hover:bg-blue-50 text-neutral-900 border-neutral-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 dark:bg-neutral-800 dark:hover:bg-blue-900/20 dark:text-neutral-100 dark:border-neutral-700 dark:hover:border-blue-600';
   };
 
   return (
@@ -62,7 +62,7 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
       <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100">
               Horários Disponíveis
             </CardTitle>
@@ -88,7 +88,7 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
                 <SelectItem value="">Todos os médicos</SelectItem>
                 {doctors.map((doctor) => (
                   <SelectItem key={doctor.id} value={doctor.id}>
-                    {doctor.name} - {doctor.specialty}
+                    {doctor.name} - {doctor.specialty || 'Clínica Geral'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -106,7 +106,7 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="flex flex-wrap gap-3 text-xs bg-neutral-50 dark:bg-neutral-800 p-3 rounded-lg">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-white border border-neutral-200 rounded"></div>
                 <span className="text-neutral-600 dark:text-neutral-400">Disponível</span>
@@ -121,7 +121,7 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
               {filteredSlots.map((slot) => (
                 <button
                   key={`${slot.time}-${slot.doctorId || 'all'}`}
@@ -132,9 +132,9 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
                   }}
                   disabled={!slot.available || slot.hasConflict}
                   className={`
-                    p-3 rounded-lg text-sm font-medium transition-all duration-200 border-2
+                    p-3 rounded-lg text-sm font-medium transition-all duration-200 border-2 min-h-[60px] flex flex-col justify-center items-center
                     ${getTimeSlotStyle(slot)}
-                    ${(!slot.available || slot.hasConflict) ? '' : 'hover:scale-105 active:scale-95'}
+                    ${(!slot.available || slot.hasConflict) ? '' : 'hover:scale-105 active:scale-95 cursor-pointer'}
                   `}
                   title={
                     !slot.available || slot.hasConflict 
@@ -142,9 +142,9 @@ const EnhancedAvailableTimesGrid: React.FC<EnhancedAvailableTimesGridProps> = ({
                       : `Disponível${slot.doctorName ? ` - ${slot.doctorName}` : ''}`
                   }
                 >
-                  <div className="font-semibold">{slot.time}</div>
+                  <div className="font-bold text-base">{slot.time}</div>
                   {slot.doctorName && !selectedDoctor && (
-                    <div className="text-xs opacity-80 truncate mt-1">
+                    <div className="text-xs opacity-80 truncate mt-1 max-w-full">
                       {slot.doctorName.split(' ')[0]}
                     </div>
                   )}
