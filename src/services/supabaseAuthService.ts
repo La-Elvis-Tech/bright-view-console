@@ -11,6 +11,8 @@ export interface AuthUser {
   role?: 'admin' | 'user' | 'supervisor';
 }
 
+type UserStatus = 'active' | 'pending' | 'inactive' | 'suspended';
+
 export const supabaseAuthService = {
   async signIn(email: string, password: string) {
     authLogger.info('Sign in attempt initiated', { email });
@@ -57,14 +59,16 @@ export const supabaseAuthService = {
           throw new Error('Perfil do usuário não encontrado no sistema.');
         }
 
-        if (profileData.status === 'pending') {
+        const userStatus = profileData.status as UserStatus;
+
+        if (userStatus === 'pending') {
           authLogger.warning('Login allowed but account pending', { email });
           // Permitir login mas o ProtectedRoute irá lidar com o status pending
-        } else if (profileData.status === 'inactive') {
+        } else if (userStatus === 'inactive') {
           authLogger.warning('Login denied - account inactive', { email });
           await supabase.auth.signOut(); // Fazer logout
           throw new Error('Sua conta foi desativada. Entre em contato com um administrador.');
-        } else if (profileData.status === 'suspended') {
+        } else if (userStatus === 'suspended') {
           authLogger.warning('Login denied - account suspended', { email });
           await supabase.auth.signOut(); // Fazer logout
           throw new Error('Sua conta foi suspensa. Entre em contato com um administrador.');
@@ -165,12 +169,14 @@ export const supabaseAuthService = {
         return null;
       }
 
+      const userStatus = profile.status as UserStatus;
+
       // Verificar se o usuário está ativo (permitir pending para mostrar tela apropriada)
-      if (profile.status === 'inactive' || profile.status === 'suspended') {
+      if (userStatus === 'inactive' || userStatus === 'suspended') {
         authLogger.warning('User with inactive/suspended status detected', { 
           userId: user.id, 
           email: user.email, 
-          status: profile.status 
+          status: userStatus 
         });
         await supabase.auth.signOut();
         return null;
