@@ -16,16 +16,20 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   availableTimes,
   disabled = false
 }) => {
-  // Filter and validate times more thoroughly
-  const validTimes = availableTimes.filter(time => 
-    time && 
-    typeof time === 'string' && 
-    time.trim() !== '' &&
-    time.length > 0
-  );
+  // Validação mais robusta dos horários
+  const validTimes = availableTimes
+    .filter(time => 
+      time && 
+      typeof time === 'string' && 
+      time.trim() !== '' &&
+      time.length >= 4 && // Formato mínimo HH:MM
+      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time.trim()) // Validar formato HH:MM
+    )
+    .map(time => time.trim())
+    .filter((time, index, array) => array.indexOf(time) === index); // Remove duplicatas
 
-  console.log('TimeSelector - Available times:', availableTimes);
-  console.log('TimeSelector - Valid times after filtering:', validTimes);
+  console.log('TimeSelector - Original times:', availableTimes);
+  console.log('TimeSelector - Valid times:', validTimes);
 
   return (
     <div className="space-y-2">
@@ -33,7 +37,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
         <Clock className="h-4 w-4" />
         Horário
       </label>
-      <Select value={selectedTime} onValueChange={onTimeChange} disabled={disabled}>
+      <Select value={selectedTime} onValueChange={onTimeChange} disabled={disabled || validTimes.length === 0}>
         <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
           <SelectValue placeholder="Selecione o horário" />
         </SelectTrigger>
@@ -41,7 +45,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           {validTimes.length > 0 ? (
             validTimes.map((time) => (
               <SelectItem 
-                key={time} 
+                key={`time-${time}`}
                 value={time}
                 className="hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -55,6 +59,11 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           )}
         </SelectContent>
       </Select>
+      {disabled && (
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Selecione um médico e data primeiro
+        </p>
+      )}
     </div>
   );
 };
