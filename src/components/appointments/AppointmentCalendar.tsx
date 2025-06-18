@@ -4,10 +4,13 @@ import { addDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { SupabaseAppointment } from '@/hooks/useSupabaseAppointments';
 import WeeklyCalendarHeader from './WeeklyCalendarHeader';
 import WeeklyCalendarDay from './WeeklyCalendarDay';
+import WeeklyCalendarByDoctor from './WeeklyCalendarByDoctor';
 import EnhancedAvailableTimesGrid from './EnhancedAvailableTimesGrid';
 import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useDoctors } from '@/hooks/useDoctors';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Users, User } from 'lucide-react';
 
 interface AppointmentCalendarProps {
   appointments: SupabaseAppointment[];
@@ -25,6 +28,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   const [selectedDoctor, setSelectedDoctor] = useState<string>('all');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [timeSlots, setTimeSlots] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<'unified' | 'by-doctor'>('unified');
   
   const { getAvailableSlots } = useAvailableSlots();
   const { doctors, loading: doctorsLoading } = useDoctors();
@@ -142,10 +146,34 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     <div className="space-y-6">
       <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
         <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
-          <WeeklyCalendarHeader 
-            currentWeek={currentWeek}
-            onNavigateWeek={navigateWeek}
-          />
+          <div className="flex items-center justify-between">
+            <WeeklyCalendarHeader 
+              currentWeek={currentWeek}
+              onNavigateWeek={navigateWeek}
+            />
+            
+            {/* Toggle para modo de visualização */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'unified' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('unified')}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Unificado
+              </Button>
+              <Button
+                variant={viewMode === 'by-doctor' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('by-doctor')}
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Por Médico
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         
         <CardContent className="p-4">
@@ -153,7 +181,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
             {weekDays.map((day) => {
               const dayAppointments = getAppointmentsForDate(day);
               
-              return (
+              return viewMode === 'unified' ? (
                 <WeeklyCalendarDay
                   key={day.toISOString()}
                   day={day}
@@ -162,13 +190,23 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                   onSelectDate={setSelectedDate}
                   onSelectAppointment={onSelectAppointment}
                 />
+              ) : (
+                <WeeklyCalendarByDoctor
+                  key={day.toISOString()}
+                  day={day}
+                  appointments={dayAppointments}
+                  doctors={doctors}
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
+                  onSelectSlot={onSelectSlot}
+                />
               );
             })}
           </div>
         </CardContent>
       </Card>
 
-      {selectedDate && doctors.length > 0 && (
+      {selectedDate && doctors.length > 0 && viewMode === 'unified' && (
         <EnhancedAvailableTimesGrid
           selectedDate={selectedDate}
           timeSlots={timeSlots}

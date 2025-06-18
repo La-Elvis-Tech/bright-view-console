@@ -36,8 +36,7 @@ export const useAppointmentLogic = () => {
     let filtered = doctors.filter(doctor => 
       doctor.id && 
       doctor.name && 
-      doctor.name.trim() !== '' &&
-      doctor.active !== false
+      doctor.name.trim() !== ''
     );
 
     // Se usuário não é admin/supervisor, mostrar apenas médicos da sua unidade
@@ -56,8 +55,7 @@ export const useAppointmentLogic = () => {
     let filtered = examTypes.filter(exam => 
       exam.id && 
       exam.name && 
-      exam.name.trim() !== '' &&
-      exam.active !== false
+      exam.name.trim() !== ''
     );
 
     if (selectedDoctor) {

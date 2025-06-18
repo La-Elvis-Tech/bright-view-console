@@ -203,8 +203,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   const validUnits = units.filter(unit => 
     unit.id && 
     unit.name && 
-    unit.name.trim() !== '' &&
-    unit.active !== false
+    unit.name.trim() !== ''
   );
 
   return (
