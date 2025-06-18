@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, Stethoscope, DollarSign, Plus, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -49,10 +50,12 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   const {
     selectedDoctor,
     selectedExamType,
+    selectedUnit,
     filteredDoctors,
     filteredExamTypes,
     handleDoctorChange,
-    handleExamTypeChange
+    handleExamTypeChange,
+    handleUnitChange
   } = useAppointmentLogic();
 
   const { profile, isAdmin, isSupervisor } = useAuthContext();
@@ -68,21 +71,10 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     patient_phone: '',
     date: prefilledData?.date || '',
     time: prefilledData?.time || '',
-    unit_id: profile?.unit_id || '',
     duration_minutes: 30,
     cost: 0,
     notes: ''
   });
-
-  // Unidades disponíveis baseadas no perfil do usuário
-  const availableUnits = React.useMemo(() => {
-    // Se é admin/supervisor, pode escolher qualquer unidade
-    if (isAdmin() || isSupervisor()) {
-      return []; // Será preenchido pelo hook useSupabaseAppointments
-    }
-    // Usuário comum só pode agendar na sua unidade
-    return profile?.unit_id ? [{ id: profile.unit_id, name: 'Sua Unidade', code: '' }] : [];
-  }, [profile?.unit_id, isAdmin, isSupervisor]);
 
   // Atualizar formulário quando prefilledData mudar
   useEffect(() => {
@@ -112,8 +104,8 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Verificar se os materiais foram validados
-    if (!materialValidation) {
+    // Verificações de validação
+    if (!selectedExamType) {
       toast({
         title: "Selecione um tipo de exame",
         description: "É necessário selecionar um tipo de exame para continuar.",
@@ -122,7 +114,25 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
       return;
     }
 
-    if (!materialValidation.canSchedule) {
+    if (!selectedDoctor) {
+      toast({
+        title: "Selecione um médico",
+        description: "É necessário selecionar um médico para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedUnit) {
+      toast({
+        title: "Selecione uma unidade",
+        description: "É necessário selecionar uma unidade para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (materialValidation && !materialValidation.canSchedule) {
       toast({
         title: "Materiais insuficientes",
         description: "Não é possível agendar devido a materiais insuficientes. Verifique o estoque.",
@@ -142,7 +152,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         patient_phone: formData.patient_phone || undefined,
         exam_type_id: selectedExamType,
         doctor_id: selectedDoctor,
-        unit_id: formData.unit_id,
+        unit_id: selectedUnit,
         scheduled_date: appointmentDate.toISOString(),
         duration_minutes: formData.duration_minutes,
         cost: formData.cost || undefined,
@@ -159,7 +169,6 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
         patient_phone: '',
         date: '',
         time: '',
-        unit_id: profile?.unit_id || '',
         duration_minutes: 30,
         cost: 0,
         notes: ''
@@ -188,7 +197,15 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     formData.date && 
     formData.time && 
     selectedDoctor && 
-    formData.unit_id;
+    selectedUnit;
+
+  // Filtrar unidades válidas
+  const validUnits = units.filter(unit => 
+    unit.id && 
+    unit.name && 
+    unit.name.trim() !== '' &&
+    unit.active !== false
+  );
 
   return (
     <div className="space-y-6">
@@ -267,6 +284,28 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                 />
               </div>
 
+              {/* Unidade - mostrar se usuário pode escolher */}
+              {(isAdmin() || isSupervisor()) && (
+                <div className="space-y-2">
+                  <Label htmlFor="unit_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <MapPin className="h-4 w-4" />
+                    Unidade *
+                  </Label>
+                  <Select value={selectedUnit} onValueChange={handleUnitChange}>
+                    <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
+                      <SelectValue placeholder="Selecione a unidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {validUnits.map((unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                          {unit.name} ({unit.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* Médico */}
               <div className="space-y-2">
                 <Label htmlFor="doctor_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -292,7 +331,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                 </Select>
                 {filteredDoctors.length === 0 && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
-                    Nenhum médico disponível para sua unidade.
+                    Nenhum médico disponível para a unidade selecionada.
                   </p>
                 )}
               </div>
@@ -322,7 +361,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                 </Select>
                 {selectedDoctor && filteredExamTypes.length === 0 && (
                   <p className="text-sm text-amber-600 dark:text-amber-400">
-                    Nenhum exame disponível para esta especialidade.
+                    Nenhum exame disponível para a especialidade do médico selecionado.
                   </p>
                 )}
               </div>
@@ -358,28 +397,6 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                   className="border-neutral-200 dark:border-neutral-700"
                 />
               </div>
-
-              {/* Unidade - só mostra se usuário pode escolher */}
-              {(isAdmin() || isSupervisor()) && (
-                <div className="space-y-2">
-                  <Label htmlFor="unit_id" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    <MapPin className="h-4 w-4" />
-                    Unidade *
-                  </Label>
-                  <Select value={formData.unit_id} onValueChange={(value) => handleInputChange('unit_id', value)}>
-                    <SelectTrigger className="border-neutral-200 dark:border-neutral-700">
-                      <SelectValue placeholder="Selecione a unidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.name} ({unit.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
               {/* Custo */}
               <div className="space-y-2">
