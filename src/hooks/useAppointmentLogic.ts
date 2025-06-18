@@ -14,21 +14,21 @@ export const useAppointmentLogic = () => {
   const [filteredDoctors, setFilteredDoctors] = useState(doctors);
   const [filteredExamTypes, setFilteredExamTypes] = useState(examTypes);
 
-  // Mapeamento de especialidades médicas com tipos de exame compatíveis
+  // Mapeamento simplificado de especialidades médicas
   const specialtyExamMapping: Record<string, string[]> = {
-    'Cardiologia': ['eletrocardiograma', 'ecocardiograma', 'teste ergométrico', 'holter', 'cardiovascular'],
-    'Endocrinologia': ['glicemia', 'hemoglobina glicada', 'tsh', 't3', 't4', 'insulina', 'hormonio', 'diabetes'],
-    'Hematologia': ['hemograma', 'coagulograma', 'tempo de protrombina', 'plaquetas', 'sangue', 'hematocrito'],
-    'Gastroenterologia': ['endoscopia', 'colonoscopia', 'ultrassom abdominal', 'gastro', 'digestivo'],
-    'Neurologia': ['eletroencefalograma', 'ressonância magnética', 'tomografia', 'neurologico', 'cerebral'],
-    'Ortopedia': ['raio-x', 'ressonância magnética', 'tomografia', 'densitometria', 'osso', 'articular'],
-    'Dermatologia': ['biópsia', 'dermatoscopia', 'patch test', 'pele', 'dermatologico'],
-    'Oftalmologia': ['fundoscopia', 'campo visual', 'tonometria', 'ocular', 'visao'],
-    'Urologia': ['ultrassom', 'urina', 'psa', 'urologico', 'prostata'],
-    'Ginecologia': ['papanicolau', 'ultrassom pélvico', 'mamografia', 'ginecologico', 'mama'],
-    'Pneumologia': ['espirometria', 'raio-x tórax', 'gasometria', 'pulmonar', 'respiratorio'],
-    'Laboratório': ['hemograma', 'bioquímica', 'urina', 'fezes', 'sangue', 'laboratorial'],
-    'Clínica Geral': [] // Pode fazer qualquer exame básico
+    'Cardiologia': ['cardio', 'coração', 'ecg', 'eco'],
+    'Endocrinologia': ['diabetes', 'hormonio', 'tireoid', 'glicemia'],
+    'Hematologia': ['sangue', 'hemograma', 'coagul'],
+    'Gastroenterologia': ['gastro', 'digestiv', 'endoscop'],
+    'Neurologia': ['neuro', 'cerebr', 'encefalograma'],
+    'Ortopedia': ['osso', 'articular', 'raio-x'],
+    'Dermatologia': ['pele', 'dermat'],
+    'Oftalmologia': ['olho', 'ocular', 'visao'],
+    'Urologia': ['urina', 'psa', 'prostata'],
+    'Ginecologia': ['gineco', 'mama', 'papanicolau'],
+    'Pneumologia': ['pulmonar', 'respirat', 'torax'],
+    'Laboratório': ['laboratorial', 'coleta', 'analise'],
+    'Clínica Geral': [] // Pode fazer exames básicos
   };
 
   // Filtrar médicos por unidade
@@ -50,7 +50,7 @@ export const useAppointmentLogic = () => {
     setFilteredDoctors(filtered);
   }, [doctors, profile?.unit_id, selectedUnit, isAdmin, isSupervisor]);
 
-  // Filtrar tipos de exame baseado no médico selecionado
+  // Filtrar tipos de exame de forma mais flexível
   useEffect(() => {
     let filtered = examTypes.filter(exam => 
       exam.id && 
@@ -64,12 +64,20 @@ export const useAppointmentLogic = () => {
         const allowedExamKeywords = specialtyExamMapping[doctor.specialty] || [];
         
         if (allowedExamKeywords.length > 0) {
-          filtered = filtered.filter(exam => 
-            allowedExamKeywords.some(keyword => 
+          filtered = filtered.filter(exam => {
+            // Se não há compatibilidade exata, permite exames básicos
+            const isCompatible = allowedExamKeywords.some(keyword => 
               exam.name.toLowerCase().includes(keyword.toLowerCase()) ||
               exam.category?.toLowerCase().includes(keyword.toLowerCase())
-            )
-          );
+            );
+            
+            // Permitir também exames básicos/gerais
+            const isBasicExam = ['consulta', 'avaliacao', 'geral', 'basico', 'rotina'].some(basic =>
+              exam.name.toLowerCase().includes(basic.toLowerCase())
+            );
+            
+            return isCompatible || isBasicExam;
+          });
         }
       }
     }
@@ -77,92 +85,79 @@ export const useAppointmentLogic = () => {
     setFilteredExamTypes(filtered);
   }, [selectedDoctor, doctors, examTypes]);
 
-  // Sincronizar unidade quando médico é selecionado
   const handleDoctorChange = (doctorId: string) => {
     const doctor = doctors.find(d => d.id === doctorId);
     
     if (doctor) {
-      // Se o médico tem uma unidade diferente da selecionada, atualizar
+      // Atualizar unidade automaticamente se necessário
       if (doctor.unit_id && doctor.unit_id !== selectedUnit) {
         setSelectedUnit(doctor.unit_id);
         toast({
           title: 'Unidade atualizada',
-          description: `Unidade alterada automaticamente para a unidade do médico selecionado.`,
+          description: `Unidade alterada para ${units.find(u => u.id === doctor.unit_id)?.name || 'a unidade do médico'}.`,
         });
       }
     }
     
     setSelectedDoctor(doctorId);
     
-    // Verificar compatibilidade com exame já selecionado
-    if (selectedExamType && doctor) {
-      const isCompatible = checkDoctorExamCompatibility(doctor, selectedExamType);
-      if (!isCompatible) {
-        setSelectedExamType('');
-        toast({
-          title: 'Incompatibilidade detectada',
-          description: `O exame selecionado não é compatível com a especialidade do médico ${doctor.name}.`,
-          variant: 'destructive'
-        });
-      }
+    // Limpar exame selecionado para forçar nova seleção
+    if (selectedExamType) {
+      setSelectedExamType('');
     }
   };
 
-  // Verificar compatibilidade médico-exame
+  const handleExamTypeChange = (examTypeId: string) => {
+    setSelectedExamType(examTypeId);
+  };
+
+  const handleUnitChange = (unitId: string) => {
+    // Se trocar a unidade e há um médico selecionado, verificar compatibilidade
+    if (selectedDoctor && unitId) {
+      const doctor = doctors.find(d => d.id === selectedDoctor);
+      if (doctor && doctor.unit_id !== unitId) {
+        setSelectedDoctor('');
+        setSelectedExamType('');
+        toast({
+          title: 'Seleções atualizadas',
+          description: 'Médico e exame foram limpos devido à mudança de unidade.',
+          variant: 'default'
+        });
+      }
+    }
+    
+    setSelectedUnit(unitId);
+  };
+
+  // Verificação mais flexível de compatibilidade
   const checkDoctorExamCompatibility = (doctor: any, examTypeId: string) => {
+    // Clínica geral sempre pode
     if (!doctor.specialty || doctor.specialty === 'Clínica Geral') {
-      return true; // Clínica geral pode fazer qualquer exame básico
+      return true;
     }
 
     const exam = examTypes.find(e => e.id === examTypeId);
     if (!exam) return false;
 
     const allowedExamKeywords = specialtyExamMapping[doctor.specialty] || [];
+    
+    // Se não há mapeamento específico, permite
     if (allowedExamKeywords.length === 0) {
-      return true; // Se não há mapeamento, permite
+      return true;
     }
 
-    return allowedExamKeywords.some(keyword => 
+    // Verifica compatibilidade específica
+    const isCompatible = allowedExamKeywords.some(keyword => 
       exam.name.toLowerCase().includes(keyword.toLowerCase()) ||
       exam.category?.toLowerCase().includes(keyword.toLowerCase())
     );
-  };
 
-  const handleExamTypeChange = (examTypeId: string) => {
-    // Verificar compatibilidade com médico já selecionado
-    if (selectedDoctor) {
-      const doctor = doctors.find(d => d.id === selectedDoctor);
-      if (doctor) {
-        const isCompatible = checkDoctorExamCompatibility(doctor, examTypeId);
-        if (!isCompatible) {
-          toast({
-            title: 'Incompatibilidade detectada',
-            description: `Este exame não pode ser realizado pelo médico ${doctor.name} (${doctor.specialty}).`,
-            variant: 'destructive'
-          });
-          return; // Não permite a seleção
-        }
-      }
-    }
-    
-    setSelectedExamType(examTypeId);
-  };
+    // Permite exames básicos
+    const isBasicExam = ['consulta', 'avaliacao', 'geral', 'basico', 'rotina'].some(basic =>
+      exam.name.toLowerCase().includes(basic.toLowerCase())
+    );
 
-  const handleUnitChange = (unitId: string) => {
-    // Se trocar a unidade e há um médico selecionado, verificar se o médico pertence à nova unidade
-    if (selectedDoctor && unitId) {
-      const doctor = doctors.find(d => d.id === selectedDoctor);
-      if (doctor && doctor.unit_id !== unitId) {
-        setSelectedDoctor('');
-        toast({
-          title: 'Médico removido',
-          description: 'O médico selecionado não pertence à unidade escolhida.',
-          variant: 'destructive'
-        });
-      }
-    }
-    
-    setSelectedUnit(unitId);
+    return isCompatible || isBasicExam;
   };
 
   return {

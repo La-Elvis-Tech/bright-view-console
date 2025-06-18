@@ -4,13 +4,14 @@ import { addDays, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
 import { SupabaseAppointment } from '@/hooks/useSupabaseAppointments';
 import WeeklyCalendarHeader from './WeeklyCalendarHeader';
 import WeeklyCalendarDay from './WeeklyCalendarDay';
-import WeeklyCalendarByDoctor from './WeeklyCalendarByDoctor';
+import DoctorFilterCalendar from './DoctorFilterCalendar';
 import EnhancedAvailableTimesGrid from './EnhancedAvailableTimesGrid';
 import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useDoctors } from '@/hooks/useDoctors';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, User } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, User, Filter } from 'lucide-react';
 
 interface AppointmentCalendarProps {
   appointments: SupabaseAppointment[];
@@ -28,7 +29,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   const [selectedDoctor, setSelectedDoctor] = useState<string>('all');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [timeSlots, setTimeSlots] = useState<any[]>([]);
-  const [viewMode, setViewMode] = useState<'unified' | 'by-doctor'>('unified');
+  const [viewMode, setViewMode] = useState<'unified' | 'filtered'>('unified');
   
   const { getAvailableSlots } = useAvailableSlots();
   const { doctors, loading: doctorsLoading } = useDoctors();
@@ -37,11 +38,11 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   console.log('AppointmentCalendar - appointments loaded:', appointments.length);
 
   useEffect(() => {
-    if (selectedDate && doctors.length > 0) {
+    if (selectedDate && doctors.length > 0 && viewMode === 'unified') {
       console.log('Loading slots for date:', selectedDate, 'with doctors:', doctors.length);
       loadAvailableSlots();
     }
-  }, [selectedDate, selectedDoctor, doctors, appointments]);
+  }, [selectedDate, selectedDoctor, doctors, appointments, viewMode]);
 
   const loadAvailableSlots = async () => {
     if (!selectedDate || doctors.length === 0) {
@@ -52,9 +53,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     console.log('Loading slots for all doctors on date:', selectedDate);
     
     try {
-      // Buscar horários para todos os médicos da unidade
       const slots = await getAvailableSlots(selectedDate, doctors);
-      
       console.log('Total slots loaded:', slots.length);
       setTimeSlots(slots);
     } catch (error) {
@@ -88,7 +87,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
   const handleDoctorChange = (doctorId: string) => {
     console.log('Doctor filter changed:', doctorId);
-    setSelectedDoctor(doctorId === 'all' ? '' : doctorId);
+    setSelectedDoctor(doctorId);
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -146,32 +145,52 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     <div className="space-y-6">
       <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
         <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <WeeklyCalendarHeader 
               currentWeek={currentWeek}
               onNavigateWeek={navigateWeek}
             />
             
-            {/* Toggle para modo de visualização */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'unified' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('unified')}
-                className="flex items-center gap-2"
-              >
-                <Users className="h-4 w-4" />
-                Unificado
-              </Button>
-              <Button
-                variant={viewMode === 'by-doctor' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('by-doctor')}
-                className="flex items-center gap-2"
-              >
-                <User className="h-4 w-4" />
-                Por Médico
-              </Button>
+            <div className="flex items-center gap-3">
+              {/* Filtro de médico */}
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-neutral-500" />
+                <Select value={selectedDoctor} onValueChange={handleDoctorChange}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filtrar por médico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os médicos</SelectItem>
+                    {doctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        Dr. {doctor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Toggle para modo de visualização */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'unified' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('unified')}
+                  className="flex items-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Geral
+                </Button>
+                <Button
+                  variant={viewMode === 'filtered' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('filtered')}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Por Médico
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -191,12 +210,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                   onSelectAppointment={onSelectAppointment}
                 />
               ) : (
-                <WeeklyCalendarByDoctor
+                <DoctorFilterCalendar
                   key={day.toISOString()}
                   day={day}
                   appointments={dayAppointments}
                   doctors={doctors}
                   selectedDate={selectedDate}
+                  selectedDoctor={selectedDoctor}
                   onSelectDate={setSelectedDate}
                   onSelectSlot={onSelectSlot}
                 />
@@ -211,7 +231,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
           selectedDate={selectedDate}
           timeSlots={timeSlots}
           onSelectTime={handleSelectTime}
-          selectedDoctor={selectedDoctor}
+          selectedDoctor={selectedDoctor === 'all' ? '' : selectedDoctor}
           doctors={doctors}
           onDoctorChange={handleDoctorChange}
           selectedTimeSlot={selectedTimeSlot}
