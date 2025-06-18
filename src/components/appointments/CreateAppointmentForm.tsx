@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, Stethoscope, DollarSign, Plus, X, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     }
   };
 
-  // Validar formulário e mostrar erros
+  // Validar formulário
   const validateForm = () => {
     const errors: string[] = [];
 
@@ -113,12 +114,10 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
       errors.push('Email deve ter um formato válido (exemplo@dominio.com)');
     }
 
-    if (!selectedUnit) {
-      if (isAdmin() || isSupervisor()) {
-        errors.push('Selecione uma unidade');
-      } else if (!profile?.unit_id) {
-        errors.push('Usuário sem unidade definida no perfil');
-      }
+    // Verificar unidade - sempre necessária
+    const unitToUse = selectedUnit || profile?.unit_id;
+    if (!unitToUse) {
+      errors.push('Unidade é obrigatória');
     }
 
     if (!selectedDoctor) {
@@ -137,15 +136,6 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
       errors.push('Selecione um horário');
     }
 
-    if (materialValidation && !materialValidation.canSchedule) {
-      errors.push('Materiais insuficientes para realizar o exame');
-    }
-
-    // Validar se o médico pode fazer o exame selecionado
-    if (selectedDoctor && selectedExamType && filteredExamTypes.length === 0) {
-      errors.push('O médico selecionado não pode realizar este tipo de exame');
-    }
-
     setValidationErrors(errors);
     return errors.length === 0;
   };
@@ -153,12 +143,16 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   // Atualizar formulário quando prefilledData mudar
   useEffect(() => {
     if (prefilledData) {
+      console.log('Prefilled data received:', prefilledData);
       setFormData(prev => ({
         ...prev,
         date: prefilledData.date,
         time: prefilledData.time,
       }));
-      handleDoctorChange(prefilledData.doctorId);
+      // Selecionar médico primeiro
+      if (prefilledData.doctorId) {
+        handleDoctorChange(prefilledData.doctorId);
+      }
     }
   }, [prefilledData, handleDoctorChange]);
 
@@ -168,7 +162,10 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
       setLoadingMaterials(true);
       calculateExamMaterials(selectedExamType)
         .then(setMaterialValidation)
-        .catch(() => setMaterialValidation(null))
+        .catch((error) => {
+          console.warn('Could not calculate materials:', error);
+          setMaterialValidation(null);
+        })
         .finally(() => setLoadingMaterials(false));
     } else {
       setMaterialValidation(null);
@@ -178,10 +175,17 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started');
+    console.log('Form data:', formData);
+    console.log('Selected doctor:', selectedDoctor);
+    console.log('Selected exam type:', selectedExamType);
+    console.log('Selected unit:', selectedUnit);
+    console.log('Profile unit:', profile?.unit_id);
+    
     if (!validateForm()) {
       toast({
         title: "Formulário incompleto",
-        description: "Corrija os erros listados abaixo para continuar.",
+        description: "Corrija os erros listados para continuar.",
         variant: "destructive",
       });
       return;
@@ -190,21 +194,33 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
     setIsCreating(true);
 
     try {
+      const unitToUse = selectedUnit || profile?.unit_id;
+      
+      if (!unitToUse) {
+        throw new Error('Unidade não definida');
+      }
+
+      console.log('Creating appointment with unit:', unitToUse);
+
       const appointmentDate = new Date(`${formData.date}T${formData.time}`);
       
-      await createAppointment({
+      const appointmentData = {
         patient_name: formData.patient_name,
         patient_email: formData.patient_email || undefined,
         patient_phone: formData.patient_phone || undefined,
-        exam_type_id: selectedExamType,
-        doctor_id: selectedDoctor,
-        unit_id: selectedUnit || profile?.unit_id!,
+        exam_type_id: selectedExamType!,
+        doctor_id: selectedDoctor!,
+        unit_id: unitToUse,
         scheduled_date: appointmentDate.toISOString(),
         duration_minutes: formData.duration_minutes,
         cost: formData.cost || undefined,
         notes: formData.notes || undefined,
-        status: 'Agendado'
-      });
+        status: 'Agendado' as const
+      };
+
+      console.log('Appointment data to create:', appointmentData);
+
+      await createAppointment(appointmentData);
 
       toast({
         title: "Agendamento criado com sucesso!",
@@ -229,11 +245,13 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
       setMaterialValidation(null);
       setValidationErrors([]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar agendamento:', error);
+      const errorMessage = error?.message || 'Erro desconhecido';
+      
       toast({
         title: "Erro ao criar agendamento",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -436,15 +454,21 @@ const CreateAppointmentForm: React.FC<CreateAppointmentFormProps> = ({
                   <SelectTrigger className={`border-neutral-200 dark:border-neutral-700 ${
                     validationErrors.some(e => e.includes('exame')) ? 'border-red-500' : ''
                   }`}>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder={selectedDoctor ? "Selecione o tipo" : "Selecione um médico primeiro"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredExamTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.name}
-                        {type.category && ` - ${type.category}`}
+                    {filteredExamTypes.length > 0 ? (
+                      filteredExamTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                          {type.category && ` - ${type.category}`}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-exams" disabled>
+                        Nenhum exame disponível
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
                 {selectedDoctor && filteredExamTypes.length === 0 && (
