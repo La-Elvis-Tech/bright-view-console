@@ -13,6 +13,9 @@ export const useAppointments = () => {
 
   const fetchAppointments = async () => {
     try {
+      setLoading(true);
+      console.log('Fetching appointments for profile:', profile?.unit_id);
+      
       let query = supabase
         .from('appointments')
         .select(`
@@ -26,11 +29,17 @@ export const useAppointments = () => {
       // Se não é admin/supervisor, filtrar por unidade
       if (!isAdmin() && !isSupervisor() && profile?.unit_id) {
         query = query.eq('unit_id', profile.unit_id);
+        console.log('Filtering appointments by unit_id:', profile.unit_id);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching appointments:', error);
+        throw error;
+      }
+      
+      console.log('Fetched appointments:', data?.length || 0);
       
       const typedAppointments: SupabaseAppointment[] = (data || []).map(item => ({
         ...item,
@@ -45,15 +54,16 @@ export const useAppointments = () => {
         description: 'Não foi possível carregar os agendamentos.',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     const loadAppointments = async () => {
       if (profile) {
-        setLoading(true);
+        console.log('Profile loaded, fetching appointments');
         await fetchAppointments();
-        setLoading(false);
       }
     };
 

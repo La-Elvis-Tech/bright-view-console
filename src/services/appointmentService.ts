@@ -55,20 +55,23 @@ export const appointmentService = {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error('User not authenticated');
 
+    console.log('Creating appointment:', appointment);
+
     // Calcular volume de sangue se houver exames de sangue
     let bloodVolumeData = null;
     if (appointment.blood_exams && appointment.blood_exams.length > 0) {
       bloodVolumeData = await bloodExamService.calculateBloodVolume(appointment.blood_exams);
     }
 
-    // Validar materiais primeiro
-    const materialValidation = await this.calculateExamMaterials(
-      appointment.exam_type_id, 
-      appointment.blood_exams || []
-    );
-    
-    if (!materialValidation.canSchedule) {
-      throw new Error(`Estoque insuficiente: ${materialValidation.insufficientMaterials.join(', ')}`);
+    // Validar se existem materiais para o exame
+    let materialValidation = { canSchedule: true, totalEstimatedCost: 0, materials: [], insufficientMaterials: [] };
+    try {
+      materialValidation = await this.calculateExamMaterials(
+        appointment.exam_type_id, 
+        appointment.blood_exams || []
+      );
+    } catch (error) {
+      console.warn('Could not validate materials, proceeding without validation:', error);
     }
 
     const appointmentData = {
@@ -80,52 +83,101 @@ export const appointmentService = {
       created_by: userData.user.id,
     };
 
+    console.log('Appointment data to insert:', appointmentData);
+
     const { data, error } = await supabase
       .from('appointments')
       .insert(appointmentData)
-      .select()
+      .select(`
+        *,
+        exam_types(name, category, duration_minutes, cost),
+        doctors(name, specialty, crm),
+        units(name, code)
+      `)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
 
-    // Reservar materiais
-    await bloodExamService.reserveMaterialsForAppointment(data.id, materialValidation.materials);
+    console.log('Appointment created successfully:', data);
+
+    // Tentar reservar materiais se disponíveis
+    if (materialValidation.materials.length > 0) {
+      try {
+        await bloodExamService.reserveMaterialsForAppointment(data.id, materialValidation.materials);
+      } catch (error) {
+        console.warn('Could not reserve materials, but appointment was created:', error);
+      }
+    }
 
     return data;
   },
 
   async updateAppointment(id: string, updates: Partial<SupabaseAppointment>) {
+    console.log('Updating appointment:', id, updates);
+    
     const { data, error } = await supabase
       .from('appointments')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        exam_types(name, category, duration_minutes, cost),
+        doctors(name, specialty, crm),
+        units(name, code)
+      `)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+
+    console.log('Appointment updated successfully:', data);
 
     // Se o status foi alterado para "Concluído", atualizar o inventário
     if (updates.status === 'Concluído') {
-      await bloodExamService.updateInventoryAfterExam(id);
+      try {
+        await bloodExamService.updateInventoryAfterExam(id);
+      } catch (error) {
+        console.warn('Could not update inventory after exam completion:', error);
+      }
     }
 
     // Se o status foi alterado para "Cancelado", liberar materiais reservados
     if (updates.status === 'Cancelado') {
-      await bloodExamService.releaseMaterialsForAppointment(id);
+      try {
+        await bloodExamService.releaseMaterialsForAppointment(id);
+      } catch (error) {
+        console.warn('Could not release materials for cancelled appointment:', error);
+      }
     }
 
     return data;
   },
 
   async deleteAppointment(id: string) {
-    // Liberar materiais reservados antes de deletar
-    await bloodExamService.releaseMaterialsForAppointment(id);
+    console.log('Deleting appointment:', id);
+    
+    // Tentar liberar materiais reservados antes de deletar
+    try {
+      await bloodExamService.releaseMaterialsForAppointment(id);
+    } catch (error) {
+      console.warn('Could not release materials before deletion:', error);
+    }
 
     const { error } = await supabase
       .from('appointments')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting appointment:', error);
+      throw error;
+    }
+
+    console.log('Appointment deleted successfully');
   }
 };

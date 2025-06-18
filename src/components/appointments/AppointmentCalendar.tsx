@@ -22,53 +22,40 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 }) => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<string>('');
+  const [selectedDoctor, setSelectedDoctor] = useState<string>('all');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [timeSlots, setTimeSlots] = useState<any[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
   
   const { getAvailableSlots } = useAvailableSlots();
-  const { doctors, loading: loadingDoctors } = useDoctors();
+  const { doctors, loading: doctorsLoading } = useDoctors();
+
+  console.log('AppointmentCalendar - doctors loaded:', doctors.length);
+  console.log('AppointmentCalendar - appointments loaded:', appointments.length);
 
   useEffect(() => {
-    if (selectedDate && doctors.length > 0 && !loadingDoctors) {
+    if (selectedDate && doctors.length > 0) {
+      console.log('Loading slots for date:', selectedDate, 'with doctors:', doctors.length);
       loadAvailableSlots();
     }
-  }, [selectedDate, selectedDoctor, doctors, appointments, loadingDoctors]);
+  }, [selectedDate, selectedDoctor, doctors, appointments]);
 
   const loadAvailableSlots = async () => {
-    if (!selectedDate || doctors.length === 0 || loadingDoctors) return;
+    if (!selectedDate || doctors.length === 0) {
+      console.log('Skipping slot loading - no date or doctors');
+      return;
+    }
     
-    setLoadingSlots(true);
+    console.log('Loading slots for all doctors on date:', selectedDate);
+    
     try {
-      console.log('Loading slots for date:', selectedDate, 'doctors:', doctors.length);
-      const slots = await getAvailableSlots(selectedDate, doctors, selectedDoctor);
+      // Buscar horários para todos os médicos da unidade
+      const slots = await getAvailableSlots(selectedDate, doctors);
       
-      // Marcar slots com conflitos baseado nos agendamentos existentes
-      const enhancedSlots = slots.map(slot => {
-        const hasConflict = appointments.some(apt => {
-          const aptDate = new Date(apt.scheduled_date);
-          const aptTime = aptDate.toTimeString().slice(0, 5);
-          return isSameDay(aptDate, selectedDate) && 
-                 aptTime === slot.time && 
-                 apt.doctor_id === slot.doctorId &&
-                 apt.status !== 'Cancelado';
-        });
-
-        return {
-          ...slot,
-          available: slot.available && !hasConflict,
-          hasConflict
-        };
-      });
-      
-      setTimeSlots(enhancedSlots);
-      console.log('Loaded slots:', enhancedSlots.length);
+      console.log('Total slots loaded:', slots.length);
+      setTimeSlots(slots);
     } catch (error) {
       console.error('Error loading available slots:', error);
       setTimeSlots([]);
-    } finally {
-      setLoadingSlots(false);
     }
   };
 
@@ -84,6 +71,8 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     const endTime = new Date(startTime.getTime() + (30 * 60000));
     const doctorName = doctors.find(d => d.id === doctorId)?.name;
     
+    console.log('Time slot selected:', { time, doctorId, doctorName });
+    
     onSelectSlot?.({
       start: startTime,
       end: endTime,
@@ -93,10 +82,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     });
   };
 
-  const handleSelectDate = (date: Date) => {
-    setSelectedDate(date);
-    setSelectedTimeSlot('');
-    setSelectedDoctor('');
+  const handleDoctorChange = (doctorId: string) => {
+    console.log('Doctor filter changed:', doctorId);
+    setSelectedDoctor(doctorId === 'all' ? '' : doctorId);
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -114,14 +102,39 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     );
   };
 
-  if (loadingDoctors) {
+  if (doctorsLoading) {
     return (
-      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-neutral-600 dark:text-neutral-400">Carregando médicos...</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
+          <CardContent className="p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-neutral-500 dark:text-neutral-400">
+                Carregando médicos da unidade...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (doctors.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
+          <CardContent className="p-8">
+            <div className="text-center">
+              <p className="text-neutral-900 dark:text-neutral-100 text-lg font-medium mb-2">
+                Nenhum médico encontrado
+              </p>
+              <p className="text-neutral-500 dark:text-neutral-400">
+                Não há médicos cadastrados para esta unidade.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -146,7 +159,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                   day={day}
                   appointments={dayAppointments}
                   selectedDate={selectedDate}
-                  onSelectDate={handleSelectDate}
+                  onSelectDate={setSelectedDate}
                   onSelectAppointment={onSelectAppointment}
                 />
               );
@@ -162,19 +175,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
           onSelectTime={handleSelectTime}
           selectedDoctor={selectedDoctor}
           doctors={doctors}
-          onDoctorChange={setSelectedDoctor}
+          onDoctorChange={handleDoctorChange}
           selectedTimeSlot={selectedTimeSlot}
         />
-      )}
-
-      {selectedDate && doctors.length === 0 && !loadingDoctors && (
-        <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shadow-sm">
-          <CardContent className="p-8 text-center">
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Nenhum médico disponível para sua unidade.
-            </p>
-          </CardContent>
-        </Card>
       )}
     </div>
   );
