@@ -121,22 +121,25 @@ const InventoryValueWaffle: React.FC = () => {
                 ]
               }
             ]}
-            tooltip={({ id, label, value, color }) => (
-              <div className="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2 mb-1">
-                  <div 
-                    className="w-3 h-3 rounded"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {label}
-                  </span>
+            tooltip={(props) => {
+              const data = props.datum;
+              return (
+                <div className="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div 
+                      className="w-3 h-3 rounded"
+                      style={{ backgroundColor: data.color }}
+                    />
+                    <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                      {data.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    Valor total: R$ {data.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
                 </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Valor total: R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            )}
+              );
+            }}
             theme={{
               background: 'transparent',
               text: {
