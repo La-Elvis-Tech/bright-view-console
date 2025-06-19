@@ -1,10 +1,11 @@
 
 import React from "react";
 import { ResponsiveWaffle } from "@nivo/waffle";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/context/AuthContext";
+import { Package } from "lucide-react";
 
 interface InventoryValueData {
   id: string;
@@ -35,17 +36,17 @@ const InventoryValueWaffle: React.FC = () => {
 
       if (error) throw error;
 
-      // Calcular valor total (estoque * custo unitário) e pegar os 4 maiores
+      // Calcular valor total (estoque * custo unitário) e pegar os 6 maiores
       const itemsWithValue = items
         ?.map(item => ({
           id: item.id,
           label: item.name,
           value: Math.round((item.current_stock || 0) * (item.cost_per_unit || 0)),
-          color: item.categories?.color || '#6B7280'
+          color: item.categories?.color || '#6366f1'
         }))
         .filter(item => item.value > 0)
         .sort((a, b) => b.value - a.value)
-        .slice(0, 4) || [];
+        .slice(0, 6) || [];
 
       return itemsWithValue;
     },
@@ -54,40 +55,63 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
-        <div className="p-6 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Carregando...</p>
-        </div>
+      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
+        <CardContent className="p-6">
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-1/2"></div>
+            <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
   if (inventoryData.length === 0) {
     return (
-      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
-        <div className="p-6 text-center">
-          <p className="text-neutral-500 dark:text-neutral-400">Nenhum item com valor encontrado</p>
-        </div>
+      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-100">
+            <Package size={18} className="text-indigo-600 dark:text-indigo-400" />
+            Valor do Inventário
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum item com valor encontrado</p>
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
+  const totalValue = inventoryData.reduce((sum, item) => sum + item.value, 0);
+
   return (
-    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
-      <div className="p-4 md:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between text-lg font-bold text-gray-800 dark:text-gray-100">
+          <span className="flex items-center gap-2">
+            <Package size={18} className="text-indigo-600 dark:text-indigo-400" />
             Itens de Maior Valor em Estoque
-          </h2>
-        </div>
-        
-        <div className="h-[400px] w-full">
+          </span>
+          <div className="text-right text-sm">
+            <div className="text-green-600 dark:text-green-400 font-semibold">
+              R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div className="text-gray-500 dark:text-gray-400 text-xs">
+              {inventoryData.length} itens
+            </div>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-80 w-full">
           <ResponsiveWaffle
             data={inventoryData}
-            total={inventoryData.reduce((sum, item) => sum + item.value, 0)}
-            rows={18}
-            columns={14}
+            total={totalValue}
+            rows={16}
+            columns={20}
             padding={1}
             colors={{ datum: 'color' }}
             borderRadius={3}
@@ -103,14 +127,14 @@ const InventoryValueWaffle: React.FC = () => {
                 direction: 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 36,
-                itemsSpacing: 0,
-                itemWidth: 100,
+                translateY: 40,
+                itemsSpacing: 2,
+                itemWidth: 120,
                 itemHeight: 18,
                 itemDirection: 'left-to-right',
                 itemOpacity: 1,
                 itemTextColor: '#6B7280',
-                symbolSize: 14,
+                symbolSize: 12,
                 effects: [
                   {
                     on: 'hover',
@@ -159,7 +183,7 @@ const InventoryValueWaffle: React.FC = () => {
             }}
           />
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

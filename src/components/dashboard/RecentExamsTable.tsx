@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Calendar, Clock } from "lucide-react";
 
 interface RecentExam {
   id: string;
@@ -35,48 +36,52 @@ const RecentExamsTable: React.FC<RecentExamsTableProps> = ({ exams }) => {
   };
 
   return (
-    <Card className="p-6 border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Últimos Exames
-          </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Atividade recente
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-3 max-h-80 overflow-y-auto">
-        {exams.map((exam) => (
-          <div 
-            key={exam.id}
-            className="flex items-center justify-between p-3 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/50 dark:border-neutral-700/50"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
-                  {exam.patient_name}
-                </p>
-                <Badge className={`text-xs ${getStatusColor(exam.status)}`}>
-                  {exam.status}
-                </Badge>
+    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg h-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-100">
+          <Calendar size={18} className="text-indigo-600 dark:text-indigo-400" />
+          Últimos Exames
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {exams.length > 0 ? exams.map((exam) => (
+            <div 
+              key={exam.id}
+              className="p-4 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 dark:from-indigo-950/40 dark:to-blue-950/40 rounded-xl border border-indigo-100 dark:border-indigo-800/50 hover:shadow-sm transition-all duration-200"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 truncate">
+                    {exam.patient_name}
+                  </h4>
+                  <Badge className={`text-xs ${getStatusColor(exam.status)}`}>
+                    {exam.status}
+                  </Badge>
+                </div>
+                <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Clock size={12} />
+                    {format(new Date(exam.created_at), 'HH:mm', { locale: ptBR })}
+                  </div>
+                  <div className="mt-1">
+                    {format(new Date(exam.created_at), 'dd/MM', { locale: ptBR })}
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
-                {exam.exam_type} • Dr. {exam.doctor_name}
-              </p>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium">{exam.exam_type}</div>
+                <div className="text-xs mt-1">Dr. {exam.doctor_name}</div>
+              </div>
             </div>
-            <div className="text-right ml-3">
-              <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                {format(new Date(exam.created_at), 'dd/MM', { locale: ptBR })}
-              </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                {format(new Date(exam.created_at), 'HH:mm', { locale: ptBR })}
-              </p>
+          )) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum exame recente</p>
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };

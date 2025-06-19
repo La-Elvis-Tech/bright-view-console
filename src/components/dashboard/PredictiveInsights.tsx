@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, Target, Zap } from "lucide-react";
+import { TrendingUp, AlertTriangle, Target, Zap, Brain } from "lucide-react";
 
 interface PredictiveInsightsProps {
   metrics: {
@@ -25,8 +25,9 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `Com crescimento de ${metrics.weeklyGrowth}%, prepare-se para aumento de 20-30% nos próximos dias`,
         priority: 'high',
         icon: TrendingUp,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50 dark:bg-green-950/20'
+        color: 'text-green-600 dark:text-green-400',
+        bgColor: 'bg-gradient-to-r from-green-50/80 to-emerald-50/80 dark:from-green-950/40 dark:to-emerald-950/40',
+        borderColor: 'border-green-200 dark:border-green-800/50'
       });
     }
 
@@ -38,8 +39,9 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `${metrics.criticalStock} itens críticos podem afetar ${Math.round(metrics.criticalStock * 2.5)} exames`,
         priority: 'critical',
         icon: AlertTriangle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50 dark:bg-red-950/20'
+        color: 'text-red-600 dark:text-red-400',
+        bgColor: 'bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-950/40 dark:to-orange-950/40',
+        borderColor: 'border-red-200 dark:border-red-800/50'
       });
     }
 
@@ -51,8 +53,9 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: 'Alta demanda detectada. Considere agenda adicional para reduzir tempo de espera',
         priority: 'medium',
         icon: Target,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50 dark:bg-blue-950/20'
+        color: 'text-blue-600 dark:text-blue-400',
+        bgColor: 'bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40',
+        borderColor: 'border-blue-200 dark:border-blue-800/50'
       });
     }
 
@@ -64,8 +67,9 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `${metrics.expiringSoon} itens vencem em 30 dias. Priorize seu uso nos próximos exames`,
         priority: 'medium',
         icon: Zap,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50 dark:bg-yellow-950/20'
+        color: 'text-yellow-600 dark:text-yellow-400',
+        bgColor: 'bg-gradient-to-r from-yellow-50/80 to-amber-50/80 dark:from-yellow-950/40 dark:to-amber-950/40',
+        borderColor: 'border-yellow-200 dark:border-yellow-800/50'
       });
     }
 
@@ -88,53 +92,52 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
   };
 
   return (
-    <Card className="p-6 border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Insights Preditivos
-          </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Análises e previsões inteligentes
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {insights.length > 0 ? (
-          insights.map((insight, index) => (
-            <div 
-              key={index}
-              className="flex items-start gap-3 p-4 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/50 dark:border-neutral-700/50"
-            >
-              <div className={`p-2 rounded-lg ${insight.bgColor}`}>
-                <insight.icon size={18} className={insight.color} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {insight.title}
-                  </h4>
-                  <Badge className={`text-xs ${getPriorityColor(insight.priority)}`}>
-                    {insight.priority === 'critical' ? 'Crítico' : 
-                     insight.priority === 'high' ? 'Alto' : 
-                     insight.priority === 'medium' ? 'Médio' : 'Baixo'}
-                  </Badge>
+    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg h-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-100">
+          <Brain size={18} className="text-indigo-600 dark:text-indigo-400" />
+          Insights Preditivos
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {insights.length > 0 ? (
+            insights.map((insight, index) => (
+              <div 
+                key={index}
+                className={`p-4 ${insight.bgColor} rounded-xl border ${insight.borderColor} hover:shadow-sm transition-all duration-200`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-white/80 dark:bg-neutral-800/80 rounded-lg shadow-sm">
+                    <insight.icon size={16} className={insight.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                        {insight.title}
+                      </h4>
+                      <Badge className={`text-xs ${getPriorityColor(insight.priority)}`}>
+                        {insight.priority === 'critical' ? 'Crítico' : 
+                         insight.priority === 'high' ? 'Alto' : 
+                         insight.priority === 'medium' ? 'Médio' : 'Baixo'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {insight.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  {insight.description}
-                </p>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="font-medium">Nenhum insight disponível</p>
+              <p className="text-sm mt-1">Dados insuficientes para análise preditiva</p>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-            <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum insight disponível</p>
-            <p className="text-sm">Dados insuficientes para análise preditiva</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };

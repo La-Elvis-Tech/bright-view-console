@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, User, Package, Calendar, Settings } from "lucide-react";
+import { Activity, User, Package, Calendar, Settings, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -52,51 +52,53 @@ const SystemLogsPanel: React.FC<SystemLogsPanelProps> = ({ logs }) => {
   };
 
   return (
-    <Card className="p-6 border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Logs do Sistema
-          </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Atividades recentes
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-3 max-h-80 overflow-y-auto">
-        {logs.map((log) => {
-          const IconComponent = getActionIcon(log.resource_type);
-          return (
-            <div 
-              key={log.id}
-              className="flex items-center gap-3 p-3 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/50 dark:border-neutral-700/50"
-            >
-              <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg">
-                <IconComponent size={16} className="text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className={`text-xs ${getActionColor(log.action)}`}>
-                    {log.action}
-                  </Badge>
-                  <span className="text-xs text-neutral-500 dark:text-neutral-500">
-                    {log.resource_type}
-                  </span>
+    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg h-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-100">
+          <Shield size={18} className="text-indigo-600 dark:text-indigo-400" />
+          Logs do Sistema
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {logs.length > 0 ? logs.map((log) => {
+            const IconComponent = getActionIcon(log.resource_type);
+            return (
+              <div 
+                key={log.id}
+                className="p-4 bg-gradient-to-r from-orange-50/80 to-red-50/80 dark:from-orange-950/40 dark:to-red-950/40 rounded-xl border border-orange-100 dark:border-orange-800/50 hover:shadow-sm transition-all duration-200"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-500/80 to-red-500/80 rounded-lg text-white shadow-sm">
+                    <IconComponent size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className={`text-xs ${getActionColor(log.action)}`}>
+                        {log.action}
+                      </Badge>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                        {log.resource_type}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {log.user_name}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                    {format(new Date(log.created_at), 'dd/MM HH:mm', { locale: ptBR })}
+                  </div>
                 </div>
-                <p className="text-sm text-neutral-900 dark:text-neutral-100 truncate">
-                  {log.user_name}
-                </p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                  {format(new Date(log.created_at), 'dd/MM HH:mm', { locale: ptBR })}
-                </p>
-              </div>
+            );
+          }) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum log disponível</p>
             </div>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };

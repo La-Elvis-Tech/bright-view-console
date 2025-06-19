@@ -2,11 +2,13 @@
 import React, { Suspense } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useAdvancedDashboard } from "@/hooks/useAdvancedDashboard";
-import MetricsGrid from "@/components/dashboard/MetricsGrid";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
 import ExamTrendsChart from "@/components/dashboard/ExamTrendsChart";
 import RecentExamsTable from "@/components/dashboard/RecentExamsTable";
 import SystemLogsPanel from "@/components/dashboard/SystemLogsPanel";
 import PredictiveInsights from "@/components/dashboard/PredictiveInsights";
+import InventoryValueWaffle from "@/components/dashboard/InventoryValueWaffle";
 import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
@@ -31,42 +33,48 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
-      <div className="p-6 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-neutral-900 to-neutral-700 dark:from-neutral-100 dark:to-neutral-300 bg-clip-text text-transparent">
-              Dashboard
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-              Bem-vindo de volta, {profile.full_name}
-            </p>
-          </div>
+      <div className="p-4 lg:p-6 space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            Dashboard
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400">
+            Bem-vindo de volta, {profile.full_name}
+          </p>
         </div>
 
         <Suspense fallback={<SkeletonDashboard />}>
-          {/* Métricas principais */}
-          {metrics && <MetricsGrid metrics={metrics} />}
+          {/* Stats Cards */}
+          <DashboardStats />
 
-          {/* Layout em grid responsivo */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Gráfico de tendências - 8 colunas */}
-            <div className="lg:col-span-8">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+            {/* Left Column - Charts and Analytics */}
+            <div className="lg:col-span-8 space-y-4 lg:space-y-6">
+              {/* Exam Trends Chart */}
               {examTrends && <ExamTrendsChart data={examTrends} />}
+              
+              {/* Inventory Value Waffle */}
+              <InventoryValueWaffle />
             </div>
 
-            {/* Insights preditivos - 4 colunas */}
-            <div className="lg:col-span-4">
+            {/* Right Column - Quick Actions and Insights */}
+            <div className="lg:col-span-4 space-y-4 lg:space-y-6">
+              <QuickActionsCard />
               {metrics && <PredictiveInsights metrics={metrics} />}
             </div>
+          </div>
 
-            {/* Exames recentes - 6 colunas */}
-            <div className="lg:col-span-6">
+          {/* Bottom Section - Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            {/* Recent Exams */}
+            <div>
               {recentExams && <RecentExamsTable exams={recentExams} />}
             </div>
 
-            {/* Logs do sistema - 6 colunas */}
-            <div className="lg:col-span-6">
+            {/* System Logs */}
+            <div>
               {systemLogs && <SystemLogsPanel logs={systemLogs} />}
             </div>
           </div>
