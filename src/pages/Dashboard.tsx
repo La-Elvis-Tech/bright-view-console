@@ -7,6 +7,7 @@ import ExamResultsCalendar from "@/components/dashboard/ExamResultsCalendar";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
 import UnitSelectorCard from "@/components/dashboard/UnitSelectorCard";
+import InventoryValueWaffle from "@/components/dashboard/InventoryValueWaffle";
 import SkeletonDashboard from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
@@ -47,9 +48,14 @@ const Dashboard: React.FC = () => {
             <DashboardStats />
           </div>
 
-          {/* Calendar Chart - Nova seção */}
-          <div className="lg:col-span-12">
+          {/* Calendar Chart - Primeira linha de gráficos */}
+          <div className="lg:col-span-7">
             <ExamResultsCalendar />
+          </div>
+
+          {/* Inventory Value Waffle - Nova seção */}
+          <div className="lg:col-span-5">
+            <InventoryValueWaffle />
           </div>
 
           {/* Exam Types Overview */}

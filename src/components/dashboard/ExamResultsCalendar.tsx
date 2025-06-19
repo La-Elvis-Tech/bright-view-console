@@ -18,14 +18,15 @@ const ExamResultsCalendar: React.FC = () => {
   const { data: examData = [], isLoading } = useQuery({
     queryKey: ['exam-results-calendar', profile?.unit_id],
     queryFn: async (): Promise<ExamResultData[]> => {
-      // Buscar dados dos últimos 6 meses
-      const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
+      // Buscar dados dos últimos 12 meses para melhor visualização
+      const twelveMonthsAgo = startOfMonth(subMonths(new Date(), 11));
       const today = endOfMonth(new Date());
 
       const { data: examResults, error } = await supabase
         .from('exam_results')
-        .select('exam_date')
-        .gte('exam_date', format(sixMonthsAgo, 'yyyy-MM-dd'))
+        .select('exam_date, result_status')
+        .eq('unit_id', profile?.unit_id)
+        .gte('exam_date', format(twelveMonthsAgo, 'yyyy-MM-dd'))
         .lte('exam_date', format(today, 'yyyy-MM-dd'));
 
       if (error) throw error;
@@ -43,7 +44,7 @@ const ExamResultsCalendar: React.FC = () => {
         value
       }));
     },
-    enabled: !!profile
+    enabled: !!profile?.unit_id
   });
 
   if (isLoading) {
@@ -57,7 +58,7 @@ const ExamResultsCalendar: React.FC = () => {
     );
   }
 
-  const fromDate = format(startOfMonth(subMonths(new Date(), 5)), 'yyyy-MM-dd');
+  const fromDate = format(startOfMonth(subMonths(new Date(), 11)), 'yyyy-MM-dd');
   const toDate = format(endOfMonth(new Date()), 'yyyy-MM-dd');
 
   return (
@@ -67,17 +68,21 @@ const ExamResultsCalendar: React.FC = () => {
           <h2 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-100">
             Calendário de Exames Realizados
           </h2>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">
+            Últimos 12 meses
+          </div>
         </div>
         
-        <div className="h-[300px] w-full">
+        <div className="h-[320px] w-full">
           <ResponsiveCalendar
             data={examData}
             from={fromDate}
             to={toDate}
-            emptyColor="#f3f4f6"
+            emptyColor="transparent"
             colors={['#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8', '#1e3a8a']}
             margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             yearSpacing={40}
+            monthBorderWidth={2}
             monthBorderColor="#e5e7eb"
             dayBorderWidth={1}
             dayBorderColor="#f3f4f6"
@@ -94,8 +99,8 @@ const ExamResultsCalendar: React.FC = () => {
               }
             ]}
             tooltip={({ day, value, color }) => (
-              <div className="bg-white dark:bg-neutral-800 p-2 rounded shadow-lg border border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2">
+              <div className="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center gap-2 mb-1">
                   <div 
                     className="w-3 h-3 rounded"
                     style={{ backgroundColor: color }}
@@ -104,24 +109,27 @@ const ExamResultsCalendar: React.FC = () => {
                     {format(new Date(day), 'dd/MM/yyyy')}
                   </span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   {value} exame{value !== 1 ? 's' : ''} realizado{value !== 1 ? 's' : ''}
                 </p>
               </div>
             )}
             theme={{
+              background: 'transparent',
               text: {
                 fontSize: 11,
-                fill: '#6b7280'
+                fill: '#6b7280',
+                outlineWidth: 0,
+                outlineColor: 'transparent'
               },
               tooltip: {
                 container: {
                   background: 'white',
                   color: 'inherit',
                   fontSize: 'inherit',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                  padding: '8px'
+                  padding: '12px'
                 }
               }
             }}
