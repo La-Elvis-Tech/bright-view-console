@@ -1,22 +1,155 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, AlertCircle, Users, Calendar, DollarSign, Package, AlertTriangle } from "lucide-react";
-import { useDashboardStats } from "@/hooks/useDashboardData";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthContext } from "@/context/AuthContext";
+import { 
+  Calendar, 
+  Users, 
+  TrendingUp, 
+  Package, 
+  AlertTriangle,
+  Clock
+} from "lucide-react";
+import { format, subDays } from "date-fns";
 
 const DashboardStats: React.FC = () => {
-  const { data: stats, isLoading } = useDashboardStats();
+  const { profile } = useAuthContext();
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats', profile?.unit_id],
+    queryFn: async () => {
+      if (!profile?.unit_id) {
+        return {
+          totalAppointments: 0,
+          todayAppointments: 0,
+          totalInventoryItems: 0,
+          lowStockItems: 0,
+          totalRevenue: 0,
+          activeExamTypes: 0
+        };
+      }
+
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      const [
+        { data: appointments },
+        { data: todayAppointments },
+        { data: inventoryItems },
+        { data: lowStockItems },
+        { data: revenue },
+        { data: examTypes }
+      ] = await Promise.all([
+        supabase
+          .from('appointments')
+          .select('id')
+          .eq('unit_id', profile.unit_id),
+        
+        supabase
+          .from('appointments')
+          .select('id')
+          .eq('unit_id', profile.unit_id)
+          .gte('created_at', today),
+        
+        supabase
+          .from('inventory_items')
+          .select('id')
+          .eq('unit_id', profile.unit_id)
+          .eq('active', true),
+        
+        supabase
+          .from('inventory_items')
+          .select('id, current_stock, min_stock')
+          .eq('unit_id', profile.unit_id)
+          .eq('active', true),
+        
+        supabase
+          .from('appointments')
+          .select('cost')
+          .eq('unit_id', profile.unit_id)
+          .not('cost', 'is', null),
+        
+        supabase
+          .from('exam_types')
+          .select('id')
+          .eq('unit_id', profile.unit_id)
+          .eq('active', true)
+      ]);
+
+      const lowStockCount = lowStockItems?.filter(item => 
+        item.current_stock < item.min_stock
+      ).length || 0;
+
+      const totalRevenue = revenue?.reduce((sum, appointment) => 
+        sum + (appointment.cost || 0), 0) || 0;
+
+      return {
+        totalAppointments: appointments?.length || 0,
+        todayAppointments: todayAppointments?.length || 0,
+        totalInventoryItems: inventoryItems?.length || 0,
+        lowStockItems: lowStockCount,
+        totalRevenue,
+        activeExamTypes: examTypes?.length || 0
+      };
+    },
+    enabled: !!profile?.unit_id
+  });
+
+  const statsCards = [
+    {
+      title: "Total de Agendamentos",
+      value: stats?.totalAppointments || 0,
+      icon: Calendar,
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20"
+    },
+    {
+      title: "Agendamentos Hoje",
+      value: stats?.todayAppointments || 0,
+      icon: Clock,
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-950/20"
+    },
+    {
+      title: "Receita Total",
+      value: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: TrendingUp,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-50 dark:bg-emerald-950/20"
+    },
+    {
+      title: "Itens em Estoque",
+      value: stats?.totalInventoryItems || 0,
+      icon: Package,
+      color: "text-indigo-600 dark:text-indigo-400",
+      bgColor: "bg-indigo-50 dark:bg-indigo-950/20"
+    },
+    {
+      title: "Estoque Baixo",
+      value: stats?.lowStockItems || 0,
+      icon: AlertTriangle,
+      color: "text-red-600 dark:text-red-400",
+      bgColor: "bg-red-50 dark:bg-red-950/20"
+    },
+    {
+      title: "Tipos de Exames",
+      value: stats?.activeExamTypes || 0,
+      icon: Users,
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-950/20"
+    }
+  ];
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
-            <CardContent className="pt-4 sm:pt-5 p-3 md:p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800">
+            <CardContent className="p-6">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-1/2"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
               </div>
             </CardContent>
           </Card>
@@ -25,87 +158,25 @@ const DashboardStats: React.FC = () => {
     );
   }
 
-  const statsData = [
-    {
-      title: "Agendamentos Ativos",
-      value: stats?.pendingAppointments || 0,
-      icon: Calendar,
-      trend: "up",
-      trendValue: `${stats?.totalAppointments || 0} total`,
-      description: "pendentes",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-950/40"
-    },
-    {
-      title: "Receita Mensal",
-      value: `R$ ${(stats?.monthlyRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: DollarSign,
-      trend: "up",
-      trendValue: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total`,
-      description: "este mês",
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-50 dark:bg-green-950/40"
-    },
-    {
-      title: "Itens em Estoque",
-      value: stats?.totalItems || 0,
-      icon: Package,
-      trend: "up",
-      trendValue: `${stats?.activeExamTypes || 0} tipos de exames`,
-      description: "ativos",
-      color: "text-indigo-600 dark:text-indigo-400",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/40"
-    },
-    {
-      title: "Tipos de Exames",
-      value: stats?.activeExamTypes || 0,
-      icon: AlertTriangle,
-      trend: "up",
-      trendValue: `${stats?.totalExamTypes || 0} total`,
-      description: "disponíveis",
-      color: "text-orange-600 dark:text-orange-400",
-      bgColor: "bg-orange-50 dark:bg-orange-950/40"
-    }
-  ];
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case "up": return <TrendingUp size={12} className="mr-1" />;
-      case "down": return <TrendingDown size={12} className="mr-1" />;
-      case "warning": return <AlertCircle size={12} className="mr-1" />;
-      default: return null;
-    }
-  };
-
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case "up": return "text-green-600 dark:text-green-400";
-      case "down": return "text-red-600 dark:text-red-400";
-      case "warning": return "text-yellow-600 dark:text-yellow-400";
-      default: return "text-gray-600 dark:text-gray-400";
-    }
-  };
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      {statsData.map((stat, index) => (
-        <Card key={index} className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
-          <CardContent className="pt-4 sm:pt-5 p-3 md:p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon size={16} className={stat.color} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+      {statsCards.map((stat, index) => (
+        <Card 
+          key={index}
+          className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">
                   {stat.title}
                 </p>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-700 dark:text-white truncate">
+                <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                   {stat.value}
-                </h3>
-                <p className={`text-xs flex items-center ${getTrendColor(stat.trend)}`}>
-                  {getTrendIcon(stat.trend)}
-                  <span className="truncate">{stat.trendValue}</span>
                 </p>
+              </div>
+              <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </div>
           </CardContent>

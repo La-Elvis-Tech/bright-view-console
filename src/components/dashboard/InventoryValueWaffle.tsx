@@ -20,6 +20,8 @@ const InventoryValueWaffle: React.FC = () => {
   const { data: inventoryData = [], isLoading } = useQuery({
     queryKey: ['inventory-value-waffle', profile?.unit_id],
     queryFn: async (): Promise<InventoryValueData[]> => {
+      if (!profile?.unit_id) return [];
+
       const { data: items, error } = await supabase
         .from('inventory_items')
         .select(`
@@ -27,9 +29,9 @@ const InventoryValueWaffle: React.FC = () => {
           name,
           current_stock,
           cost_per_unit,
-          categories:inventory_categories(name, color)
+          inventory_categories(name, color)
         `)
-        .eq('unit_id', profile?.unit_id)
+        .eq('unit_id', profile.unit_id)
         .eq('active', true)
         .not('cost_per_unit', 'is', null)
         .order('current_stock', { ascending: false });
@@ -42,7 +44,7 @@ const InventoryValueWaffle: React.FC = () => {
           id: item.id,
           label: item.name,
           value: Math.round((item.current_stock || 0) * (item.cost_per_unit || 0)),
-          color: item.categories?.color || '#6366f1'
+          color: item.inventory_categories?.color || '#6366f1'
         }))
         .filter(item => item.value > 0)
         .sort((a, b) => b.value - a.value)
@@ -79,6 +81,7 @@ const InventoryValueWaffle: React.FC = () => {
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Nenhum item com valor encontrado</p>
+            <p className="text-sm mt-1">para sua unidade</p>
           </div>
         </CardContent>
       </Card>
