@@ -77,8 +77,7 @@ export const useAdvancedDashboard = () => {
         
         supabase
           .from('inventory_items')
-          .select('id')
-          .lt('current_stock', supabase.raw('min_stock'))
+          .select('id, current_stock, min_stock')
           .eq('unit_id', profile?.unit_id || ''),
         
         supabase
@@ -94,6 +93,11 @@ export const useAdvancedDashboard = () => {
           .eq('unit_id', profile?.unit_id || '')
       ]);
 
+      // Filter critical stock items manually since we can't use raw SQL
+      const criticalStockCount = criticalItems?.filter(item => 
+        item.current_stock < item.min_stock
+      ).length || 0;
+
       const avgTime = avgDuration?.reduce((acc, exam) => acc + (exam.duration_minutes || 0), 0) / (avgDuration?.length || 1);
       const weeklyGrowth = yesterdayExams?.length ? 
         ((todayExams?.length || 0) - (yesterdayExams?.length || 0)) / (yesterdayExams?.length || 1) * 100 : 0;
@@ -102,7 +106,7 @@ export const useAdvancedDashboard = () => {
         totalExams: weekExams?.length || 0,
         todayExams: todayExams?.length || 0,
         weeklyGrowth: Math.round(weeklyGrowth),
-        criticalStock: criticalItems?.length || 0,
+        criticalStock: criticalStockCount,
         expiringSoon: expiringItems?.length || 0,
         averageExamTime: Math.round(avgTime || 0)
       };
