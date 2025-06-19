@@ -339,6 +339,77 @@ export type Database = {
           },
         ]
       }
+      exam_results: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          doctor_id: string
+          exam_category: string | null
+          exam_date: string
+          exam_type_id: string
+          id: string
+          patient_name: string
+          result_status: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          doctor_id: string
+          exam_category?: string | null
+          exam_date: string
+          exam_type_id: string
+          id?: string
+          patient_name: string
+          result_status?: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          doctor_id?: string
+          exam_category?: string | null
+          exam_date?: string
+          exam_type_id?: string
+          id?: string
+          patient_name?: string
+          result_status?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_type_materials: {
         Row: {
           created_at: string | null

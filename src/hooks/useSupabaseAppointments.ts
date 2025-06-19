@@ -3,7 +3,6 @@ import { useAppointments } from './useAppointments';
 import { useExamTypes } from './useExamTypes';
 import { useDoctors } from './useDoctors';
 import { useUnits } from './useUnits';
-import { useBloodExams } from './useBloodExams';
 import { appointmentService } from '@/services/appointmentService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +12,6 @@ export const useSupabaseAppointments = () => {
   const { examTypes, refreshExamTypes } = useExamTypes();
   const { doctors, refreshDoctors } = useDoctors();
   const { units, refreshUnits } = useUnits();
-  const { 
-    bloodExamTypes, 
-    bloodExamPanels, 
-    calculateBloodVolume, 
-    calculateDetailedMaterials 
-  } = useBloodExams();
   const { toast } = useToast();
 
   const createAppointment = async (appointment: Parameters<typeof appointmentService.createAppointment>[0]) => {
@@ -35,19 +28,11 @@ export const useSupabaseAppointments = () => {
     } catch (error: any) {
       console.error('Error creating appointment:', error);
       
-      if (error.message && error.message.includes('Estoque insuficiente')) {
-        toast({
-          title: 'Estoque insuficiente',
-          description: error.message.replace('Estoque insuficiente: ', ''),
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível criar o agendamento.',
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível criar o agendamento.',
+        variant: 'destructive',
+      });
       throw error;
     }
   };
@@ -60,12 +45,12 @@ export const useSupabaseAppointments = () => {
       if (updates.status === 'Cancelado') {
         toast({
           title: 'Agendamento cancelado',
-          description: 'O agendamento foi cancelado e os materiais foram liberados.',
+          description: 'O agendamento foi cancelado com sucesso.',
         });
       } else if (updates.status === 'Concluído') {
         toast({
           title: 'Exame concluído',
-          description: 'O exame foi concluído e o estoque foi atualizado automaticamente.',
+          description: 'O exame foi concluído com sucesso.',
         });
       } else {
         toast({
@@ -132,6 +117,8 @@ export const useSupabaseAppointments = () => {
         title: 'Médico criado',
         description: `Dr(a). ${doctorData.name} foi adicionado com sucesso.`,
       });
+
+      return data;
     } catch (error: any) {
       console.error('Error creating doctor:', error);
       toast({
@@ -167,6 +154,8 @@ export const useSupabaseAppointments = () => {
         title: 'Médico atualizado',
         description: 'As informações do médico foram atualizadas com sucesso.',
       });
+
+      return data;
     } catch (error: any) {
       console.error('Error updating doctor:', error);
       toast({
@@ -233,6 +222,8 @@ export const useSupabaseAppointments = () => {
         title: 'Tipo de exame criado',
         description: `${examTypeData.name} foi adicionado com sucesso.`,
       });
+
+      return data;
     } catch (error: any) {
       console.error('Error creating exam type:', error);
       toast({
@@ -269,6 +260,8 @@ export const useSupabaseAppointments = () => {
         title: 'Tipo de exame atualizado',
         description: 'As informações foram atualizadas com sucesso.',
       });
+
+      return data;
     } catch (error: any) {
       console.error('Error updating exam type:', error);
       toast({
@@ -311,8 +304,6 @@ export const useSupabaseAppointments = () => {
     examTypes,
     doctors,
     units,
-    bloodExamTypes,
-    bloodExamPanels,
     loading: appointmentsLoading,
     createAppointment,
     updateAppointment,
@@ -323,9 +314,6 @@ export const useSupabaseAppointments = () => {
     createExamType,
     updateExamType,
     deleteExamType,
-    calculateExamMaterials: appointmentService.calculateExamMaterials,
-    calculateBloodVolume,
-    calculateDetailedMaterials,
     refreshAppointments,
     refreshExamTypes,
     refreshDoctors,
@@ -337,5 +325,4 @@ export const useSupabaseAppointments = () => {
 export type { ExamType } from './useExamTypes';
 export type { Doctor } from './useDoctors';
 export type { Unit } from './useUnits';
-export type { ExamMaterial, MaterialValidation } from '@/services/appointmentService';
 export type { SupabaseAppointment } from '@/types/appointment';

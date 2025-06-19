@@ -1,134 +1,73 @@
-import React, { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import DashboardChart from "@/components/DashboardChart.tsx";
 
-// Import refactored components
+import React, { Suspense } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 import DashboardStats from "@/components/dashboard/DashboardStats";
+import ExamTypesOverview from "@/components/dashboard/ExamTypesOverview";
+import ExamResultsCalendar from "@/components/dashboard/ExamResultsCalendar";
 import RecentActivities from "@/components/dashboard/RecentActivities";
-import InventoryGauges from "@/components/dashboard/InventoryGauges";
-import LowStockTable from "@/components/dashboard/LowStockTable";
-
-// Import existing dashboard components
-import DemandForecastCard from "@/components/dashboard/DemandForecastCard";
-import RiskAlertsCard from "@/components/dashboard/RiskAlertsCard";
-import ForecastPerformanceCard from "@/components/dashboard/ForecastPerformanceCard";
 import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
 import UnitSelectorCard from "@/components/dashboard/UnitSelectorCard";
-
-// Data imports
-import { useConsumptionData, useAppointmentTrends } from "@/hooks/useDashboardData";
-import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
+import SkeletonDashboard from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
-  const dashboardRef = useRef<HTMLDivElement>(null);
-  const { data: consumptionData, isLoading: consumptionLoading } = useConsumptionData();
-  const { data: appointmentTrends, isLoading: trendsLoading } = useAppointmentTrends();
-
-  const loading = consumptionLoading || trendsLoading;
-
-  useEffect(() => {
-    if (loading) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".dashboard-card",
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.4,
-          stagger: 0.1,
-          ease: "power2.out",
-        }
-      );
-
-      gsap.fromTo(
-        ".dashboard-chart",
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          stagger: 0.15,
-          ease: "power2.out",
-          delay: 0.3,
-        }
-      );
-    }, dashboardRef);
-
-    return () => ctx.revert();
-  }, [loading]);
+  const { profile, loading } = useAuthContext();
 
   if (loading) {
     return <SkeletonDashboard />;
   }
 
-  return (
-    <div
-      ref={dashboardRef}
-      className="space-y-6 dark:text-gray-100"
-    >
-      <div>
-        <h1 className="text-3xl sm:text-3xl font-bold text-gray-800 dark:text-white">
-          Dashboard
-        </h1>
-        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
-          Visão geral do sistema de agendamentos e inventário
+  if (!profile) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-neutral-500 dark:text-neutral-400">
+          Você precisa estar logado para acessar o dashboard.
         </p>
       </div>
+    );
+  }
 
-      {/* Estatísticas principais */}
-      <div className="dashboard-card">
-        <DashboardStats />
+  return (
+    <div className="p-4 md:p-6 space-y-6 bg-neutral-50 dark:bg-neutral-900 min-h-screen">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            Dashboard
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
+            Bem-vindo de volta, {profile.full_name}
+          </p>
+        </div>
+        <UnitSelectorCard />
       </div>
 
-      {/* Grid principal com layout mais equilibrado */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Coluna da esquerda - Unidades e métricas principais */}
-        <div className="xl:col-span-4 space-y-6">
-          <div className="dashboard-card h-[400px]">
-            <UnitSelectorCard />
+      <Suspense fallback={<SkeletonDashboard />}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Stats - Linha superior */}
+          <div className="lg:col-span-12">
+            <DashboardStats />
           </div>
-          <div className="dashboard-chart">
-        <RiskAlertsCard />
-      </div>
-          
-        </div>
 
-        {/* Coluna central - Analytics avançados */}
-        <div className="xl:col-span-4 space-y-6">
-          <div className="dashboard-chart">
-            <DashboardChart
-              type="area"
-              data={appointmentTrends || []}
-              title="Tendência de Agendamentos"
-              description="Agendamentos realizados nos últimos 6 meses"
-            />
+          {/* Calendar Chart - Nova seção */}
+          <div className="lg:col-span-12">
+            <ExamResultsCalendar />
           </div>
-          
-          <div className="dashboard-card">
-            <ForecastPerformanceCard />
-          </div>
-        </div>
 
-        {/* Coluna da direita - Ações e alertas */}
-        <div className="xl:col-span-4 space-y-6">
-          <div className="dashboard-card">
-            <QuickActionsCard />
+          {/* Exam Types Overview */}
+          <div className="lg:col-span-4">
+            <ExamTypesOverview />
           </div>
-          
-          <div className="dashboard-card">
+
+          {/* Recent Activities */}
+          <div className="lg:col-span-4">
             <RecentActivities />
           </div>
 
-          {/*<div className="dashboard-card">
-            <DemandForecastCard />
-          </div>*/}
+          {/* Quick Actions */}
+          <div className="lg:col-span-4">
+            <QuickActionsCard />
+          </div>
         </div>
-      </div>
-      <div className="dashboard-card">
-            <InventoryGauges />
-      </div>
+      </Suspense>
     </div>
   );
 };

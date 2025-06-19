@@ -25,7 +25,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onForgotPassword,
 }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="text-start space-y-2">
+          <h2 className="text-xl font-medium text-gray-900 dark:text-white">
+            Bem-vindo de Volta!
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Faça login na sua conta
+          </p>
+        </div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="login-email" className="text-neutral-700 dark:text-neutral-300 font-medium">
           Email

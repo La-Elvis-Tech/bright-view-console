@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -81,28 +82,58 @@ const AppointmentsDashboard: React.FC = () => {
     setSelectedSlotData(null);
   };
 
-  // Wrap the functions to match expected interface
-  const handleCreateDoctor = async (doctorData: any) => {
+  // Wrapper functions that match expected signatures by discarding return values
+  const handleCreateDoctor = async (doctorData: {
+    name: string;
+    specialty?: string;
+    crm?: string;
+    email?: string;
+    phone?: string;
+    unit_id?: string;
+  }): Promise<void> => {
     await createDoctor(doctorData);
   };
 
-  const handleUpdateDoctor = async (id: string, updates: any) => {
+  const handleUpdateDoctor = async (id: string, updates: {
+    name?: string;
+    specialty?: string;
+    crm?: string;
+    email?: string;
+    phone?: string;
+    unit_id?: string;
+  }): Promise<void> => {
     await updateDoctor(id, updates);
   };
 
-  const handleDeleteDoctor = async (id: string) => {
+  const handleDeleteDoctor = async (id: string): Promise<void> => {
     await deleteDoctor(id);
   };
 
-  const handleCreateExamType = async (examTypeData: any) => {
+  const handleCreateExamType = async (examTypeData: {
+    name: string;
+    category?: string;
+    description?: string;
+    duration_minutes?: number;
+    cost?: number;
+    requires_preparation?: boolean;
+    preparation_instructions?: string;
+  }): Promise<void> => {
     await createExamType(examTypeData);
   };
 
-  const handleUpdateExamType = async (id: string, updates: any) => {
+  const handleUpdateExamType = async (id: string, updates: {
+    name?: string;
+    category?: string;
+    description?: string;
+    duration_minutes?: number;
+    cost?: number;
+    requires_preparation?: boolean;
+    preparation_instructions?: string;
+  }): Promise<void> => {
     await updateExamType(id, updates);
   };
 
-  const handleDeleteExamType = async (id: string) => {
+  const handleDeleteExamType = async (id: string): Promise<void> => {
     await deleteExamType(id);
   };
 
@@ -162,17 +193,17 @@ const AppointmentsDashboard: React.FC = () => {
             <DoctorManagement
               doctors={doctors}
               units={units}
-              onCreateDoctor={createDoctor}
-              onUpdateDoctor={updateDoctor}
-              onDeleteDoctor={deleteDoctor}
+              onCreateDoctor={handleCreateDoctor}
+              onUpdateDoctor={handleUpdateDoctor}
+              onDeleteDoctor={handleDeleteDoctor}
             />
           ),
           examTypes: (
             <ExamTypeManagement
               examTypes={examTypes}
-              onCreateExamType={createExamType}
-              onUpdateExamType={updateExamType}
-              onDeleteExamType={deleteExamType}
+              onCreateExamType={handleCreateExamType}
+              onUpdateExamType={handleUpdateExamType}
+              onDeleteExamType={handleDeleteExamType}
             />
           )
         }}

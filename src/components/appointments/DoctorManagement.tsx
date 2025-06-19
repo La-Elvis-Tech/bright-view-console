@@ -14,8 +14,22 @@ import { Doctor, Unit } from '@/hooks/useSupabaseAppointments';
 interface DoctorManagementProps {
   doctors: Doctor[];
   units: Unit[];
-  onCreateDoctor: (doctor: Omit<Doctor, 'id'>) => Promise<void>;
-  onUpdateDoctor: (id: string, doctor: Partial<Doctor>) => Promise<void>;
+  onCreateDoctor: (doctor: {
+    name: string;
+    specialty?: string;
+    crm?: string;
+    email?: string;
+    phone?: string;
+    unit_id?: string;
+  }) => Promise<void>;
+  onUpdateDoctor: (id: string, doctor: {
+    name?: string;
+    specialty?: string;
+    crm?: string;
+    email?: string;
+    phone?: string;
+    unit_id?: string;
+  }) => Promise<void>;
   onDeleteDoctor: (id: string) => Promise<void>;
 }
 
@@ -76,26 +90,14 @@ const DoctorManagement: React.FC<DoctorManagementProps> = ({
     try {
       if (editingDoctor) {
         await onUpdateDoctor(editingDoctor.id, formData);
-        toast({
-          title: 'Médico atualizado',
-          description: 'As informações do médico foram atualizadas com sucesso.',
-        });
       } else {
         await onCreateDoctor(formData);
-        toast({
-          title: 'Médico criado',
-          description: 'O novo médico foi adicionado com sucesso.',
-        });
       }
       
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar as informações do médico.',
-        variant: 'destructive',
-      });
+      console.error('Error saving doctor:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,16 +107,8 @@ const DoctorManagement: React.FC<DoctorManagementProps> = ({
     if (confirm(`Tem certeza que deseja remover o Dr(a). ${doctor.name}?`)) {
       try {
         await onDeleteDoctor(doctor.id);
-        toast({
-          title: 'Médico removido',
-          description: 'O médico foi removido com sucesso.',
-        });
       } catch (error) {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível remover o médico.',
-          variant: 'destructive',
-        });
+        console.error('Error deleting doctor:', error);
       }
     }
   };

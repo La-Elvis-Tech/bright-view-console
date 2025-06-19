@@ -29,22 +29,22 @@ const AppointmentTabs: React.FC<AppointmentTabsProps> = ({
           value="calendar"
           className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
         >
-          <Calendar className="h-4 w-4 mr-2" />
+          <Calendar className="h-4 w-4 mr-2 hidden md:inline" />
           Calendário
         </TabsTrigger>
         <TabsTrigger 
           value="doctors"
           className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
         >
-          <Users className="h-4 w-4 mr-2" />
+          <Users className="h-4 w-4 mr-2 hidden md:inline" />
           Médicos ({doctorsCount})
         </TabsTrigger>
         <TabsTrigger 
           value="exam-types"
           className="data-[state=active]:bg-neutral-100 data-[state=active]:text-neutral-900 dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100 text-sm"
         >
-          <Clock className="h-4 w-4 mr-2" />
-          Tipos de Exames ({examTypesCount})
+          <Clock className="h-4 w-4 mr-2 hidden md:inline" />
+          Exames ({examTypesCount})
         </TabsTrigger>
       </TabsList>
 
