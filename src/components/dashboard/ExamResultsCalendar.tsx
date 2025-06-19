@@ -110,7 +110,7 @@ const ExamResultsCalendar: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  {value} exame{value !== 1 ? 's' : ''} realizado{value !== 1 ? 's' : ''}
+                  {value} exame{Number(value) !== 1 ? 's' : ''} realizado{Number(value) !== 1 ? 's' : ''}
                 </p>
               </div>
             )}

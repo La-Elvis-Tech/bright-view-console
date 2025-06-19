@@ -8,7 +8,7 @@ import RecentActivities from "@/components/dashboard/RecentActivities";
 import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
 import UnitSelectorCard from "@/components/dashboard/UnitSelectorCard";
 import InventoryValueWaffle from "@/components/dashboard/InventoryValueWaffle";
-import SkeletonDashboard from "@/components/ui/skeleton-dashboard";
+import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
   const { profile, loading } = useAuthContext();
