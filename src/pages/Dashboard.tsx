@@ -9,6 +9,7 @@ import RecentExamsTable from "@/components/dashboard/RecentExamsTable";
 import SystemLogsPanel from "@/components/dashboard/SystemLogsPanel";
 import PredictiveInsights from "@/components/dashboard/PredictiveInsights";
 import InventoryValueWaffle from "@/components/dashboard/InventoryValueWaffle";
+import ExamResultsCalendar from "@/components/dashboard/ExamResultsCalendar";
 import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
@@ -21,9 +22,9 @@ const Dashboard: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <p className="text-gray-600">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+        <div className="text-center p-8 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+          <p className="text-neutral-600 dark:text-neutral-400">
             Você precisa estar logado para acessar o dashboard.
           </p>
         </div>
@@ -32,14 +33,14 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-xl md:text-2xl font-medium text-neutral-900 dark:text-neutral-100">
             Dashboard
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Bem-vindo de volta, {profile.full_name}
           </p>
         </div>
@@ -47,6 +48,9 @@ const Dashboard: React.FC = () => {
         <Suspense fallback={<SkeletonDashboard />}>
           {/* Stats Cards */}
           <DashboardStats />
+
+          {/* Calendar Section */}
+          <ExamResultsCalendar />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

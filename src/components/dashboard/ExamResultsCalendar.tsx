@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ResponsiveCalendar } from "@nivo/calendar";
 import { Card } from "@/components/ui/card";
@@ -49,9 +48,9 @@ const ExamResultsCalendar: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-lg">
         <div className="p-6 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-600 dark:border-neutral-400 mx-auto"></div>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Carregando...</p>
         </div>
       </Card>
@@ -62,10 +61,10 @@ const ExamResultsCalendar: React.FC = () => {
   const toDate = format(endOfMonth(new Date()), 'yyyy-MM-dd');
 
   return (
-    <Card className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-lg">
       <div className="p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-100">
             Calendário de Exames Realizados
           </h2>
           <div className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -78,14 +77,14 @@ const ExamResultsCalendar: React.FC = () => {
             data={examData}
             from={fromDate}
             to={toDate}
-            emptyColor="transparent"
-            colors={['#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8', '#1e3a8a']}
+            emptyColor="#f5f5f5"
+            colors={['#e5e5e5', '#a3a3a3', '#737373', '#525252', '#262626']}
             margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             yearSpacing={40}
-            monthBorderWidth={2}
+            monthBorderWidth={1}
             monthBorderColor="#e5e7eb"
-            dayBorderWidth={1}
-            dayBorderColor="#f3f4f6"
+            dayBorderWidth={0}
+            dayBorderColor="transparent"
             legends={[
               {
                 anchor: 'bottom-right',
@@ -121,16 +120,6 @@ const ExamResultsCalendar: React.FC = () => {
                 fill: '#6b7280',
                 outlineWidth: 0,
                 outlineColor: 'transparent'
-              },
-              tooltip: {
-                container: {
-                  background: 'white',
-                  color: 'inherit',
-                  fontSize: 'inherit',
-                  borderRadius: '8px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                  padding: '12px'
-                }
               }
             }}
           />

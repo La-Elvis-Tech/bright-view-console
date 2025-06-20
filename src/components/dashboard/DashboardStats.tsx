@@ -101,37 +101,37 @@ const DashboardStats: React.FC = () => {
       title: "Total de Agendamentos",
       value: stats?.totalAppointments || 0,
       icon: Calendar,
-      iconColor: "text-blue-600"
+      iconColor: "text-neutral-600 dark:text-neutral-400"
     },
     {
       title: "Agendamentos Hoje",
       value: stats?.todayAppointments || 0,
       icon: Clock,
-      iconColor: "text-green-600"
+      iconColor: "text-neutral-600 dark:text-neutral-400"
     },
     {
       title: "Receita Total",
       value: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
-      iconColor: "text-emerald-600"
+      iconColor: "text-neutral-600 dark:text-neutral-400"
     },
     {
       title: "Itens em Estoque",
       value: stats?.totalInventoryItems || 0,
       icon: Package,
-      iconColor: "text-indigo-600"
+      iconColor: "text-neutral-600 dark:text-neutral-400"
     },
     {
       title: "Estoque Baixo",
       value: stats?.lowStockItems || 0,
       icon: AlertTriangle,
-      iconColor: "text-red-600"
+      iconColor: "text-red-600 dark:text-red-400"
     },
     {
       title: "Tipos de Exames",
       value: stats?.activeExamTypes || 0,
       icon: Users,
-      iconColor: "text-purple-600"
+      iconColor: "text-neutral-600 dark:text-neutral-400"
     }
   ];
 
@@ -139,11 +139,11 @@ const DashboardStats: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="border-0 shadow-sm bg-white">
+          <Card key={i} className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
             <CardContent className="p-4">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2 w-1/2"></div>
+                <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-1/3"></div>
               </div>
             </CardContent>
           </Card>
@@ -157,20 +157,20 @@ const DashboardStats: React.FC = () => {
       {statsCards.map((stat, index) => (
         <Card 
           key={index}
-          className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow"
+          className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
         >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
                   {stat.title}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-2 bg-gray-50 rounded">
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+              <div className="p-2 bg-neutral-50 dark:bg-neutral-800 rounded">
+                <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
               </div>
             </div>
           </CardContent>

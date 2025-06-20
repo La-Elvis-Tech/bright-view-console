@@ -26,18 +26,18 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
   const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-900">
+        <CardTitle className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-100">
           <span className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-gray-400" />
+            <TrendingUp className="h-4 w-4 text-neutral-400" />
             Tendência de Exames
           </span>
           <div className="text-right text-xs">
-            <div className="text-gray-900 font-medium">
+            <div className="text-neutral-900 dark:text-neutral-100 font-medium">
               {totalExams} exames
             </div>
-            <div className="text-green-600 text-xs">
+            <div className="text-neutral-600 dark:text-neutral-400 text-xs">
               R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </div>
@@ -49,8 +49,8 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
             <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="examGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#525252" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="#525252" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <XAxis 
@@ -66,11 +66,12 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--background)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  padding: '12px'
+                  padding: '12px',
+                  color: 'var(--foreground)'
                 }}
                 formatter={(value, name) => [
                   name === 'count' ? `${value} exames` : `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
@@ -80,11 +81,11 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke="#3b82f6"
+                stroke="#525252"
                 strokeWidth={2}
                 fill="url(#examGradient)"
                 dot={false}
-                activeDot={{ r: 4, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: '#525252', stroke: '#ffffff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

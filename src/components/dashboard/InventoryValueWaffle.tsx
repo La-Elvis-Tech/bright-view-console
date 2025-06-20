@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ResponsiveWaffle } from "@nivo/waffle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +42,7 @@ const InventoryValueWaffle: React.FC = () => {
           id: item.id,
           label: item.name,
           value: Math.round((item.current_stock || 0) * (item.cost_per_unit || 0)),
-          color: item.inventory_categories?.color || '#3b82f6'
+          color: '#525252' // Neutral gray for minimalist design
         }))
         .filter(item => item.value > 0)
         .sort((a, b) => b.value - a.value)
@@ -56,11 +55,11 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-0 shadow-sm bg-white">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
         <CardContent className="p-4">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-4 w-1/2"></div>
+            <div className="h-64 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
           </div>
         </CardContent>
       </Card>
@@ -69,15 +68,15 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (inventoryData.length === 0) {
     return (
-      <Card className="border-0 shadow-sm bg-white">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-900">
-            <Package className="h-4 w-4 text-gray-400" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <Package className="h-4 w-4 text-neutral-400" />
             Valor do Inventário
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-neutral-400">
             <Package className="h-8 w-8 mx-auto mb-3 opacity-50" />
             <p className="text-sm">Nenhum item com valor encontrado</p>
             <p className="text-xs mt-1">para sua unidade</p>
@@ -90,18 +89,18 @@ const InventoryValueWaffle: React.FC = () => {
   const totalValue = inventoryData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-900">
+        <CardTitle className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-100">
           <span className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-gray-400" />
+            <Package className="h-4 w-4 text-neutral-400" />
             Itens de Maior Valor em Estoque
           </span>
           <div className="text-right text-xs">
-            <div className="text-green-600 font-medium">
+            <div className="text-neutral-600 dark:text-neutral-400 font-medium">
               R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <div className="text-gray-400 text-xs">
+            <div className="text-neutral-400 text-xs">
               {inventoryData.length} itens
             </div>
           </div>
@@ -115,7 +114,7 @@ const InventoryValueWaffle: React.FC = () => {
             rows={12}
             columns={16}
             padding={1}
-            colors={{ datum: 'color' }}
+            colors={['#525252', '#737373', '#a3a3a3', '#d4d4d4', '#e5e5e5']}
             borderRadius={2}
             borderWidth={0}
             motionConfig="gentle"
@@ -146,17 +145,17 @@ const InventoryValueWaffle: React.FC = () => {
             tooltip={(props) => {
               const data = props.data;
               return (
-                <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                <div className="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-center gap-2 mb-1">
                     <div 
                       className="w-3 h-3 rounded"
                       style={{ backgroundColor: data.color }}
                     />
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                       {data.label}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
                     Valor total: R$ {data.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
