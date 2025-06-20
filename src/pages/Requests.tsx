@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ExamsStats from '@/components/exams/ExamsStats';
 import ExamDetailsCard from '@/components/exams/ExamDetailsCard';
+import RecentExamsSection from '@/components/exams/RecentExamsSection';
 import { useQuery } from '@tanstack/react-query';
 import { examDetailsService } from '@/services/examDetailsService';
 import { SkeletonExams } from '@/components/ui/skeleton-exams';
@@ -70,7 +71,7 @@ const Requests = () => {
   }
 
   return (
-    <div className="space-y-8 ">
+    <div className="space-y-6">
       {/* Header */}
       <div className="text-left">
         <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -83,6 +84,9 @@ const Requests = () => {
 
       {/* Stats */}
       <ExamsStats examTypes={examTypes} />
+
+      {/* Recent Exams Section */}
+      <RecentExamsSection />
 
       {/* Filters */}
       <Card className="bg-white/50 dark:bg-neutral-950/30 border-neutral-200 dark:border-neutral-800 backdrop-blur-sm">
@@ -126,6 +130,9 @@ const Requests = () => {
       {/* Results Header */}
       {filteredExams.length > 0 && (
         <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            Catálogo de Exames Disponíveis
+          </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
             {filteredExams.length} {filteredExams.length === 1 ? 'exame encontrado' : 'exames encontrados'}
           </p>
