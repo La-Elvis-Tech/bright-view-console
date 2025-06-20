@@ -13,8 +13,8 @@ interface RecentExam {
   id: string;
   patient_name: string;
   exam_type: string;
-  status: string;
-  created_at: string;
+  result_status: string;
+  exam_date: string;
   doctor_name: string;
   exam_category: string;
 }
@@ -23,22 +23,23 @@ const RecentExamsSection: React.FC = () => {
   const { profile } = useAuthContext();
 
   const { data: recentExams, isLoading } = useQuery({
-    queryKey: ['recent-exams-page', profile?.unit_id],
+    queryKey: ['recent-exam-results', profile?.unit_id],
     queryFn: async (): Promise<RecentExam[]> => {
       if (!profile?.unit_id) return [];
 
       const { data, error } = await supabase
-        .from('appointments')
+        .from('exam_results')
         .select(`
           id,
           patient_name,
-          status,
-          created_at,
-          exam_types(name, category),
+          result_status,
+          exam_date,
+          exam_category,
+          exam_types(name),
           doctors(name)
         `)
         .eq('unit_id', profile.unit_id)
-        .order('created_at', { ascending: false })
+        .order('exam_date', { ascending: false })
         .limit(6);
 
       if (error) throw error;
@@ -47,9 +48,9 @@ const RecentExamsSection: React.FC = () => {
         id: exam.id,
         patient_name: exam.patient_name,
         exam_type: exam.exam_types?.name || 'N/A',
-        exam_category: exam.exam_types?.category || 'N/A',
-        status: exam.status,
-        created_at: exam.created_at,
+        exam_category: exam.exam_category || 'N/A',
+        result_status: exam.result_status,
+        exam_date: exam.exam_date,
         doctor_name: exam.doctors?.name || 'N/A'
       })) || [];
     },
@@ -58,98 +59,91 @@ const RecentExamsSection: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'agendado':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'em andamento':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'pendente':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'em análise':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'concluído':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'cancelado':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   if (isLoading) {
     return (
-      <Card className="bg-white/50 dark:bg-neutral-950/30 border-neutral-200 dark:border-neutral-800 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+      <Card className="border-0 shadow-sm bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Calendar className="h-4 w-4 text-gray-400" />
             Últimos Exames Realizados
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-              </div>
-            ))}
-          </div>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-16 bg-gray-100 rounded"></div>
+            </div>
+          ))}
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-white/50 dark:bg-neutral-950/30 border-neutral-200 dark:border-neutral-800 backdrop-blur-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+    <Card className="border-0 shadow-sm bg-white">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <Calendar className="h-4 w-4 text-gray-400" />
           Últimos Exames Realizados
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {recentExams?.length > 0 ? (
-            recentExams.map((exam) => (
-              <div 
-                key={exam.id}
-                className="p-4 bg-white dark:bg-neutral-900/50 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <User className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                      <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-                        {exam.patient_name}
-                      </h4>
-                      <Badge className={`text-xs ${getStatusColor(exam.status)}`}>
-                        {exam.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                      <FileText className="h-3 w-3" />
-                      <span>{exam.exam_type}</span>
-                      <span className="text-neutral-400">•</span>
-                      <span>{exam.exam_category}</span>
-                    </div>
+      <CardContent className="space-y-3">
+        {recentExams?.length > 0 ? (
+          recentExams.map((exam) => (
+            <div 
+              key={exam.id}
+              className="p-3 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User className="h-3 w-3 text-gray-400" />
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {exam.patient_name}
+                    </h4>
+                    <Badge className={`text-xs px-2 py-0.5 border ${getStatusColor(exam.result_status)}`}>
+                      {exam.result_status}
+                    </Badge>
                   </div>
-                  <div className="text-right text-xs text-neutral-500 dark:text-neutral-400">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(exam.created_at), 'HH:mm', { locale: ptBR })}
-                    </div>
-                    <div className="mt-1">
-                      {format(new Date(exam.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                    </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <FileText className="h-3 w-3" />
+                    <span>{exam.exam_type}</span>
+                    <span>•</span>
+                    <span>{exam.exam_category}</span>
                   </div>
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Dr. {exam.doctor_name}
+                <div className="text-right text-xs text-gray-400">
+                  <div className="flex items-center gap-1 justify-end mb-1">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(exam.exam_date), 'dd/MM/yyyy', { locale: ptBR })}
+                  </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum exame recente encontrado</p>
-              <p className="text-sm mt-1">para sua unidade</p>
+              <div className="text-xs text-gray-400">
+                Dr. {exam.doctor_name}
+              </div>
             </div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            <Calendar className="h-8 w-8 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">Nenhum exame realizado</p>
+            <p className="text-xs mt-1">para sua unidade</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

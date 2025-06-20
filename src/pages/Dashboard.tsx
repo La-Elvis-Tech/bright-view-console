@@ -21,9 +21,9 @@ const Dashboard: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
-        <div className="text-center p-8 bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm rounded-2xl border border-neutral-200/50 dark:border-neutral-700/50">
-          <p className="text-neutral-600 dark:text-neutral-400">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-gray-600">
             Você precisa estar logado para acessar o dashboard.
           </p>
         </div>
@@ -32,14 +32,14 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
-      <div className="p-4 lg:p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-gray-900">
             Dashboard
           </h1>
-          <p className="text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-gray-500">
             Bem-vindo de volta, {profile.full_name}
           </p>
         </div>
@@ -49,31 +49,25 @@ const Dashboard: React.FC = () => {
           <DashboardStats />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-            {/* Left Column - Charts and Analytics */}
-            <div className="lg:col-span-8 space-y-4 lg:space-y-6">
-              {/* Exam Trends Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Charts */}
+            <div className="lg:col-span-2 space-y-6">
               {examTrends && <ExamTrendsChart data={examTrends} />}
-              
-              {/* Inventory Value Waffle */}
               <InventoryValueWaffle />
             </div>
 
             {/* Right Column - Quick Actions and Insights */}
-            <div className="lg:col-span-4 space-y-4 lg:space-y-6">
+            <div className="space-y-6">
               <QuickActionsCard />
               {metrics && <PredictiveInsights metrics={metrics} />}
             </div>
           </div>
 
           {/* Bottom Section - Tables */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-            {/* Recent Exams */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               {recentExams && <RecentExamsTable exams={recentExams} />}
             </div>
-
-            {/* System Logs */}
             <div>
               {systemLogs && <SystemLogsPanel logs={systemLogs} />}
             </div>

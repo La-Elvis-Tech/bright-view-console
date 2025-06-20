@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/context/AuthContext";
@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   Clock
 } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 
 const DashboardStats: React.FC = () => {
   const { profile } = useAuthContext();
@@ -101,55 +101,49 @@ const DashboardStats: React.FC = () => {
       title: "Total de Agendamentos",
       value: stats?.totalAppointments || 0,
       icon: Calendar,
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-950/20"
+      iconColor: "text-blue-600"
     },
     {
       title: "Agendamentos Hoje",
       value: stats?.todayAppointments || 0,
       icon: Clock,
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-50 dark:bg-green-950/20"
+      iconColor: "text-green-600"
     },
     {
       title: "Receita Total",
       value: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
-      color: "text-emerald-600 dark:text-emerald-400",
-      bgColor: "bg-emerald-50 dark:bg-emerald-950/20"
+      iconColor: "text-emerald-600"
     },
     {
       title: "Itens em Estoque",
       value: stats?.totalInventoryItems || 0,
       icon: Package,
-      color: "text-indigo-600 dark:text-indigo-400",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/20"
+      iconColor: "text-indigo-600"
     },
     {
       title: "Estoque Baixo",
       value: stats?.lowStockItems || 0,
       icon: AlertTriangle,
-      color: "text-red-600 dark:text-red-400",
-      bgColor: "bg-red-50 dark:bg-red-950/20"
+      iconColor: "text-red-600"
     },
     {
       title: "Tipos de Exames",
       value: stats?.activeExamTypes || 0,
       icon: Users,
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-950/20"
+      iconColor: "text-purple-600"
     }
   ];
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800">
-            <CardContent className="p-6">
+          <Card key={i} className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-1/2"></div>
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
               </div>
             </CardContent>
           </Card>
@@ -159,24 +153,24 @@ const DashboardStats: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {statsCards.map((stat, index) => (
         <Card 
           key={index}
-          className="bg-white dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+          className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow"
         >
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                <p className="text-xs font-medium text-gray-500 mb-1">
                   {stat.title}
                 </p>
-                <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                <p className="text-2xl font-semibold text-gray-900">
                   {stat.value}
                 </p>
               </div>
-              <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              <div className="p-2 bg-gray-50 rounded">
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
             </div>
           </CardContent>
