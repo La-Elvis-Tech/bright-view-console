@@ -1,171 +1,145 @@
-import React from "react";
+
+import React, { useRef, useEffect } from "react";
 import { ResponsiveWaffle } from "@nivo/waffle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/context/AuthContext";
 import { Package } from "lucide-react";
-
-interface InventoryValueData {
-  id: string;
-  label: string;
-  value: number;
-  color: string;
-}
+import { gsap } from "gsap";
 
 const InventoryValueWaffle: React.FC = () => {
   const { profile } = useAuthContext();
+  const waffleRef = useRef<HTMLDivElement>(null);
 
   const { data: inventoryData = [], isLoading } = useQuery({
-    queryKey: ['inventory-value-waffle', profile?.unit_id],
-    queryFn: async (): Promise<InventoryValueData[]> => {
-      if (!profile?.unit_id) return [];
-
+    queryKey: ['inventory-waffle', profile?.unit_id],
+    queryFn: async () => {
       const { data: items, error } = await supabase
         .from('inventory_items')
-        .select(`
-          id,
-          name,
-          current_stock,
-          cost_per_unit,
-          inventory_categories(name, color)
-        `)
-        .eq('unit_id', profile.unit_id)
-        .eq('active', true)
-        .not('cost_per_unit', 'is', null)
-        .order('current_stock', { ascending: false });
+        .select('category, current_stock, unit_cost')
+        .eq('unit_id', profile?.unit_id)
+        .eq('active', true);
 
       if (error) throw error;
 
-      const itemsWithValue = items
-        ?.map(item => ({
-          id: item.id,
-          label: item.name,
-          value: Math.round((item.current_stock || 0) * (item.cost_per_unit || 0)),
-          color: '#525252' // Neutral gray for minimalist design
-        }))
-        .filter(item => item.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 6) || [];
+      const categoryData = items?.reduce((acc, item) => {
+        const category = item.category || 'Outros';
+        const value = (item.current_stock || 0) * (item.unit_cost || 0);
+        
+        if (acc[category]) {
+          acc[category] += value;
+        } else {
+          acc[category] = value;
+        }
+        return acc;
+      }, {} as Record<string, number>);
 
-      return itemsWithValue;
+      return Object.entries(categoryData || {}).map(([id, value]) => ({
+        id,
+        label: id,
+        value: Math.round(value)
+      }));
     },
     enabled: !!profile?.unit_id
   });
 
+  useEffect(() => {
+    if (!isLoading && waffleRef.current) {
+      gsap.fromTo(waffleRef.current, 
+        { 
+          opacity: 0, 
+          y: 30,
+          scale: 0.95
+        },
+        { 
+          opacity: 1, 
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          ease: "power2.out"
+        }
+      );
+    }
+  }, [isLoading]);
+
   if (isLoading) {
     return (
-      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-        <CardContent className="p-4">
-          <div className="animate-pulse">
-            <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-4 w-1/2"></div>
-            <div className="h-64 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (inventoryData.length === 0) {
-    return (
-      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+      <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-            <Package className="h-4 w-4 text-neutral-400" />
-            Valor do Inventário
+            <Package className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            Valor do Estoque por Categoria
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-neutral-400">
-            <Package className="h-8 w-8 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">Nenhum item com valor encontrado</p>
-            <p className="text-xs mt-1">para sua unidade</p>
+          <div className="h-64 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-600 dark:border-neutral-400"></div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const totalValue = inventoryData.reduce((sum, item) => sum + item.value, 0);
-
   return (
-    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+    <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-100">
-          <span className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-neutral-400" />
-            Itens de Maior Valor em Estoque
-          </span>
-          <div className="text-right text-xs">
-            <div className="text-neutral-600 dark:text-neutral-400 font-medium">
-              R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </div>
-            <div className="text-neutral-400 text-xs">
-              {inventoryData.length} itens
-            </div>
-          </div>
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <Package className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+          Valor do Estoque por Categoria
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-64 w-full">
+        <div ref={waffleRef} className="h-64">
           <ResponsiveWaffle
             data={inventoryData}
-            total={totalValue}
+            total={inventoryData.reduce((sum, item) => sum + item.value, 0)}
             rows={12}
             columns={16}
             padding={1}
-            colors={['#525252', '#737373', '#a3a3a3', '#d4d4d4', '#e5e5e5']}
-            borderRadius={2}
-            borderWidth={0}
-            motionConfig="gentle"
+            colors={['#f3f4f6', '#d1d5db', '#9ca3af', '#6b7280', '#4b5563']}
+            borderColor="#ffffff"
+            borderWidth={1}
+            margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
             legends={[
               {
                 anchor: 'bottom',
                 direction: 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 30,
-                itemsSpacing: 2,
+                translateY: 56,
+                itemsSpacing: 10,
                 itemWidth: 100,
-                itemHeight: 16,
+                itemHeight: 20,
                 itemDirection: 'left-to-right',
                 itemOpacity: 1,
-                itemTextColor: '#6B7280',
-                symbolSize: 10,
+                symbolSize: 12,
                 effects: [
                   {
                     on: 'hover',
                     style: {
-                      itemTextColor: '#1F2937'
+                      itemOpacity: 1
                     }
                   }
                 ]
               }
             ]}
-            tooltip={(props) => {
-              const data = props.data;
-              return (
-                <div className="bg-white dark:bg-neutral-800 p-3 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div 
-                      className="w-3 h-3 rounded"
-                      style={{ backgroundColor: data.color }}
-                    />
-                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                      {data.label}
-                    </span>
-                  </div>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                    Valor total: R$ {data.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
+            tooltip={({ label, value }) => (
+              <div className="bg-white/95 dark:bg-neutral-800/95 p-3 rounded-lg shadow-lg border border-neutral-200/50 dark:border-neutral-700/50 backdrop-blur-sm">
+                <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  {label}
                 </div>
-              );
-            }}
+                <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                  R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            )}
             theme={{
-              background: 'transparent',
               text: {
-                fontSize: 10,
-                fill: '#6B7280'
+                fontSize: 11,
+                fill: '#6b7280',
+                outlineWidth: 0,
+                outlineColor: 'transparent'
               }
             }}
           />

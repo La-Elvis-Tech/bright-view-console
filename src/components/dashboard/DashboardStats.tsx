@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,9 +12,11 @@ import {
   Clock
 } from "lucide-react";
 import { format } from "date-fns";
+import { gsap } from "gsap";
 
 const DashboardStats: React.FC = () => {
   const { profile } = useAuthContext();
+  const statsRef = useRef<HTMLDivElement>(null);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats', profile?.unit_id],
@@ -96,87 +97,128 @@ const DashboardStats: React.FC = () => {
     enabled: !!profile?.unit_id
   });
 
-  const statsCards = [
+  useEffect(() => {
+    if (!isLoading && statsRef.current) {
+      const cards = statsRef.current.querySelectorAll('.stat-card');
+      gsap.fromTo(cards, 
+        { 
+          opacity: 0, 
+          y: 20,
+          scale: 0.95
+        },
+        { 
+          opacity: 1, 
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power2.out"
+        }
+      );
+    }
+  }, [isLoading]);
+
+  const statsData = [
     {
       title: "Total de Agendamentos",
       value: stats?.totalAppointments || 0,
       icon: Calendar,
-      iconColor: "text-neutral-600 dark:text-neutral-400"
+      color: "from-blue-500/10 to-blue-600/10",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      borderColor: "border-blue-200/50 dark:border-blue-800/50"
     },
     {
       title: "Agendamentos Hoje",
       value: stats?.todayAppointments || 0,
       icon: Clock,
-      iconColor: "text-neutral-600 dark:text-neutral-400"
+      color: "from-emerald-500/10 to-emerald-600/10",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      borderColor: "border-emerald-200/50 dark:border-emerald-800/50"
     },
     {
       title: "Receita Total",
       value: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
-      iconColor: "text-neutral-600 dark:text-neutral-400"
+      color: "from-purple-500/10 to-purple-600/10",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      borderColor: "border-purple-200/50 dark:border-purple-800/50"
     },
     {
       title: "Itens em Estoque",
       value: stats?.totalInventoryItems || 0,
       icon: Package,
-      iconColor: "text-neutral-600 dark:text-neutral-400"
+      color: "from-amber-500/10 to-amber-600/10",
+      iconColor: "text-amber-600 dark:text-amber-500",
+      borderColor: "border-amber-200/50 dark:border-amber-800/50"
     },
     {
       title: "Estoque Baixo",
       value: stats?.lowStockItems || 0,
       icon: AlertTriangle,
-      iconColor: "text-red-600 dark:text-red-400"
+      color: "from-red-500/10 to-red-600/10",
+      iconColor: "text-red-600 dark:text-red-400",
+      borderColor: "border-red-200/50 dark:border-red-800/50"
     },
     {
       title: "Tipos de Exames",
       value: stats?.activeExamTypes || 0,
       icon: Users,
-      iconColor: "text-neutral-600 dark:text-neutral-400"
+      color: "from-indigo-500/10 to-indigo-600/10",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      borderColor: "border-indigo-200/50 dark:border-indigo-800/50"
     }
   ];
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-            <CardContent className="p-4">
-              <div className="animate-pulse">
-                <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2 w-1/2"></div>
-                <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-1/3"></div>
+      <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="animate-pulse">
+                  <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-700 rounded-lg mb-3"></div>
+                  <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2"></div>
+                  <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-2/3"></div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {statsCards.map((stat, index) => (
-        <Card 
-          key={index}
-          className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
-        >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                  {stat.title}
-                </p>
-                <p className="text-xl font-medium text-neutral-900 dark:text-neutral-100">
-                  {stat.value}
-                </p>
-              </div>
-              <div className="p-2 bg-neutral-50 dark:bg-neutral-800 rounded">
-                <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+    <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+      <CardContent className="p-6">
+        <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {statsData.map((stat, index) => (
+            <div 
+              key={index}
+              className={`stat-card relative group cursor-pointer transition-all duration-300 hover:scale-105`}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              <div className={`relative p-4 rounded-xl border ${stat.borderColor} bg-white/30 dark:bg-neutral-800/30 backdrop-blur-sm`}>
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`p-2 rounded-lg bg-white/50 dark:bg-neutral-800/50 ${stat.iconColor}`}>
+                    <stat.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                      {stat.title}
+                    </p>
+                    <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                      {stat.value}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
