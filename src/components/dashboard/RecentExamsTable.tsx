@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Clock } from "lucide-react";
+import { Activity } from "lucide-react";
+import { gsap } from "gsap";
 
 interface RecentExam {
   id: string;
@@ -20,66 +21,79 @@ interface RecentExamsTableProps {
 }
 
 const RecentExamsTable: React.FC<RecentExamsTableProps> = ({ exams }) => {
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (tableRef.current) {
+      gsap.fromTo(tableRef.current, 
+        { 
+          opacity: 0, 
+          y: 20,
+          scale: 0.98
+        },
+        { 
+          opacity: 1, 
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        }
+      );
+    }
+  }, [exams]);
+
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'agendado':
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
-      case 'em andamento':
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
-      case 'concluído':
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
-      case 'cancelado':
-        return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+    switch (status) {
+      case 'Concluído':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'Em andamento':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'Agendado':
+        return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-300';
       default:
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
+        return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-300';
     }
   };
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-          <Calendar className="h-4 w-4 text-neutral-400" />
-          Últimos Agendamentos
+    <Card ref={tableRef} className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <Activity className="h-4 w-4" />
+          Exames Recentes
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-80 overflow-y-auto">
-          {exams.length > 0 ? exams.map((exam) => (
+        <div className="space-y-3">
+          {exams.slice(0, 6).map((exam) => (
             <div 
-              key={exam.id}
-              className="p-3 border border-neutral-100 dark:border-neutral-800 rounded-lg hover:border-neutral-200 dark:hover:border-neutral-700 transition-colors"
+              key={exam.id} 
+              className="flex items-center justify-between p-3 bg-neutral-50/60 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/50 transition-colors"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    {exam.patient_name}
-                  </h4>
-                  <Badge className={`text-xs px-2 py-0.5 border ${getStatusColor(exam.status)}`}>
-                    {exam.status}
-                  </Badge>
-                </div>
-                <div className="text-right text-xs text-neutral-400">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {format(new Date(exam.created_at), 'HH:mm', { locale: ptBR })}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                      {exam.patient_name}
+                    </p>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                      {exam.exam_type} • Dr. {exam.doctor_name}
+                    </p>
                   </div>
-                  <div className="mt-1">
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
                     {format(new Date(exam.created_at), 'dd/MM', { locale: ptBR })}
-                  </div>
+                  </p>
                 </div>
-              </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                <div className="font-medium">{exam.exam_type}</div>
-                <div className="mt-1">Dr. {exam.doctor_name}</div>
+                <Badge className={`text-xs px-2 py-1 ${getStatusColor(exam.status)}`}>
+                  {exam.status}
+                </Badge>
               </div>
             </div>
-          )) : (
-            <div className="text-center py-8 text-neutral-400">
-              <Calendar className="h-8 w-8 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Nenhum agendamento recente</p>
-            </div>
-          )}
+          ))}
         </div>
       </CardContent>
     </Card>

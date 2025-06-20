@@ -103,15 +103,15 @@ const DashboardStats: React.FC = () => {
       gsap.fromTo(cards, 
         { 
           opacity: 0, 
-          y: 20,
-          scale: 0.95
+          y: 10,
+          scale: 0.98
         },
         { 
           opacity: 1, 
           y: 0,
           scale: 1,
-          duration: 0.6,
-          stagger: 0.1,
+          duration: 0.4,
+          stagger: 0.05,
           ease: "power2.out"
         }
       );
@@ -123,64 +123,50 @@ const DashboardStats: React.FC = () => {
       title: "Total de Agendamentos",
       value: stats?.totalAppointments || 0,
       icon: Calendar,
-      color: "from-blue-500/10 to-blue-600/10",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      borderColor: "border-blue-200/50 dark:border-blue-800/50"
+      change: "+12%"
     },
     {
       title: "Agendamentos Hoje",
       value: stats?.todayAppointments || 0,
       icon: Clock,
-      color: "from-emerald-500/10 to-emerald-600/10",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      borderColor: "border-emerald-200/50 dark:border-emerald-800/50"
+      change: "+5%"
     },
     {
       title: "Receita Total",
       value: `R$ ${(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
-      color: "from-purple-500/10 to-purple-600/10",
-      iconColor: "text-purple-600 dark:text-purple-400",
-      borderColor: "border-purple-200/50 dark:border-purple-800/50"
+      change: "+8%"
     },
     {
       title: "Itens em Estoque",
       value: stats?.totalInventoryItems || 0,
       icon: Package,
-      color: "from-amber-500/10 to-amber-600/10",
-      iconColor: "text-amber-600 dark:text-amber-500",
-      borderColor: "border-amber-200/50 dark:border-amber-800/50"
+      change: "-2%"
     },
     {
       title: "Estoque Baixo",
       value: stats?.lowStockItems || 0,
       icon: AlertTriangle,
-      color: "from-red-500/10 to-red-600/10",
-      iconColor: "text-red-600 dark:text-red-400",
-      borderColor: "border-red-200/50 dark:border-red-800/50"
+      change: stats?.lowStockItems > 0 ? "Atenção" : "OK"
     },
     {
       title: "Tipos de Exames",
       value: stats?.activeExamTypes || 0,
       icon: Users,
-      color: "from-indigo-500/10 to-indigo-600/10",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      borderColor: "border-indigo-200/50 dark:border-indigo-800/50"
+      change: "+1%"
     }
   ];
 
   if (isLoading) {
     return (
-      <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
         <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="animate-pulse">
-                  <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-700 rounded-lg mb-3"></div>
-                  <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2"></div>
-                  <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-2/3"></div>
-                </div>
+              <div key={i} className="animate-pulse p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+                <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-700 rounded mb-3"></div>
+                <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2"></div>
+                <div className="h-6 bg-neutral-200 dark:bg-neutral-700 rounded w-2/3"></div>
               </div>
             ))}
           </div>
@@ -190,28 +176,32 @@ const DashboardStats: React.FC = () => {
   }
 
   return (
-    <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
       <CardContent className="p-6">
-        <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {statsData.map((stat, index) => (
             <div 
               key={index}
-              className={`stat-card relative group cursor-pointer transition-all duration-300 hover:scale-105`}
+              className="stat-card group p-4 bg-neutral-50/80 dark:bg-neutral-800/40 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all duration-200"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              <div className={`relative p-4 rounded-xl border ${stat.borderColor} bg-white/30 dark:bg-neutral-800/30 backdrop-blur-sm`}>
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className={`p-2 rounded-lg bg-white/50 dark:bg-neutral-800/50 ${stat.iconColor}`}>
-                    <stat.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                      {stat.title}
-                    </p>
-                    <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                      {stat.value}
-                    </p>
-                  </div>
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center justify-between">
+                  <stat.icon className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    stat.change.includes('+') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                    stat.change.includes('-') ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                    'bg-neutral-100 text-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-400'
+                  }`}>
+                    {stat.change}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                    {stat.title}
+                  </p>
+                  <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                    {stat.value}
+                  </p>
                 </div>
               </div>
             </div>

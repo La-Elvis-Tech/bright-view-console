@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Activity, User, Package, Calendar, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Settings } from "lucide-react";
+import { gsap } from "gsap";
 
 interface SystemLog {
   id: string;
@@ -20,83 +20,74 @@ interface SystemLogsPanelProps {
 }
 
 const SystemLogsPanel: React.FC<SystemLogsPanelProps> = ({ logs }) => {
-  const getActionIcon = (resourceType: string) => {
-    switch (resourceType.toLowerCase()) {
-      case 'appointment':
-        return Calendar;
-      case 'inventory':
-        return Package;
-      case 'user':
-        return User;
-      case 'system':
-        return Settings;
-      default:
-        return Activity;
+  const logsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (logsRef.current) {
+      gsap.fromTo(logsRef.current, 
+        { 
+          opacity: 0, 
+          y: 20,
+          scale: 0.98
+        },
+        { 
+          opacity: 1, 
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        }
+      );
     }
-  };
+  }, [logs]);
 
   const getActionColor = (action: string) => {
     switch (action.toLowerCase()) {
       case 'create':
       case 'created':
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
+        return 'text-green-600 dark:text-green-400';
       case 'update':
       case 'updated':
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
+        return 'text-blue-600 dark:text-blue-400';
       case 'delete':
       case 'deleted':
-        return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+        return 'text-red-600 dark:text-red-400';
       default:
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
+        return 'text-neutral-600 dark:text-neutral-400';
     }
   };
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-          <Activity className="h-4 w-4 text-neutral-400" />
-          Logs do Sistema
+    <Card ref={logsRef} className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <Settings className="h-4 w-4" />
+          Atividades do Sistema
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-80 overflow-y-auto">
-          {logs.length > 0 ? logs.map((log) => {
-            const IconComponent = getActionIcon(log.resource_type);
-            return (
-              <div 
-                key={log.id}
-                className="p-3 border border-neutral-100 dark:border-neutral-800 rounded-lg hover:border-neutral-200 dark:hover:border-neutral-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-neutral-50 dark:bg-neutral-800 rounded">
-                    <IconComponent className="h-3 w-3 text-neutral-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={`text-xs px-2 py-0.5 border ${getActionColor(log.action)}`}>
-                        {log.action}
-                      </Badge>
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
-                        {log.resource_type}
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-900 dark:text-neutral-100 truncate">
-                      {log.user_name}
-                    </p>
-                  </div>
-                  <div className="text-xs text-neutral-400">
-                    {format(new Date(log.created_at), 'dd/MM HH:mm', { locale: ptBR })}
-                  </div>
+        <div className="space-y-3">
+          {logs.slice(0, 6).map((log) => (
+            <div 
+              key={log.id} 
+              className="flex items-start gap-3 p-3 bg-neutral-50/60 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40"
+            >
+              <div className="w-2 h-2 rounded-full bg-neutral-400 dark:bg-neutral-500 mt-2 flex-shrink-0"></div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-sm font-medium ${getActionColor(log.action)}`}>
+                    {log.action}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {log.resource_type}
+                  </span>
                 </div>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Por {log.user_name} • {format(new Date(log.created_at), 'dd/MM HH:mm', { locale: ptBR })}
+                </p>
               </div>
-            );
-          }) : (
-            <div className="text-center py-8 text-neutral-400">
-              <Activity className="h-8 w-8 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Nenhum log disponível</p>
             </div>
-          )}
+          ))}
         </div>
       </CardContent>
     </Card>
