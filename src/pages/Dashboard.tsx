@@ -1,4 +1,3 @@
-
 import React, { Suspense } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useAdvancedDashboard } from "@/hooks/useAdvancedDashboard";
@@ -53,26 +52,30 @@ const Dashboard: React.FC = () => {
           <ExamResultsCalendar />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
             {/* Left Column - Charts */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="xl:col-span-2 space-y-6">
               {examTrends && <ExamTrendsChart data={examTrends} />}
               <InventoryValueWaffle />
             </div>
 
-            {/* Right Column - Quick Actions and Insights */}
-            <div className="space-y-6">
+            {/* Middle Column - Quick Actions */}
+            <div className="xl:col-span-1">
               <QuickActionsCard />
+            </div>
+
+            {/* Right Column - Insights */}
+            <div className="xl:col-span-1">
               {metrics && <PredictiveInsights metrics={metrics} />}
             </div>
           </div>
 
           {/* Bottom Section - Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+            <div className="min-h-0">
               <RecentExamsTable />
             </div>
-            <div>
+            <div className="min-h-0">
               {systemLogs && <SystemLogsPanel logs={systemLogs} />}
             </div>
           </div>

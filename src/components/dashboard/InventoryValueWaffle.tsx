@@ -64,17 +64,17 @@ const InventoryValueWaffle: React.FC = () => {
 
   useEffect(() => {
     if (!isLoading && containerRef.current && inventoryData.length > 0) {
-      const bars = containerRef.current.querySelectorAll('.inventory-bar');
-      gsap.fromTo(bars, 
+      const items = containerRef.current.querySelectorAll('.category-item');
+      gsap.fromTo(items, 
         { 
-          scaleX: 0,
-          opacity: 0
+          opacity: 0,
+          x: -10
         },
         { 
-          scaleX: 1,
           opacity: 1,
-          duration: 0.8,
-          stagger: 0.1,
+          x: 0,
+          duration: 0.4,
+          stagger: 0.08,
           ease: "power2.out"
         }
       );
@@ -83,16 +83,24 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
-        <CardHeader className="pb-4">
+      <Card className="h-full">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             <Package className="h-4 w-4" />
-            Valor do Estoque por Categoria
+            Valor por Categoria
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-48 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-300 border-t-neutral-600 dark:border-neutral-600 dark:border-t-neutral-400"></div>
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
+                  <div className="h-3 w-20 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                </div>
+                <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -101,49 +109,59 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (inventoryData.length === 0) {
     return (
-      <Card className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
-        <CardHeader className="pb-4">
+      <Card className="h-full">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             <Package className="h-4 w-4" />
-            Valor do Estoque por Categoria
+            Valor por Categoria
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-48 flex items-center justify-center">
-            <div className="text-center">
-              <Package className="h-8 w-8 mx-auto mb-3 text-neutral-400" />
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Nenhum item em estoque</p>
-            </div>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Package className="h-8 w-8 text-neutral-300 dark:text-neutral-600 mb-2" />
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Nenhum item</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">em estoque</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
+  const totalValue = inventoryData.reduce((sum, item) => sum + item.value, 0);
+
   return (
-    <Card className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
-      <CardHeader className="pb-4">
+    <Card className="h-full">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
           <Package className="h-4 w-4" />
-          Valor do Estoque por Categoria
+          Valor por Categoria
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="space-y-4">
-          {inventoryData.map((item, index) => (
-            <div key={item.id} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
+        <div ref={containerRef} className="space-y-3">
+          {/* Total Value */}
+          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/30 rounded-lg">
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Valor Total</p>
+            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
+          {/* Categories */}
+          {inventoryData.map((item) => (
+            <div key={item.id} className="category-item">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
                     {item.label}
                   </span>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                <div className="text-right flex-shrink-0 ml-2">
+                  <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                     R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -151,13 +169,12 @@ const InventoryValueWaffle: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="relative h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+              <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-1.5 overflow-hidden">
                 <div 
-                  className="inventory-bar absolute top-0 left-0 h-full rounded-full transition-all duration-300"
+                  className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{ 
                     backgroundColor: item.color,
-                    width: `${item.percentage}%`,
-                    transformOrigin: 'left'
+                    width: `${item.percentage}%`
                   }}
                 />
               </div>
