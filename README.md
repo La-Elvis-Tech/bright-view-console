@@ -226,7 +226,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 👥 Equipe
 
-Desenvolvido com ❤️ pela equipe La Elvis Tech
+Desenvolvido com ❤️ pela equipe La Elvis Tech.
 
 ---
 
