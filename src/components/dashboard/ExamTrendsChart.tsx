@@ -48,7 +48,7 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
   }, [data]);
 
   return (
-    <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-100">
           <span className="flex items-center gap-2">
@@ -68,20 +68,22 @@ const ExamTrendsChart: React.FC<ExamTrendsChartProps> = ({ data }) => {
       <CardContent>
         <div ref={chartRef} className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={formattedData} margin={{ top: 10, right: -10, left: -40, bottom: 0 }}>
               <defs>
                 <linearGradient id="examGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis 
+              <XAxis
+                hide 
                 dataKey="day" 
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6b7280', fontSize: 12 }}
               />
               <YAxis 
+                hide
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6b7280', fontSize: 12 }}

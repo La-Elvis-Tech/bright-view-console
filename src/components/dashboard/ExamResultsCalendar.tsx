@@ -141,7 +141,7 @@ const ExamResultsCalendar: React.FC = () => {
   const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
-    <Card className="bg-white/50 dark:bg-neutral-900/50 border border-neutral-200/50 dark:border-neutral-800/50 backdrop-blur-sm">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60 backdrop-blur-sm">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">

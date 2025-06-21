@@ -32,8 +32,8 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen">
+      <div className=" p-2 lg:p-4 md:p-6 max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-medium text-neutral-900 dark:text-neutral-100">
