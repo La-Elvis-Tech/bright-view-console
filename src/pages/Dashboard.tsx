@@ -1,3 +1,4 @@
+
 import React, { Suspense } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useAdvancedDashboard } from "@/hooks/useAdvancedDashboard";
@@ -33,7 +34,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <div className=" p-2 lg:p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-2 lg:p-4 md:p-6 max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-medium text-neutral-900 dark:text-neutral-100">
@@ -51,21 +52,17 @@ const Dashboard: React.FC = () => {
           {/* Calendar Section */}
           <ExamResultsCalendar />
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* Left Column - Charts */}
-            <div className="xl:col-span-2 space-y-6">
+          {/* Main Content Grid - Improved XL Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Charts Column */}
+            <div className="lg:col-span-2 xl:col-span-2 space-y-6">
               {examTrends && <ExamTrendsChart data={examTrends} />}
               <InventoryValueWaffle />
             </div>
 
-            {/* Middle Column - Quick Actions */}
-            <div className="xl:col-span-1">
+            {/* Side Panel */}
+            <div className="space-y-6">
               <QuickActionsCard />
-            </div>
-
-            {/* Right Column - Insights */}
-            <div className="xl:col-span-1">
               {metrics && <PredictiveInsights metrics={metrics} />}
             </div>
           </div>

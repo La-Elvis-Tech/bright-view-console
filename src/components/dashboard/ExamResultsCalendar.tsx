@@ -20,21 +20,28 @@ const ExamResultsCalendar: React.FC = () => {
   const { data: examData = [], isLoading } = useQuery({
     queryKey: ['exam-results-calendar', profile?.unit_id],
     queryFn: async (): Promise<ExamResultData[]> => {
+      if (!profile?.unit_id) return [];
+
       const twelveMonthsAgo = startOfMonth(subMonths(new Date(), 11));
       const today = endOfMonth(new Date());
 
-      const { data: examResults, error } = await supabase
-        .from('exam_results')
-        .select('exam_date, result_status')
-        .eq('unit_id', profile?.unit_id)
-        .gte('exam_date', format(twelveMonthsAgo, 'yyyy-MM-dd'))
-        .lte('exam_date', format(today, 'yyyy-MM-dd'));
+      // Buscar appointments realizados no período
+      const { data: appointments, error } = await supabase
+        .from('appointments')
+        .select('scheduled_date, status')
+        .eq('unit_id', profile.unit_id)
+        .eq('status', 'Concluído')
+        .gte('scheduled_date', format(twelveMonthsAgo, 'yyyy-MM-dd'))
+        .lte('scheduled_date', format(today, 'yyyy-MM-dd'));
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar dados do calendário:', error);
+        return [];
+      }
 
       const dateCount: Record<string, number> = {};
-      examResults?.forEach(result => {
-        const date = result.exam_date;
+      appointments?.forEach(appointment => {
+        const date = format(new Date(appointment.scheduled_date), 'yyyy-MM-dd');
         dateCount[date] = (dateCount[date] || 0) + 1;
       });
 
@@ -47,7 +54,7 @@ const ExamResultsCalendar: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!isLoading && calendarRef.current) {
+    if (!isLoading && calendarRef.current && examData.length >= 0) {
       const squares = calendarRef.current.querySelectorAll('.calendar-square');
       gsap.fromTo(squares, 
         { 
@@ -124,7 +131,7 @@ const ExamResultsCalendar: React.FC = () => {
     currentWeek.push(new Date(0)); // placeholder
   }
 
-  allDays.forEach((day, index) => {
+  allDays.forEach((day) => {
     currentWeek.push(day);
     
     if (currentWeek.length === 7) {
