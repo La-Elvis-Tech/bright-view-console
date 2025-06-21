@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
           {/* Bottom Section - Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              {recentExams && <RecentExamsTable exams={recentExams} />}
+              <RecentExamsTable />
             </div>
             <div>
               {systemLogs && <SystemLogsPanel logs={systemLogs} />}
