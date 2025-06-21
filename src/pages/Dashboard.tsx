@@ -53,9 +53,9 @@ const Dashboard: React.FC = () => {
           <ExamResultsCalendar />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Primary Chart */}
-            <div className="lg:col-span-2 xl:col-span-2">
+            <div className="lg:col-span-1 xl:col-span-1">
               {examTrends && <ExamTrendsChart data={examTrends} />}
             </div>
 
@@ -68,18 +68,21 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-1 xl:col-span-1">
               <div className="space-y-6 h-full">
                 <QuickActionsCard />
-                {metrics && <PredictiveInsights metrics={metrics} />}
+                
               </div>
             </div>
           </div>
 
           {/* Bottom Section - Tables */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="min-h-0">
               <RecentExamsTable />
             </div>
             <div className="min-h-0">
               {systemLogs && <SystemLogsPanel logs={systemLogs} />}
+            </div>
+            <div className="min-h-0">
+              {metrics && <PredictiveInsights metrics={metrics} />}
             </div>
           </div>
         </Suspense>

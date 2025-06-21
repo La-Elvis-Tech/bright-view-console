@@ -149,7 +149,7 @@ const ExamResultsCalendar: React.FC = () => {
 
   return (
     <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60 backdrop-blur-sm">
-      <div className="p-6">
+      <div className="px-8 py-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
             Calendário de Exames Realizados
@@ -168,7 +168,7 @@ const ExamResultsCalendar: React.FC = () => {
         <div ref={calendarRef} className="overflow-x-auto">
           <div className="inline-flex flex-col gap-1 min-w-max">
             {/* Month labels */}
-            <div className="flex gap-1 ml-8 mb-1">
+            <div className="flex gap-2 ml-10 mb-2">
               {Array.from({ length: 12 }).map((_, monthIndex) => (
                 <div key={monthIndex} className="text-xs text-neutral-500 dark:text-neutral-400 w-12 text-left">
                   {monthLabels[monthIndex]}

@@ -91,7 +91,7 @@ const InventoryValueWaffle: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-3 ">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="flex items-center justify-between mb-2">
@@ -141,7 +141,7 @@ const InventoryValueWaffle: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="space-y-4">
+        <div ref={containerRef} className="space-y-4 px-3 py-5 bg-neutral-50/80 dark:bg-neutral-800/40 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all duration-200">
           {/* Total Value */}
           <div className="text-center pb-3 border-b border-neutral-100 dark:border-neutral-800">
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Total</p>

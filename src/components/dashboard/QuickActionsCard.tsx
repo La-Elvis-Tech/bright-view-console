@@ -61,7 +61,7 @@ const QuickActionsCard: React.FC = () => {
   ];
 
   return (
-    <Card ref={cardRef} className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60 h-full">
+    <Card ref={cardRef} className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-sm font-medium text-neutral-700 dark:text-neutral-300">
           <span className="flex items-center gap-2">
