@@ -57,7 +57,7 @@ const InventoryValueWaffle: React.FC = () => {
         value: data.value,
         percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
         color: data.color
-      })).sort((a, b) => b.value - a.value);
+      })).sort((a, b) => b.value - a.value).slice(0, 4);
     },
     enabled: !!profile?.unit_id
   });
@@ -83,22 +83,25 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="h-full">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            <Package className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <Package className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
             Valor por Categoria
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
-                  <div className="h-3 w-20 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+              <div key={i} className="animate-pulse">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
+                    <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                  </div>
+                  <div className="h-3 w-12 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
                 </div>
-                <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-1"></div>
               </div>
             ))}
           </div>
@@ -109,10 +112,10 @@ const InventoryValueWaffle: React.FC = () => {
 
   if (inventoryData.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            <Package className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <Package className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
             Valor por Categoria
           </CardTitle>
         </CardHeader>
@@ -130,56 +133,56 @@ const InventoryValueWaffle: React.FC = () => {
   const totalValue = inventoryData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <Card className="h-full">
+    <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-          <Package className="h-4 w-4" />
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <Package className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
           Valor por Categoria
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="space-y-3">
+        <div ref={containerRef} className="space-y-4">
           {/* Total Value */}
-          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/30 rounded-lg">
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Valor Total</p>
-            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          <div className="text-center pb-3 border-b border-neutral-100 dark:border-neutral-800">
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Total</p>
+            <p className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
               R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           {/* Categories */}
-          {inventoryData.map((item) => (
-            <div key={item.id} className="category-item">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
-                    {item.label}
+          <div className="space-y-3">
+            {inventoryData.map((item) => (
+              <div key={item.id} className="category-item">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className="text-neutral-600 dark:text-neutral-400">
+                    {item.percentage.toFixed(0)}%
                   </span>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                    R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                    {item.percentage.toFixed(1)}%
-                  </div>
+                <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-1">
+                  <div 
+                    className="h-1 rounded-full transition-all duration-500"
+                    style={{ 
+                      backgroundColor: item.color,
+                      width: `${item.percentage}%`
+                    }}
+                  />
+                </div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
               </div>
-              <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-1.5 overflow-hidden">
-                <div 
-                  className="h-full rounded-full transition-all duration-500 ease-out"
-                  style={{ 
-                    backgroundColor: item.color,
-                    width: `${item.percentage}%`
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

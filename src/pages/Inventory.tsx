@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import InventoryTable from '@/components/inventory/InventoryTable';
 import InventoryStats from '@/components/inventory/InventoryStats';
 import InventoryFilters from '@/components/inventory/InventoryFilters';
-import InventoryStockHealth from '@/components/inventory/InventoryStockHealth';
 import { SkeletonInventory } from '@/components/ui/skeleton-inventory';
 import { useAuthContext } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/inventory';
@@ -152,226 +151,223 @@ const Inventory = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          Inventário
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Gerencie o estoque de materiais e suprimentos do laboratório
-        </p>
-      </div>
-
-      <InventoryStats items={inventoryItems} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <InventoryFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            categories={categories}
-          />
+    <div className="min-h-screen">
+      <div className="p-2 lg:p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="space-y-1">
+          <h1 className="text-xl md:text-2xl font-medium text-neutral-900 dark:text-neutral-100">
+            Inventário
+          </h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Gerencie o estoque de materiais e suprimentos do laboratório
+          </p>
         </div>
-        <div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Adicionar Novo Item</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddItem} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome *</Label>
-                    <Input
-                      id="name"
-                      value={newItem.name}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Nome do item"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Categoria *</Label>
-                    <Select 
-                      value={newItem.category_id} 
-                      onValueChange={(value) => setNewItem(prev => ({ ...prev, category_id: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.filter(category => category.id).map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    value={newItem.description}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Descrição do item"
-                    rows={2}
-                  />
-                </div>
+        <InventoryStats items={inventoryItems} />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current_stock">Estoque Atual *</Label>
-                    <Input
-                      id="current_stock"
-                      type="number"
-                      min="0"
-                      value={newItem.current_stock}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, current_stock: parseInt(e.target.value) || 0 }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unit_measure">Unidade de Medida *</Label>
-                    <Input
-                      id="unit_measure"
-                      value={newItem.unit_measure}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, unit_measure: e.target.value }))}
-                      placeholder="Ex: mL, Kg, Unidade"
-                      required
-                    />
-                  </div>
-                </div>
+        {/* Filters and Add Button */}
+        <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <InventoryFilters
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  categories={categories}
+                />
+              </div>
+              <div>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Item
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Novo Item</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleAddItem} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nome *</Label>
+                          <Input
+                            id="name"
+                            value={newItem.name}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Nome do item"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="category">Categoria *</Label>
+                          <Select 
+                            value={newItem.category_id} 
+                            onValueChange={(value) => setNewItem(prev => ({ ...prev, category_id: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.filter(category => category.id).map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="min_stock">Estoque Mínimo *</Label>
-                    <Input
-                      id="min_stock"
-                      type="number"
-                      min="0"
-                      value={newItem.min_stock}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, min_stock: parseInt(e.target.value) || 0 }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cost_per_unit">Custo por Unidade *</Label>
-                    <Input
-                      id="cost_per_unit"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={newItem.cost_per_unit}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, cost_per_unit: parseFloat(e.target.value) || 0 }))}
-                      required
-                    />
-                  </div>
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Descrição</Label>
+                        <Textarea
+                          id="description"
+                          value={newItem.description}
+                          onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Descrição do item"
+                          rows={2}
+                        />
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="supplier">Fornecedor</Label>
-                  <Input
-                    id="supplier"
-                    value={newItem.supplier}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, supplier: e.target.value }))}
-                    placeholder="Nome do fornecedor"
-                  />
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="current_stock">Estoque Atual *</Label>
+                          <Input
+                            id="current_stock"
+                            type="number"
+                            min="0"
+                            value={newItem.current_stock}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, current_stock: parseInt(e.target.value) || 0 }))}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="unit_measure">Unidade de Medida *</Label>
+                          <Input
+                            id="unit_measure"
+                            value={newItem.unit_measure}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, unit_measure: e.target.value }))}
+                            placeholder="Ex: mL, Kg, Unidade"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input
-                      id="sku"
-                      value={newItem.sku}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, sku: e.target.value }))}
-                      placeholder="Código SKU"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="storage_location">Local de Armazenamento</Label>
-                    <Input
-                      id="storage_location"
-                      value={newItem.storage_location}
-                      onChange={(e) => setNewItem(prev => ({ ...prev, storage_location: e.target.value }))}
-                      placeholder="Ex: Prateleira A, Geladeira"
-                    />
-                  </div>
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="min_stock">Estoque Mínimo *</Label>
+                          <Input
+                            id="min_stock"
+                            type="number"
+                            min="0"
+                            value={newItem.min_stock}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, min_stock: parseInt(e.target.value) || 0 }))}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cost_per_unit">Custo por Unidade *</Label>
+                          <Input
+                            id="cost_per_unit"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={newItem.cost_per_unit}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, cost_per_unit: parseFloat(e.target.value) || 0 }))}
+                            required
+                          />
+                        </div>
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="expiry_date">Data de Validade</Label>
-                  <Input
-                    id="expiry_date"
-                    type="date"
-                    value={newItem.expiry_date}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, expiry_date: e.target.value }))}
-                  />
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="supplier">Fornecedor</Label>
+                        <Input
+                          id="supplier"
+                          value={newItem.supplier}
+                          onChange={(e) => setNewItem(prev => ({ ...prev, supplier: e.target.value }))}
+                          placeholder="Nome do fornecedor"
+                        />
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lot_number">Número do Lote</Label>
-                  <Input
-                    id="lot_number"
-                    value={newItem.lot_number}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, lot_number: e.target.value }))}
-                    placeholder="Número do lote"
-                  />
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="sku">SKU</Label>
+                          <Input
+                            id="sku"
+                            value={newItem.sku}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, sku: e.target.value }))}
+                            placeholder="Código SKU"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="storage_location">Local de Armazenamento</Label>
+                          <Input
+                            id="storage_location"
+                            value={newItem.storage_location}
+                            onChange={(e) => setNewItem(prev => ({ ...prev, storage_location: e.target.value }))}
+                            placeholder="Ex: Prateleira A, Geladeira"
+                          />
+                        </div>
+                      </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Adicionar Item
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="expiry_date">Data de Validade</Label>
+                        <Input
+                          id="expiry_date"
+                          type="date"
+                          value={newItem.expiry_date}
+                          onChange={(e) => setNewItem(prev => ({ ...prev, expiry_date: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="lot_number">Número do Lote</Label>
+                        <Input
+                          id="lot_number"
+                          value={newItem.lot_number}
+                          onChange={(e) => setNewItem(prev => ({ ...prev, lot_number: e.target.value }))}
+                          placeholder="Número do lote"
+                        />
+                      </div>
+
+                      <div className="flex justify-end space-x-2 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsAddDialogOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Adicionar Item
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <InventoryTable
+          items={filteredItems}
+          selectedItems={selectedItems}
+          onSelectItem={handleSelectItem}
+          onSelectAll={handleSelectAll}
+          onUpdateItem={updateInventoryItem}
+          onDeleteItem={deleteInventoryItem}
+          onUpdateSuccess={handleUpdateSuccess}
+          onLowStockAlert={handleLowStockAlert}
+        />
       </div>
-
-      {/*<InventoryStockHealth 
-        items={inventoryItems} 
-        expiringItems={inventoryItems.filter(item => {
-          if (!item.expiry_date) return false;
-          const expiryDate = new Date(item.expiry_date);
-          const thirtyDaysFromNow = new Date();
-          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-          return expiryDate <= thirtyDaysFromNow;
-        })} 
-      />*/}
-
-      <InventoryTable
-        items={filteredItems}
-        selectedItems={selectedItems}
-        onSelectItem={handleSelectItem}
-        onSelectAll={handleSelectAll}
-        onUpdateItem={updateInventoryItem}
-        onDeleteItem={deleteInventoryItem}
-        onUpdateSuccess={handleUpdateSuccess}
-        onLowStockAlert={handleLowStockAlert}
-      />
     </div>
   );
 };
