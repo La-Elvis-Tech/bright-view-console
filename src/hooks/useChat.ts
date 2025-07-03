@@ -172,7 +172,7 @@ export const useChat = () => {
     }
   };
 
-  // Gerar resposta do Elvinho com personalidade Elvis
+  // Gerar resposta do Elvinho de forma profissional
   const generateElvinhoResponse = async (userMessage: string, messageType: 'normal' | 'command'): Promise<string> => {
     const isCommand = messageType === 'command' || userMessage.startsWith('/');
     
@@ -180,7 +180,7 @@ export const useChat = () => {
       return handleCommand(userMessage);
     }
 
-    // Respostas baseadas em contexto com personalidade do Elvis
+    // Respostas baseadas em contexto
     const responses = getContextualResponse(userMessage);
     return responses[Math.floor(Math.random() * responses.length)];
   };
@@ -188,13 +188,13 @@ export const useChat = () => {
   const handleCommand = (command: string): string => {
     switch (command.toLowerCase()) {
       case '/estoque':
-        return '🎸 Tchan tchan! Consultando o estoque para você, baby! Encontrei 45 itens com estoque baixo e 3 itens próximos ao vencimento. Que tal verificarmos juntos? Can\'t help falling in love with essa organização!';
+        return 'Consultando estoque atual... Encontrei 45 itens com estoque baixo e 3 itens próximos ao vencimento. Deseja ver mais detalhes?';
       case '/consultas-hoje':
-        return '🕺 All shook up com as consultas de hoje! Temos 23 agendadas, 18 já realizadas e 5 pendentes. A taxa de ocupação está em 85% - that\'s what I call rockin\'!';
+        return 'Hoje temos 23 consultas agendadas, 18 já realizadas e 5 pendentes. A taxa de ocupação está em 85%.';
       case '/relatorio':
-        return '📊 Don\'t be cruel, deixa o Rei dos relatórios trabalhar! Esta semana processamos 147 exames, com crescimento de 12% - estamos burning love para os números!';
+        return 'Gerando relatório... Esta semana processamos 147 exames, com crescimento de 12% em relação à semana anterior.';
       default:
-        return '🤔 Hmm, esse comando não tá no meu repertório, hunny! Comandos disponíveis: /estoque, /consultas-hoje, /relatorio. Thank ya, thank ya very much!';
+        return 'Comando não reconhecido. Comandos disponíveis: /estoque, /consultas-hoje, /relatorio';
     }
   };
 
@@ -203,59 +203,59 @@ export const useChat = () => {
 
     if (lowerMessage.includes('oi') || lowerMessage.includes('olá') || lowerMessage.includes('hello')) {
       return [
-        '🎸 Well hello there, hunny! Sou o Elvinho, o Rei do laboratório! Como posso ajudar você hoje?',
-        '🕺 Oi baby! Elvinho aqui, pronto para rock and roll com seus dados laboratoriais!',
-        '👑 Hey gorgeous! O Rei chegou para deixar seu dia all shook up de tanta eficiência!'
+        'Olá! Sou o Elvinho, seu assistente inteligente de laboratório. Como posso ajudar você hoje?',
+        'Oi! Estou aqui para ajudar com todas as suas necessidades laboratoriais.',
+        'Olá! Pronto para te auxiliar com dados, relatórios e muito mais!'
       ];
     }
 
     if (lowerMessage.includes('ajuda') || lowerMessage.includes('help')) {
       return [
-        '🎤 Don\'t worry baby, o Elvinho tá aqui! Posso ajudar com estoque, consultas, relatórios e muito mais. What can I do for you?',
-        '🕺 Help is on the way, hunny! Sou especialista em dados laboratoriais. Me diga o que precisa e vamos shake it up!',
-        '👑 O Rei nunca abandona seus fãs! Estou aqui para ajudar com tudo sobre o laboratório. Burning love para resolver problemas!'
+        'Estou aqui para ajudar! Posso auxiliar com estoque, consultas, relatórios e análises de dados. O que você precisa?',
+        'Claro! Sou especialista em dados laboratoriais. Me diga como posso ajudar.',
+        'Conte comigo! Estou preparado para resolver suas dúvidas sobre o laboratório.'
       ];
     }
 
     if (lowerMessage.includes('estoque') || lowerMessage.includes('inventário')) {
       return [
-        '📦 That\'s my specialty, baby! Nosso estoque está rockin\' - posso mostrar relatórios, alertas e previsões. What do you need?',
-        '🎸 Estoque é minha paixão, hunny! Temos controle total dos materiais. Can\'t help falling in love com essa organização!',
-        '👑 O Rei do estoque está aqui! Materiais, reagentes, tudo under control. Tell me more, gorgeous!'
+        'Perfeito! Tenho acesso completo aos dados de estoque. Posso mostrar relatórios, alertas e previsões. O que você gostaria de ver?',
+        'Estoque é minha especialidade! Temos controle total dos materiais e posso gerar relatórios detalhados.',
+        'Ótimo! Posso ajudar com análises de estoque, materiais em falta e previsões de consumo.'
       ];
     }
 
     if (lowerMessage.includes('consulta') || lowerMessage.includes('agendamento')) {
       return [
-        '📅 All shook up com os agendamentos! Posso mostrar horários, médicos disponíveis e estatísticas. What\'s on your mind?',
-        '🕺 Consultas are my business, baby! Agenda lotada, mas sempre organized. Como posso ajudar?',
-        '🎤 Don\'t be cruel com a agenda! Temos tudo sincronizado e ready to rock. Tell me what you need!'
+        'Posso ajudar com informações sobre consultas! Tenho dados sobre horários, médicos e estatísticas. O que você precisa saber?',
+        'Consultas e agendamentos são minha área! Posso mostrar dados em tempo real e relatórios.',
+        'Perfeito! Tenho acesso aos dados de agendamento e posso fornecer informações detalhadas.'
       ];
     }
 
     if (lowerMessage.includes('relatório') || lowerMessage.includes('dados')) {
       return [
-        '📊 Burning love pelos relatórios, hunny! Dados completos, gráficos beautiful e insights poderosos. What would you like to see?',
-        '👑 O Rei dos dados arrived! Relatórios customizados, métricas em tempo real - tudo que seu coração desire!',
-        '🎸 That\'s what I call data excellence! Posso gerar qualquer relatório que precisar, baby!'
+        'Excelente! Sou especialista em relatórios e análise de dados. Posso gerar relatórios customizados e insights valiosos.',
+        'Relatórios são minha paixão! Posso criar análises detalhadas com métricas em tempo real.',
+        'Ótimo! Tenho ferramentas avançadas para análise de dados e geração de relatórios personalizados.'
       ];
     }
 
     if (lowerMessage.includes('obrigado') || lowerMessage.includes('thanks')) {
       return [
-        '🕺 Thank ya, thank ya very much! Foi um prazer ajudar, hunny!',
-        '👑 You\'re welcome, gorgeous! O Rei sempre à disposição!',
-        '🎸 Don\'t mention it, baby! Rock and roll never stops!'
+        'De nada! Foi um prazer ajudar. Estou sempre aqui quando precisar!',
+        'Fico feliz em ajudar! Conte comigo sempre que precisar de suporte.',
+        'Por nada! Estou sempre disponível para auxiliar você.'
       ];
     }
 
     // Respostas padrão
     return [
-      '🎤 That\'s interesting, hunny! Me conte mais sobre isso. O Elvinho está all ears para você!',
-      '🕺 Hmm, deixa eu processar isso, baby! Como posso tornar sua experiência more rockin\'?',
-      '👑 O Rei está pensando... Tell me more about that, gorgeous! Sempre burning love para aprender!',
-      '🎸 Can\'t help falling in love com suas perguntas! Explique um pouco mais para eu ajudar melhor, hunny!',
-      '🕺 All shook up com essa informação! Me dê mais detalhes para eu poder rock your world com a resposta!'
+      'Interessante! Me conte mais sobre isso. Como posso ajudar especificamente?',
+      'Entendi. Poderia fornecer mais detalhes para eu poder ajudar melhor?',
+      'Compreendo. Que tipo de informação ou análise você precisa sobre isso?',
+      'Perfeito! Explique um pouco mais para eu poder fornecer a melhor assistência.',
+      'Ótima pergunta! Me dê mais contexto para eu poder ajudar de forma mais precisa.'
     ];
   };
 

@@ -80,13 +80,13 @@ const Chat = () => {
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg">
-              <Bot className="h-5 w-5 text-transparent bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text" />
+            <div className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+              <Bot className="h-5 w-5 text-blue-500" />
             </div>
-            Chat com Elvinho 🎸
+            Chat com Elvinho
           </h1>
           <p className="text-neutral-600 dark:text-neutral-400">
-            O Rei do laboratório está aqui para te ajudar, baby! Rock and roll!
+            Seu assistente inteligente para gestão laboratorial
           </p>
         </div>
 
@@ -193,14 +193,14 @@ const Chat = () => {
                       <div className="space-y-4">
                         {messages.length === 0 && (
                           <div className="text-center py-8">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-3">
+                            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-3">
                               <Bot className="h-6 w-6 text-white" />
                             </div>
                             <p className="text-neutral-600 dark:text-neutral-400 mb-2">
-                              🎸 Well hello there, hunny! Sou o Elvinho!
+                              Olá! Eu sou o Elvinho, seu assistente de laboratório.
                             </p>
                             <p className="text-sm text-neutral-500">
-                              O Rei do laboratório está aqui para rock your world com dados incríveis!
+                              Como posso ajudar você hoje?
                             </p>
                           </div>
                         )}
@@ -214,8 +214,8 @@ const Chat = () => {
                           >
                             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                               message.sender === 'user' 
-                                ? 'bg-blue-500' 
-                                : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                                 ? 'bg-blue-500' 
+                                 : 'bg-blue-500'
                             }`}>
                               {message.sender === 'user' ? (
                                 <User className="h-4 w-4 text-white" />
@@ -235,7 +235,7 @@ const Chat = () => {
                                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                 {message.message_type === 'command' && (
                                   <Badge variant="secondary" className="mt-2 text-xs">
-                                    🎸 Comando
+                                    Comando
                                   </Badge>
                                 )}
                               </div>
@@ -249,7 +249,7 @@ const Chat = () => {
                         {/* Typing Indicator */}
                         {isTyping && (
                           <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                               <Bot className="h-4 w-4 text-white" />
                             </div>
                             <div className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg">
@@ -273,7 +273,7 @@ const Chat = () => {
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
-                          placeholder="Digite sua mensagem ou use comandos como /estoque... 🎸"
+                          placeholder="Digite sua mensagem ou use comandos como /estoque..."
                           className="flex-1"
                           disabled={isTyping || loading}
                         />
@@ -290,19 +290,19 @@ const Chat = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-4">
-                        <Bot className="h-8 w-8 text-white" />
-                      </div>
-                      <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-                        🎸 Welcome to Elvinho's World!
-                      </h3>
-                      <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-                        Selecione uma conversa ou inicie um novo chat, baby!
-                      </p>
-                      <Button onClick={handleNewChat}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Novo Chat
-                      </Button>
+                       <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-4">
+                         <Bot className="h-8 w-8 text-white" />
+                       </div>
+                       <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                         Bem-vindo ao Chat!
+                       </h3>
+                       <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                         Selecione uma conversa ou inicie um novo chat
+                       </p>
+                       <Button onClick={handleNewChat}>
+                         <Plus className="h-4 w-4 mr-2" />
+                         Novo Chat
+                       </Button>
                     </div>
                   </div>
                 )}
@@ -315,7 +315,7 @@ const Chat = () => {
             <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
               <CardContent className="p-4">
                 <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-                  🎸 Comandos Rápidos
+                  Comandos Rápidos
                 </h3>
                 <div className="space-y-2">
                   {quickCommands.map((cmd, index) => (
@@ -337,23 +337,23 @@ const Chat = () => {
             <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
               <CardContent className="p-4">
                 <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-                  👑 Status do Rei
+                  Status do Elvinho
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      All shook up e online!
+                      Online
                     </span>
                   </div>
                   <div className="text-xs text-neutral-500">
                     Tempo de resposta: ~1.5s
                   </div>
                   <div className="text-xs text-neutral-500">
-                    Burning love pela eficiência!
+                    Sistema operacional
                   </div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">
-                    🎸 Thank ya, thank ya very much!
+                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    Pronto para ajudar!
                   </div>
                 </div>
               </CardContent>
