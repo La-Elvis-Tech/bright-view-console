@@ -1,283 +1,200 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardChart from "@/components/DashboardChart";
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuthContext } from "@/context/AuthContext";
-import { subMonths } from "date-fns";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DollarSign, 
+  TrendingDown, 
+  TrendingUp, 
+  PieChart,
+  Calculator,
+  Target
+} from 'lucide-react';
 
 interface CostAnalysisProps {
   selectedUnitId?: string;
 }
 
 const CostAnalysis: React.FC<CostAnalysisProps> = ({ selectedUnitId }) => {
-  const { profile } = useAuthContext();
-  const unitFilter = selectedUnitId || profile?.unit_id;
+  // Mock data - replace with real data fetching
+  const costData = {
+    totalCosts: 125000,
+    monthlyChange: -8.5,
+    costPerExam: 85,
+    efficiency: 92,
+    categories: [
+      { name: "Materiais", value: 45000, percentage: 36, color: "bg-blue-500" },
+      { name: "Pessoal", value: 50000, percentage: 40, color: "bg-emerald-500" },
+      { name: "Equipamentos", value: 20000, percentage: 16, color: "bg-purple-500" },
+      { name: "Outros", value: 10000, percentage: 8, color: "bg-orange-500" }
+    ]
+  };
 
-  // Buscar dados reais de custos por tipo de exame
-  const { data: examCosts = [] } = useQuery({
-    queryKey: ['exam-costs', unitFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from('appointments')
-        .select(`
-          id,
-          cost,
-          status,
-          exam_types(name, cost, category)
-        `)
-        .eq('status', 'Concluído');
-
-      if (unitFilter) {
-        query = query.eq('unit_id', unitFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      // Agrupar por tipo de exame e calcular média de custos
-      const costsByType: { [key: string]: { total: number; count: number } } = {};
-      
-      data?.forEach(appointment => {
-        const examType = appointment.exam_types?.name || 'Outros';
-        const cost = appointment.cost || appointment.exam_types?.cost || 0;
-        
-        if (!costsByType[examType]) {
-          costsByType[examType] = { total: 0, count: 0 };
-        }
-        
-        costsByType[examType].total += cost;
-        costsByType[examType].count += 1;
-      });
-
-      return Object.entries(costsByType)
-        .map(([name, { total, count }]) => ({
-          name,
-          value: count > 0 ? Math.round(total / count) : 0
-        }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
+  const costMetrics = [
+    {
+      title: "Custo Total Mensal",
+      value: new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(costData.totalCosts),
+      change: `${costData.monthlyChange}%`,
+      trend: costData.monthlyChange < 0 ? "down" : "up",
+      icon: DollarSign,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20"
     },
-    enabled: !!profile
-  });
-
-  // Buscar dados de consumo por categoria (Pareto)
-  const { data: paretoData = [] } = useQuery({
-    queryKey: ['inventory-pareto', unitFilter],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inventory_movements')
-        .select(`
-          id,
-          total_cost,
-          quantity,
-          movement_type,
-          inventory_items!inner(name, cost_per_unit, unit_id, inventory_categories(name))
-        `)
-        .eq('movement_type', 'out')
-        .gte('created_at', subMonths(new Date(), 3).toISOString());
-
-      if (error) throw error;
-
-      // Filtrar por unidade se necessário
-      const filteredData = unitFilter 
-        ? data.filter(movement => movement.inventory_items.unit_id === unitFilter)
-        : data;
-
-      // Agrupar por item e calcular custos totais
-      const costsByItem: { [key: string]: number } = {};
-      
-      filteredData?.forEach(movement => {
-        const itemName = movement.inventory_items?.name || 'Item Desconhecido';
-        const cost = movement.total_cost || 0;
-        costsByItem[itemName] = (costsByItem[itemName] || 0) + cost;
-      });
-
-      const sortedItems = Object.entries(costsByItem)
-        .map(([name, cost]) => ({ name, value: cost }))
-        .sort((a, b) => b.value - a.value);
-
-      const totalCost = sortedItems.reduce((sum, item) => sum + item.value, 0);
-      let cumulativePercentage = 0;
-
-      return sortedItems.slice(0, 8).map(item => {
-        const percentage = totalCost > 0 ? (item.value / totalCost) * 100 : 0;
-        cumulativePercentage += percentage;
-        return {
-          name: item.name,
-          value: Math.round(percentage),
-          percentage: Math.round(cumulativePercentage)
-        };
-      });
+    {
+      title: "Custo por Exame",
+      value: new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(costData.costPerExam),
+      change: "-2.1%",
+      trend: "down",
+      icon: Calculator,
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-50 dark:bg-emerald-950/20"
     },
-    enabled: !!profile
-  });
-
-  // Buscar dados de consumo por unidade (radar)
-  const { data: radarData = [] } = useQuery({
-    queryKey: ['consumption-by-unit', unitFilter],
-    queryFn: async () => {
-      // Se há filtro de unidade, mostrar apenas essa unidade
-      if (unitFilter) {
-        const { data: unitData, error: unitError } = await supabase
-          .from('units')
-          .select('name, code')
-          .eq('id', unitFilter)
-          .single();
-
-        if (unitError) throw unitError;
-
-        const { data: movements, error } = await supabase
-          .from('inventory_movements')
-          .select(`
-            id,
-            total_cost,
-            inventory_items!inner(unit_id)
-          `)
-          .eq('movement_type', 'out')
-          .eq('inventory_items.unit_id', unitFilter)
-          .gte('created_at', subMonths(new Date(), 6).toISOString());
-
-        if (error) throw error;
-
-        const totalCost = movements?.reduce((sum, m) => sum + (m.total_cost || 0), 0) || 0;
-
-        return [{
-          name: unitData.name,
-          gastosK: Math.round(totalCost / 1000)
-        }];
-      }
-
-      // Sem filtro de unidade, mostrar todas
-      const { data, error } = await supabase
-        .from('inventory_movements')
-        .select(`
-          id,
-          total_cost,
-          inventory_items!inner(units(name, code))
-        `)
-        .eq('movement_type', 'out')
-        .gte('created_at', subMonths(new Date(), 6).toISOString());
-
-      if (error) throw error;
-
-      // Agrupar por unidade
-      const costsByUnit: { [key: string]: number } = {};
-      
-      data?.forEach(movement => {
-        const unitName = movement.inventory_items?.units?.name || 'Unidade Principal';
-        const cost = movement.total_cost || 0;
-        costsByUnit[unitName] = (costsByUnit[unitName] || 0) + cost;
-      });
-
-      return Object.entries(costsByUnit)
-        .map(([name, totalCost]) => ({
-          name,
-          gastosK: Math.round(totalCost / 1000) // Converter para milhares
-        }))
-        .slice(0, 6);
+    {
+      title: "Eficiência de Custos",
+      value: `${costData.efficiency}%`,
+      change: "+5.3%",
+      trend: "up",
+      icon: Target,
+      color: "text-purple-500",
+      bgColor: "bg-purple-50 dark:bg-purple-950/20"
     }
-  });
+  ];
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800">
-        <CardHeader>
-          <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100">
-            Custo Médio por Exame
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {examCosts.length > 0 ? (
-            <DashboardChart
-              type="bar"
-              data={examCosts}
-              title="Custo por Tipo de Exame"
-              description="Média de custos por procedimento realizado"
-            />
-          ) : (
-            <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-              Nenhum dado de custo disponível
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Header */}
+      <div className="space-y-2">
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+          Análise de Custos
+        </h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Breakdown detalhado de gastos e eficiência financeira
+        </p>
+      </div>
 
+      {/* Cost Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {costMetrics.map((metric, index) => (
+          <Card key={index} className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`p-2 rounded-lg ${metric.bgColor}`}>
+                  <metric.icon className={`h-4 w-4 ${metric.color}`} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                    {metric.title}
+                  </p>
+                  <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                    {metric.value}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {metric.trend === "up" ? (
+                    <TrendingUp className="h-3 w-3 text-emerald-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className={`text-xs font-medium ${
+                    metric.trend === "up" ? "text-emerald-600" : "text-red-600"
+                  }`}>
+                    {metric.change}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Cost Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800">
-          <CardHeader>
-            <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100">
-              Análise de Pareto - Itens mais Consumidos
+        {/* Categories Breakdown */}
+        <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-neutral-500" />
+              Distribuição de Custos
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {paretoData.length > 0 ? (
-              <DashboardChart
-                type="progress"
-                data={paretoData.map(item => ({ name: item.name, value: item.value }))}
-                title="80/20 dos Gastos"
-                description="20% dos itens representam 80% dos custos"
-              />
-            ) : (
-              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-                Nenhum dado de consumo disponível
+          <CardContent className="space-y-4">
+            {costData.categories.map((category, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${category.color}`} />
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      {category.name}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(category.value)}
+                    </span>
+                    <Badge className="ml-2 text-xs bg-neutral-100 text-neutral-700 border-neutral-200">
+                      {category.percentage}%
+                    </Badge>
+                  </div>
+                </div>
+                <Progress value={category.percentage} className="h-1.5" />
               </div>
-            )}
+            ))}
           </CardContent>
         </Card>
 
-        <Card className="bg-white dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800">
-          <CardHeader>
-            <CardTitle className="text-lg text-neutral-900 dark:text-neutral-100">
-              Radar de Consumo por Unidade
+        {/* Cost Trends */}
+        <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+              Tendências de Custo
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {radarData.length > 0 ? (
-              <ResponsiveContainer width="100%" minHeight={100} height={300} maxHeight={300}>
-                <RadarChart
-                  cx="50%" cy="50%" outerRadius={80} data={radarData}
-                >
-                  <PolarGrid />
-                  <PolarAngleAxis 
-                    dataKey="name"
-                    tick={{ fontSize: 12, fill: '#a2a6ad', fontWeight: 500 }}
-                  />
-                  <PolarRadiusAxis 
-                    tick={{ fontSize: 10, fill: '#a2a6ad', fontWeight: 500 }}
-                  />
-                  <Radar
-                    name="Gastos (em milhares R$)"
-                    dataKey="gastosK"
-                    stroke="#4e63bd"
-                    fill="#322d9e"
-                    fillOpacity={0.7}
-                  />
-                  <Legend
-                    iconSize={8}
-                    iconType="circle"
-                    layout="vertical"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: 12, fontWeight: 500 }}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
-                Nenhum dado por unidade disponível
+          <CardContent className="space-y-4">
+            <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/30">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  Redução de Custos
+                </span>
               </div>
-            )}
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                Economia de R$ 12.500 este mês através de otimizações
+              </p>
+            </div>
+
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Meta de Eficiência
+                </span>
+              </div>
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                92% da meta mensal de eficiência alcançada
+              </p>
+            </div>
+
+            <div className="p-3 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Calculator className="h-4 w-4 text-neutral-500" />
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Projeção Próximo Mês
+                </span>
+              </div>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                Estimativa de R$ 118.000 baseada nas tendências atuais
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

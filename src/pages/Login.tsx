@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useTheme } from '../hooks/use-theme';
 import { User, Lock } from 'lucide-react';
-// Importação do gradiente animado
 import { BgradientAnim } from "@/components/soft-gradient-background-animation";
 
 export const Login = () => {
@@ -43,16 +41,13 @@ export const Login = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Gradiente animado customizado */}
       <BgradientAnim
         className="absolute inset-0 z-0"
         animationDuration={8}
       />
 
-      {/* Login Form Container */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          {/* Logo/Brand Area */}
           <div className="text-center mb-8">
             <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg p-2 ${
               theme === 'dark'
@@ -62,7 +57,9 @@ export const Login = () => {
               <img 
                 src="/logolaelvis.svg" 
                 alt="La Elvis Tech" 
-                className="w-full h-full object-contain"
+                className={`w-full h-full object-contain ${
+                  theme === 'dark' ? 'filter brightness-0 invert' : 'filter brightness-0'
+                }`}
               />
             </div>
             <h1 className={`text-4xl font-bold font-michroma mb-2 ${
@@ -77,19 +74,11 @@ export const Login = () => {
             }`}>Sistema de Gestão Laboratorial desenvolvido para Dasa</p>
           </div>
 
-          {/* Login Card */}
           <div className={`backdrop-blur-lg rounded-3xl shadow-2xl p-8 border ${
             theme === 'dark'
               ? 'bg-white/10 border-white/20'
               : 'bg-white/70 border-blue-200/50'
           }`}>
-            {/* Decorative top border */}
-            <div className={`absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-1 rounded-full ${
-              theme === 'dark'
-                ? 'bg-gradient-to-r from-blue-400 to-blue-500'
-                : 'bg-gradient-to-r from-blue-500 to-blue-600'
-            }`}></div>
-
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <h2 className={`text-2xl font-bold ${
@@ -103,7 +92,6 @@ export const Login = () => {
               </div>
 
               <form onSubmit={onSubmit} className="space-y-6">
-                {/* Username */}
                 <div className="group">
                   <label
                     htmlFor="username"
@@ -134,7 +122,6 @@ export const Login = () => {
                   </div>
                 </div>
 
-                {/* Password */}
                 <div className="group">
                   <label
                     htmlFor="password"
@@ -185,7 +172,6 @@ export const Login = () => {
                   </div>
                 </div>
 
-                {/* Error Message */}
                 {error && (
                   <div className="flex items-center gap-2 text-red-400 text-sm p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/20 rounded-xl">
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +181,6 @@ export const Login = () => {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.98] shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50"
@@ -215,7 +200,6 @@ export const Login = () => {
                 </button>
               </form>
 
-              {/* Footer */}
               <div className="text-center">
                 <a
                   href="#forgot-password"
@@ -230,7 +214,6 @@ export const Login = () => {
             </div>
           </div>
 
-          {/* Bottom Text */}
           <div className={`text-center mt-8 text-sm ${
             theme === 'dark' ? 'text-gray-200' : 'text-gray-300'
           }`}>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Activity, Clock, AlertTriangle, Package } from "lucide-react";
 
 interface MetricsGridProps {
@@ -45,31 +45,33 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       value: metrics.criticalStock,
       subtitle: `${metrics.expiringSoon} expirando`,
       icon: metrics.criticalStock > 0 ? AlertTriangle : Package,
-      color: metrics.criticalStock > 0 ? "text-orange-500" : "text-gray-500",
-      bgColor: metrics.criticalStock > 0 ? "bg-orange-50 dark:bg-orange-950/20" : "bg-gray-50 dark:bg-gray-950/20"
+      color: metrics.criticalStock > 0 ? "text-orange-500" : "text-neutral-500",
+      bgColor: metrics.criticalStock > 0 ? "bg-orange-50 dark:bg-orange-950/20" : "bg-neutral-50 dark:bg-neutral-800/40"
     }
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, index) => (
-        <Card key={index} className="p-4 border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${card.bgColor}`}>
-              <card.icon size={20} className={card.color} />
+        <Card key={index} className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${card.bgColor}`}>
+                <card.icon size={16} className={card.color} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-1">
+                  {card.title}
+                </p>
+                <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  {card.value}
+                </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                  {card.subtitle}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
-                {card.title}
-              </p>
-              <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                {card.value}
-              </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                {card.subtitle}
-              </p>
-            </div>
-          </div>
+          </CardContent>
         </Card>
       ))}
     </div>

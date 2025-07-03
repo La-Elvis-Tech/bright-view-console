@@ -168,88 +168,111 @@ const Simulations = () => {
   };
 
   return (
-    <div ref={containerRef} className="space-y-6 simulation-container">
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-          Simulações de Estoque
-        </h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-          Modele cenários e otimize políticas de reabastecimento
-        </p>
+    <div ref={containerRef} className="min-h-screen">
+      <div className="p-2 md:p-6 max-w-7xl mx-auto space-y-8 simulation-container">
+        {/* Header */}
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            Simulações de Estoque
+          </h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Modele cenários e otimize políticas de reabastecimento
+          </p>
+        </div>
+
+        {/* Main Content */}
+        <div className="bg-white/60 dark:bg-neutral-900/40 border border-neutral-200/60 dark:border-neutral-800/60 rounded-lg backdrop-blur-sm">
+          <Tabs defaultValue="parameters" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 bg-neutral-50/50 dark:bg-neutral-900/20 border-b border-neutral-200/40 dark:border-neutral-800/40 h-12 p-1 rounded-t-lg rounded-b-none">
+              <TabsTrigger 
+                value="parameters" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-neutral-100 text-sm font-medium"
+              >
+                <Target className="h-4 w-4 inline md:mr-2" />
+                <span className="hidden md:inline">Parâmetros</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="results" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-neutral-100 text-sm font-medium"
+              >
+                <BarChart3 className="h-4 w-4 inline md:mr-2" />
+                <span className="hidden md:inline">Resultados</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="scenarios" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-neutral-100 text-sm font-medium"
+              >
+                <Save className="h-4 w-4 inline md:mr-2" />
+                <span className="hidden md:inline">Cenários Salvos</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="scheduled" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-neutral-100 text-sm font-medium"
+              >
+                <Calendar className="h-4 w-4 inline md:mr-2" />
+                <span className="hidden md:inline">Agendadas</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="comparison" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-neutral-100 text-sm font-medium"
+              >
+                <GitCompare className="h-4 w-4 inline md:mr-2" />
+                <span className="hidden md:inline">Comparação</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="p-6">
+              <TabsContent value="parameters" className="space-y-6 mt-0">
+                <div className="grid grid-cols-1 gap-6">
+                  <SimulationParameters
+                    currentScenario={currentScenario}
+                    setCurrentScenario={setCurrentScenario}
+                    selectedTemplate={selectedTemplate}
+                    setSelectedTemplate={setSelectedTemplate}
+                    applyTemplate={applyTemplate}
+                  />
+                  <SimulationActions
+                    isRunning={isRunning}
+                    onRunSimulation={handleRunSimulation}
+                    onSaveScenario={handleSaveScenario}
+                    onExportResults={exportResults}
+                    onScheduleSimulation={scheduleSimulation}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="results" className="space-y-6 mt-0">
+                <SimulationResults results={results} />
+              </TabsContent>
+
+              <TabsContent value="scenarios" className="space-y-6 mt-0">
+                <SavedScenarios
+                  scenarios={scenarios}
+                  selectedScenariosForComparison={selectedScenariosForComparison}
+                  onScenarioSelect={setCurrentScenario}
+                  onToggleComparison={toggleScenarioForComparison}
+                />
+              </TabsContent>
+
+              <TabsContent value="scheduled" className="space-y-6 mt-0">
+                <ScheduledSimulations
+                  scenarios={scenarios}
+                  onScheduleCreate={handleScheduleCreate}
+                />
+              </TabsContent>
+
+              <TabsContent value="comparison" className="space-y-6 mt-0">
+                <ScenarioComparison
+                  scenarios={scenarios}
+                  results={results}
+                  selectedScenariosForComparison={selectedScenariosForComparison}
+                  onClearComparison={clearComparison}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
-
-      <Tabs defaultValue="parameters" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-neutral-100 dark:bg-neutral-800">
-          <TabsTrigger value="parameters" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900">
-            <Target className="inline md:hidden" />
-            <p className="hidden md:inline">Parâmetros</p>
-          </TabsTrigger>
-          <TabsTrigger value="results" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900">
-            <BarChart3 className="inline md:hidden" />
-            <p className="hidden md:inline">Resultados</p>
-          </TabsTrigger>
-          <TabsTrigger value="scenarios" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900">
-            <Save className="inline md:hidden" />
-            <p className="hidden md:inline">Cenários Salvos</p>
-          </TabsTrigger>
-          <TabsTrigger value="scheduled" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900">
-            <Calendar className="inline md:hidden" />
-            <p className="hidden md:inline">Agendadas</p>
-          </TabsTrigger>
-          <TabsTrigger value="comparison" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900">
-            <GitCompare className="inline md:hidden" />
-            <p className="hidden md:inline">Comparação</p>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="parameters" className="space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-            <SimulationParameters
-              currentScenario={currentScenario}
-              setCurrentScenario={setCurrentScenario}
-              selectedTemplate={selectedTemplate}
-              setSelectedTemplate={setSelectedTemplate}
-              applyTemplate={applyTemplate}
-            />
-            <SimulationActions
-              isRunning={isRunning}
-              onRunSimulation={handleRunSimulation}
-              onSaveScenario={handleSaveScenario}
-              onExportResults={exportResults}
-              onScheduleSimulation={scheduleSimulation}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="results" className="space-y-6">
-          <SimulationResults results={results} />
-        </TabsContent>
-
-        <TabsContent value="scenarios" className="space-y-6">
-          <SavedScenarios
-            scenarios={scenarios}
-            selectedScenariosForComparison={selectedScenariosForComparison}
-            onScenarioSelect={setCurrentScenario}
-            onToggleComparison={toggleScenarioForComparison}
-          />
-        </TabsContent>
-
-        <TabsContent value="scheduled" className="space-y-6">
-          <ScheduledSimulations
-            scenarios={scenarios}
-            onScheduleCreate={handleScheduleCreate}
-          />
-        </TabsContent>
-
-        <TabsContent value="comparison" className="space-y-6">
-          <ScenarioComparison
-            scenarios={scenarios}
-            results={results}
-            selectedScenariosForComparison={selectedScenariosForComparison}
-            onClearComparison={clearComparison}
-          />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

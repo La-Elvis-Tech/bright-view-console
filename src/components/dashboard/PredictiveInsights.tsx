@@ -46,7 +46,8 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `Crescimento de ${metrics.weeklyGrowth}%. Prepare-se para aumento de 20-30%`,
         priority: 'high',
         icon: TrendingUp,
-        color: 'text-blue-600 dark:text-blue-400'
+        color: 'text-blue-500',
+        bgColor: 'bg-blue-50 dark:bg-blue-950/20'
       });
     }
 
@@ -57,7 +58,8 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `${metrics.criticalStock} itens podem afetar ${Math.round(metrics.criticalStock * 2.5)} exames`,
         priority: 'critical',
         icon: AlertTriangle,
-        color: 'text-red-600 dark:text-red-400'
+        color: 'text-red-500',
+        bgColor: 'bg-red-50 dark:bg-red-950/20'
       });
     }
 
@@ -68,7 +70,8 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: 'Considere agenda adicional para reduzir tempo de espera',
         priority: 'medium',
         icon: Target,
-        color: 'text-green-600 dark:text-green-400'
+        color: 'text-green-500',
+        bgColor: 'bg-green-50 dark:bg-green-950/20'
       });
     }
 
@@ -79,7 +82,8 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
         description: `${metrics.expiringSoon} itens vencem em 30 dias`,
         priority: 'medium',
         icon: Zap,
-        color: 'text-amber-600 dark:text-amber-400'
+        color: 'text-amber-500',
+        bgColor: 'bg-amber-50 dark:bg-amber-950/20'
       });
     }
 
@@ -91,21 +95,23 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
-        return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+        return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800';
       case 'high':
-        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800';
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800';
       case 'medium':
-        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800';
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800';
       default:
-        return 'bg-neutral-50 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700';
+        return 'bg-neutral-50 text-neutral-700 border-neutral-200 dark:bg-neutral-800/40 dark:text-neutral-300 dark:border-neutral-700';
     }
   };
 
   return (
-    <Card ref={cardRef} className="h-full">
+    <Card ref={cardRef} className="h-full border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-          <Brain className="h-4 w-4" />
+          <div className="p-1 bg-neutral-50 dark:bg-neutral-800/40 rounded">
+            <Brain className="h-3 w-3 text-neutral-500" />
+          </div>
           Insights Preditivos
         </CardTitle>
       </CardHeader>
@@ -115,10 +121,10 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
             insights.map((insight, index) => (
               <div 
                 key={index}
-                className="insight-item p-3 border border-neutral-100 dark:border-neutral-800 rounded-lg hover:border-neutral-200 dark:hover:border-neutral-700 transition-colors"
+                className="insight-item p-3 border border-neutral-100 dark:border-neutral-800 rounded-lg hover:border-neutral-200 dark:hover:border-neutral-700 transition-colors bg-neutral-50/50 dark:bg-neutral-800/20"
               >
                 <div className="flex items-start gap-2">
-                  <div className="p-1 bg-neutral-50 dark:bg-neutral-800 rounded">
+                  <div className={`p-1 rounded ${insight.bgColor}`}>
                     <insight.icon className={`h-3 w-3 ${insight.color}`} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -141,7 +147,9 @@ const PredictiveInsights: React.FC<PredictiveInsightsProps> = ({ metrics }) => {
             ))
           ) : (
             <div className="text-center py-6">
-              <Brain className="h-6 w-6 mx-auto mb-2 text-neutral-300 dark:text-neutral-600" />
+              <div className="p-2 bg-neutral-50 dark:bg-neutral-800/40 rounded-lg w-fit mx-auto mb-2">
+                <Brain className="h-4 w-4 text-neutral-400" />
+              </div>
               <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Nenhum insight</p>
               <p className="text-xs text-neutral-400 dark:text-neutral-500">disponível</p>
             </div>

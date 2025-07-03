@@ -68,7 +68,6 @@ const LaboratoryProfile = () => {
       await updateAvatar(avatarUrl);
     }
 
-    // Clear the input so the same file can be selected again
     event.target.value = '';
   };
 
@@ -83,9 +82,9 @@ const LaboratoryProfile = () => {
 
   const getStatusBadge = (status: string) => {
     const colors = {
-      active: 'bg-green-500',
-      inactive: 'bg-yellow-500',
-      suspended: 'bg-red-500'
+      active: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      inactive: 'bg-amber-100 text-amber-700 border-amber-200',
+      suspended: 'bg-red-100 text-red-700 border-red-200'
     };
     
     const labels = {
@@ -95,7 +94,7 @@ const LaboratoryProfile = () => {
     };
 
     return (
-      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-500'}>
+      <Badge className={`text-xs ${colors[status as keyof typeof colors] || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>
         {labels[status as keyof typeof labels] || status}
       </Badge>
     );
@@ -103,41 +102,55 @@ const LaboratoryProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto"></div>
-          <p className="mt-4 text-gray-500 dark:text-gray-400">Carregando perfil...</p>
-        </div>
-      </div>
+      <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-400 mx-auto"></div>
+              <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">Carregando perfil...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Profile Header */}
-      <Card className="border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Perfil do Usuário
+      {/* Header */}
+      <div className="space-y-2">
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+          Perfil do Usuário
+        </h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Gerencie suas informações pessoais e profissionais
+        </p>
+      </div>
+
+      {/* Profile Card */}
+      <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+            <User className="h-4 w-4 text-neutral-500" />
+            Informações Pessoais
           </CardTitle>
-          <CardDescription className="text-neutral-600 dark:text-neutral-300">
-            Gerencie suas informações pessoais e profissionais
+          <CardDescription className="text-sm text-neutral-600 dark:text-neutral-400">
+            Atualize seus dados pessoais e de contato
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           {/* Avatar Section */}
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
+          <div className="flex items-center gap-4 p-4 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg">
+            <Avatar className="h-16 w-16">
               <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="text-lg bg-neutral-100 dark:bg-neutral-800">
+              <AvatarFallback className="text-base bg-neutral-100 dark:bg-neutral-800">
                 {profile?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'US'}
               </AvatarFallback>
             </Avatar>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-100">
                   {profile?.full_name || 'Usuário'}
                 </h3>
                 {profile?.status && getStatusBadge(profile.status)}
@@ -147,12 +160,12 @@ const LaboratoryProfile = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="cursor-pointer" 
+                    className="cursor-pointer border-neutral-200 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/40" 
                     asChild
                     disabled={uploading}
                   >
                     <span>
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-3 w-3 mr-2" />
                       {uploading ? 'Enviando...' : 'Alterar Foto'}
                     </span>
                   </Button>
@@ -171,9 +184,9 @@ const LaboratoryProfile = () => {
                     size="sm"
                     onClick={handleAvatarDelete}
                     disabled={uploading}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/20"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
               </div>
@@ -183,8 +196,8 @@ const LaboratoryProfile = () => {
           {/* Personal Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
+              <Label htmlFor="full_name" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                <User className="h-3 w-3" />
                 Nome Completo
               </Label>
               <Input
@@ -192,12 +205,13 @@ const LaboratoryProfile = () => {
                 value={formData.full_name}
                 onChange={(e) => handleInputChange('full_name', e.target.value)}
                 placeholder="Digite seu nome completo"
+                className="border-0 bg-white dark:bg-neutral-800/40 shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
+              <Label htmlFor="email" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                <Mail className="h-3 w-3" />
                 Email
               </Label>
               <Input
@@ -206,14 +220,14 @@ const LaboratoryProfile = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="Digite seu email"
-                disabled // Email usually shouldn't be editable
-                className="bg-neutral-50 dark:bg-neutral-900"
+                disabled
+                className="bg-neutral-100/50 dark:bg-neutral-800/50 border-0 shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
+              <Label htmlFor="phone" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                <Phone className="h-3 w-3" />
                 Telefone
               </Label>
               <Input
@@ -221,42 +235,49 @@ const LaboratoryProfile = () => {
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="(11) 99999-9999"
+                className="border-0 bg-white dark:bg-neutral-800/40 shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="position">Cargo</Label>
+              <Label htmlFor="position" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Cargo
+              </Label>
               <Input
                 id="position"
                 value={formData.position}
                 onChange={(e) => handleInputChange('position', e.target.value)}
                 placeholder="Ex: Biomédico, Técnico em Laboratório"
+                className="border-0 bg-white dark:bg-neutral-800/40 shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="department">Departamento</Label>
+              <Label htmlFor="department" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Departamento
+              </Label>
               <Input
                 id="department"
                 value={formData.department}
                 onChange={(e) => handleInputChange('department', e.target.value)}
                 placeholder="Ex: Hematologia, Bioquímica"
+                className="border-0 bg-white dark:bg-neutral-800/40 shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="unit_id" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
+              <Label htmlFor="unit_id" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                <Building2 className="h-3 w-3" />
                 Unidade
               </Label>
               <Select 
                 value={formData.unit_id} 
                 onValueChange={(value) => handleInputChange('unit_id', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-0 bg-white dark:bg-neutral-800/40 shadow-sm">
                   <SelectValue placeholder="Selecione uma unidade" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-0 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm">
                   {units.map((unit) => (
                     <SelectItem key={unit.id} value={unit.id}>
                       {unit.name} ({unit.code})
@@ -269,7 +290,7 @@ const LaboratoryProfile = () => {
 
           {/* Current Unit Information */}
           {profile?.unit && (
-            <Card className="bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-700">
+            <Card className="border-0 bg-neutral-50/50 dark:bg-neutral-800/30 shadow-none">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Unidade Atual
@@ -279,8 +300,12 @@ const LaboratoryProfile = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-neutral-500" />
-                    <span className="font-medium">{profile.unit.name}</span>
-                    <Badge variant="outline">{profile.unit.code}</Badge>
+                    <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                      {profile.unit.name}
+                    </span>
+                    <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                      {profile.unit.code}
+                    </Badge>
                   </div>
                   {profile.unit.address && (
                     <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
@@ -300,7 +325,7 @@ const LaboratoryProfile = () => {
           )}
         </CardContent>
         
-        <CardFooter className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+        <CardFooter className="border-t border-neutral-200/50 dark:border-neutral-700/50 pt-4">
           <Button 
             onClick={handleSave}
             disabled={saving}

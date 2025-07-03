@@ -58,34 +58,68 @@ export const useAdvancedDashboard = () => {
       const yesterday = subDays(today, 1);
       const weekAgo = subDays(today, 7);
 
+      // Tentar buscar dados de exam_results primeiro, depois appointments como fallback
+      let todayExamsData, yesterdayExamsData, weekExamsData;
+      
+      try {
+        const [todayExamsRes, yesterdayExamsRes, weekExamsRes] = await Promise.all([
+          supabase
+            .from('exam_results')
+            .select('id')
+            .gte('exam_date', format(today, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id),
+          
+          supabase
+            .from('exam_results')
+            .select('id')
+            .gte('exam_date', format(yesterday, 'yyyy-MM-dd'))
+            .lt('exam_date', format(today, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id),
+          
+          supabase
+            .from('exam_results')
+            .select('id')
+            .gte('exam_date', format(weekAgo, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id)
+        ]);
+
+        todayExamsData = todayExamsRes.data;
+        yesterdayExamsData = yesterdayExamsRes.data;
+        weekExamsData = weekExamsRes.data;
+      } catch (error) {
+        // Fallback para appointments se exam_results não funcionar
+        const [todayAppRes, yesterdayAppRes, weekAppRes] = await Promise.all([
+          supabase
+            .from('appointments')
+            .select('id')
+            .gte('created_at', format(today, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id),
+          
+          supabase
+            .from('appointments')
+            .select('id')
+            .gte('created_at', format(yesterday, 'yyyy-MM-dd'))
+            .lt('created_at', format(today, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id),
+          
+          supabase
+            .from('appointments')
+            .select('id')
+            .gte('created_at', format(weekAgo, 'yyyy-MM-dd'))
+            .eq('unit_id', profile.unit_id)
+        ]);
+
+        todayExamsData = todayAppRes.data;
+        yesterdayExamsData = yesterdayAppRes.data;
+        weekExamsData = weekAppRes.data;
+      }
+
       // Consultas paralelas para métricas da unidade específica
       const [
-        { data: todayExams },
-        { data: yesterdayExams },
-        { data: weekExams },
         { data: criticalItems },
         { data: expiringItems },
         { data: avgDuration }
       ] = await Promise.all([
-        supabase
-          .from('appointments')
-          .select('id')
-          .gte('created_at', format(today, 'yyyy-MM-dd'))
-          .eq('unit_id', profile.unit_id),
-        
-        supabase
-          .from('appointments')
-          .select('id')
-          .gte('created_at', format(yesterday, 'yyyy-MM-dd'))
-          .lt('created_at', format(today, 'yyyy-MM-dd'))
-          .eq('unit_id', profile.unit_id),
-        
-        supabase
-          .from('appointments')
-          .select('id')
-          .gte('created_at', format(weekAgo, 'yyyy-MM-dd'))
-          .eq('unit_id', profile.unit_id),
-        
         supabase
           .from('inventory_items')
           .select('id, current_stock, min_stock')
@@ -113,12 +147,12 @@ export const useAdvancedDashboard = () => {
       ).length || 0;
 
       const avgTime = avgDuration?.reduce((acc, exam) => acc + (exam.duration_minutes || 0), 0) / (avgDuration?.length || 1);
-      const weeklyGrowth = yesterdayExams?.length ? 
-        ((todayExams?.length || 0) - (yesterdayExams?.length || 0)) / (yesterdayExams?.length || 1) * 100 : 0;
+      const weeklyGrowth = yesterdayExamsData?.length ? 
+        ((todayExamsData?.length || 0) - (yesterdayExamsData?.length || 0)) / (yesterdayExamsData?.length || 1) * 100 : 0;
 
       return {
-        totalExams: weekExams?.length || 0,
-        todayExams: todayExams?.length || 0,
+        totalExams: weekExamsData?.length || 0,
+        todayExams: todayExamsData?.length || 0,
         weeklyGrowth: Math.round(weeklyGrowth),
         criticalStock: criticalStockCount,
         expiringSoon: expiringItems?.length || 0,

@@ -24,10 +24,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { InventoryItem } from "@/types/inventory";
+import { InventoryItem, InventoryCategory } from "@/types/inventory";
+import InventoryActions from "./InventoryActions";
 
 interface InventoryTableProps {
   items: InventoryItem[];
+  categories: InventoryCategory[];
   selectedItems: Set<string>;
   onSelectItem: (itemId: string) => void;
   onSelectAll: () => void;
@@ -39,6 +41,7 @@ interface InventoryTableProps {
 
 const InventoryTable: React.FC<InventoryTableProps> = ({
   items,
+  categories,
   selectedItems,
   onSelectItem,
   onSelectAll,
@@ -183,31 +186,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                   {formatCurrency(item.cost_per_unit || 0)}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Reservar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <InventoryActions
+                    item={item}
+                    categories={categories}
+                    onUpdate={onUpdateItem}
+                    onDelete={onDeleteItem}
+                  />
                 </TableCell>
               </TableRow>
             ))}

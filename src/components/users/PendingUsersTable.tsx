@@ -1,53 +1,59 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Check, X, Clock, Mail, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-interface PendingUser {
-  id: string;
-  full_name: string;
-  email: string;
-  status: string;
-  created_at: string;
-}
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { 
+  UserCheck, 
+  X, 
+  Mail, 
+  Calendar,
+  Building2,
+  Clock
+} from 'lucide-react';
 
 const PendingUsersTable = () => {
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchPendingUsers();
-  }, []);
-
-  const fetchPendingUsers = async () => {
-    try {
-      const { data, error } = await supabase
+  const { data: pendingUsers, isLoading } = useQuery({
+    queryKey: ['pending-users'],
+    queryFn: async () => {
+      // First get profiles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPendingUsers(data || []);
-    } catch (error: any) {
-      console.error('Erro ao buscar usuários pendentes:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os usuários pendentes.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (profilesError) throw profilesError;
 
-  const handleApproveUser = async (userId: string, userEmail: string) => {
+      // Then get units separately
+      const { data: unitsData, error: unitsError } = await supabase
+        .from('units')
+        .select('id, name, code');
+
+      if (unitsError) throw unitsError;
+
+      // Combine the data manually
+      const combinedData = profilesData?.map(profile => {
+        const unit = unitsData?.find(u => u.id === profile.unit_id);
+        
+        return {
+          ...profile,
+          units: unit || null
+        };
+      }) || [];
+
+      return combinedData;
+    },
+  });
+
+  const handleApprove = async (userId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -56,26 +62,14 @@ const PendingUsersTable = () => {
 
       if (error) throw error;
 
-      // Adicionar role padrão de usuário se não existir
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: 'user' })
-        .select()
-        .single();
-
-      // Ignorar erro se a role já existe
-      if (roleError && !roleError.message?.includes('duplicate key')) {
-        console.warn('Erro ao adicionar role:', roleError);
-      }
-
       toast({
-        title: 'Usuário aprovado!',
-        description: `${userEmail} foi aprovado e agora pode acessar o sistema.`,
+        title: 'Usuário aprovado',
+        description: 'O usuário foi aprovado com sucesso.',
       });
 
-      fetchPendingUsers();
-    } catch (error: any) {
-      console.error('Erro ao aprovar usuário:', error);
+      queryClient.invalidateQueries({ queryKey: ['pending-users'] });
+      queryClient.invalidateQueries({ queryKey: ['active-users'] });
+    } catch (error) {
       toast({
         title: 'Erro',
         description: 'Não foi possível aprovar o usuário.',
@@ -84,7 +78,7 @@ const PendingUsersTable = () => {
     }
   };
 
-  const handleRejectUser = async (userId: string, userEmail: string) => {
+  const handleReject = async (userId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -95,12 +89,11 @@ const PendingUsersTable = () => {
 
       toast({
         title: 'Usuário rejeitado',
-        description: `${userEmail} foi rejeitado e não poderá acessar o sistema.`,
+        description: 'O usuário foi rejeitado.',
       });
 
-      fetchPendingUsers();
-    } catch (error: any) {
-      console.error('Erro ao rejeitar usuário:', error);
+      queryClient.invalidateQueries({ queryKey: ['pending-users'] });
+    } catch (error) {
       toast({
         title: 'Erro',
         description: 'Não foi possível rejeitar o usuário.',
@@ -109,17 +102,12 @@ const PendingUsersTable = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR');
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <Card className=''>
-        <CardContent className="flex items-center justify-center py-8 bg-white dark:bg-neutral-900">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto"></div>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">Carregando usuários...</p>
+      <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-400"></div>
           </div>
         </CardContent>
       </Card>
@@ -127,74 +115,104 @@ const PendingUsersTable = () => {
   }
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-yellow-500" />
+    <Card className="border-0 shadow-sm bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-amber-500" />
           Usuários Pendentes de Aprovação
         </CardTitle>
-        <CardDescription>
-          Usuários que se cadastraram e aguardam aprovação para acessar o sistema
-        </CardDescription>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          {pendingUsers?.length || 0} usuários aguardando aprovação
+        </p>
       </CardHeader>
       <CardContent>
-        {pendingUsers.length === 0 ? (
+        {!pendingUsers || pendingUsers.length === 0 ? (
           <div className="text-center py-8">
-            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">Nenhum usuário pendente de aprovação</p>
+            <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-lg w-fit mx-auto mb-3">
+              <UserCheck className="h-6 w-6 text-neutral-400" />
+            </div>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Nenhum usuário pendente
+            </p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+              Todos os usuários foram processados
+            </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data de Cadastro</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.full_name}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      {user.email}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <div className="space-y-3">
+            {pendingUsers.map((user) => (
+              <div
+                key={user.id}
+                className="p-4 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-lg border border-neutral-200/50 dark:border-neutral-700/50"
+              >
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.avatar_url} />
+                    <AvatarFallback className="bg-neutral-100 dark:bg-neutral-800">
+                      {user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                        {user.full_name || 'Nome não informado'}
+                      </h3>
+                      <Badge className="text-xs bg-amber-100 text-amber-700 border-amber-200">
                         Pendente
                       </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(user.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleApproveUser(user.id, user.email)}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Aprovar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleRejectUser(user.id, user.email)}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Rejeitar
-                        </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
+                      {user.email && (
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                      )}
+                      
+                      {user.units && (
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
+                          <span>{user.units.name}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+
+                    {user.position && (
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                        {user.position}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleApprove(user.id)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3 py-1 h-8"
+                    >
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Aprovar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleReject(user.id)}
+                      className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/20 text-xs px-3 py-1 h-8"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Rejeitar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

@@ -55,7 +55,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ items }) => {
             >
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  <stat.icon className={`h-5 w-5`} />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">

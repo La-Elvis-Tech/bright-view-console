@@ -142,72 +142,82 @@ const AppointmentsDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Sistema de Agendamentos
-          </h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-1 text-sm">
-            Gerencie agendamentos, médicos e tipos de exames
-          </p>
+    <div className="min-h-screen">
+      <div className="p-2 md:p-6 max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              Agendamentos
+            </h1>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Gerencie consultas, médicos e tipos de exames
+            </p>
+          </div>
+          <Button 
+            onClick={() => {
+              setSelectedSlotData(null);
+              setShowCreateForm(true);
+            }}
+            className="bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 shadow-sm"
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Agendamento
+          </Button>
         </div>
-        <Button 
-          onClick={() => {
-            setSelectedSlotData(null);
-            setShowCreateForm(true);
-          }}
-          className="bg-neutral-900 hover:bg-neutral-800 text-white text-sm dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Agendamento
-        </Button>
+
+        {/* Stats */}
+        <AppointmentsStats appointments={appointments} />
+
+        {/* Create Form */}
+        {showCreateForm && (
+          <div className="bg-white/60 dark:bg-neutral-900/40 border border-neutral-200/60 dark:border-neutral-800/60 rounded-lg backdrop-blur-sm">
+            <CreateAppointmentForm 
+              onAppointmentCreated={handleCreateAppointment}
+              onClose={handleCloseForm}
+              prefilledData={selectedSlotData}
+            />
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white/60 dark:bg-neutral-900/40 border border-neutral-200/60 dark:border-neutral-800/60 rounded-lg backdrop-blur-sm">
+          <AppointmentTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            doctorsCount={doctors.length}
+            examTypesCount={examTypes.length}
+          >
+            {{
+              calendar: (
+                <AppointmentCalendar
+                  appointments={appointments}
+                  onSelectAppointment={handleSelectAppointment}
+                  onSelectSlot={handleSelectSlot}
+                />
+              ),
+              doctors: (
+                <DoctorManagement
+                  doctors={doctors}
+                  units={units}
+                  onCreateDoctor={handleCreateDoctor}
+                  onUpdateDoctor={handleUpdateDoctor}
+                  onDeleteDoctor={handleDeleteDoctor}
+                />
+              ),
+              examTypes: (
+                <ExamTypeManagement
+                  examTypes={examTypes}
+                  onCreateExamType={handleCreateExamType}
+                  onUpdateExamType={handleUpdateExamType}
+                  onDeleteExamType={handleDeleteExamType}
+                />
+              )
+            }}
+          </AppointmentTabs>
+        </div>
       </div>
-
-      <AppointmentsStats appointments={appointments} />
-
-      {showCreateForm && (
-        <CreateAppointmentForm 
-          onAppointmentCreated={handleCreateAppointment}
-          onClose={handleCloseForm}
-          prefilledData={selectedSlotData}
-        />
-      )}
-
-      <AppointmentTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        doctorsCount={doctors.length}
-        examTypesCount={examTypes.length}
-      >
-        {{
-          calendar: (
-            <AppointmentCalendar
-              appointments={appointments}
-              onSelectAppointment={handleSelectAppointment}
-              onSelectSlot={handleSelectSlot}
-            />
-          ),
-          doctors: (
-            <DoctorManagement
-              doctors={doctors}
-              units={units}
-              onCreateDoctor={handleCreateDoctor}
-              onUpdateDoctor={handleUpdateDoctor}
-              onDeleteDoctor={handleDeleteDoctor}
-            />
-          ),
-          examTypes: (
-            <ExamTypeManagement
-              examTypes={examTypes}
-              onCreateExamType={handleCreateExamType}
-              onUpdateExamType={handleUpdateExamType}
-              onDeleteExamType={handleDeleteExamType}
-            />
-          )
-        }}
-      </AppointmentTabs>
     </div>
   );
 };

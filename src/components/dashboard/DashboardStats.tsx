@@ -162,7 +162,7 @@ const DashboardStats: React.FC = () => {
       <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {Array.from({ length: 20 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="animate-pulse p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
                 <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-700 rounded mb-3"></div>
                 <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded mb-2"></div>
@@ -186,7 +186,7 @@ const DashboardStats: React.FC = () => {
             >
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
-                  <stat.icon className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                  <stat.icon className="h-5 w-5" />
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     stat.change.includes('+') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                     stat.change.includes('-') ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :

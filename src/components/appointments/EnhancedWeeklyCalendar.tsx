@@ -66,7 +66,7 @@ const EnhancedWeeklyCalendar: React.FC<EnhancedWeeklyCalendarProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <WeeklyCalendarHeader
         currentWeek={currentWeek}
         onNavigateWeek={handleNavigateWeek}
@@ -87,28 +87,29 @@ const EnhancedWeeklyCalendar: React.FC<EnhancedWeeklyCalendarProps> = ({
         </div>
       )}
 
-      {/* Layout horizontal dos dias */}
+      {/* Layout responsivo */}
       <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
-        <div className="grid md:grid-cols-1 lg:grid-cols-7 divide-x divide-neutral-200 dark:divide-neutral-700">
-          {weekDays.map((day, index) => (
-            <div key={day.toISOString()} className="min-h-[600px] flex flex-col">
-              {/* Cabeçalho do dia */}
-              <div className="bg-neutral-50 dark:bg-neutral-800 p-3 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="text-center">
-                  <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1">
-                    {format(day, 'EEE', { locale: ptBR })}
+        {/* Mobile: Layout em stack */}
+        <div className="block lg:hidden">
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            {weekDays.map((day) => (
+              <div key={day.toISOString()} className="p-4">
+                {/* Cabeçalho do dia mobile */}
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+                  <div>
+                    <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                      {format(day, 'EEEE', { locale: ptBR })}
+                    </div>
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                      {format(day, 'dd \'de\' MMMM', { locale: ptBR })}
+                    </div>
                   </div>
-                  <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-2xl font-bold text-neutral-400">
                     {format(day, 'd')}
                   </div>
-                  <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                    {format(day, 'MMM', { locale: ptBR })}
-                  </div>
                 </div>
-              </div>
-              
-              {/* Conteúdo do dia */}
-              <div className="flex-1 p-2">
+                
+                {/* Conteúdo do dia mobile */}
                 <WeeklyCalendarByDoctor
                   day={day}
                   appointments={filteredData.appointments}
@@ -118,8 +119,44 @@ const EnhancedWeeklyCalendar: React.FC<EnhancedWeeklyCalendarProps> = ({
                   onSelectSlot={onSelectSlot}
                 />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Layout em grid */}
+        <div className="hidden lg:block">
+          <div className="grid grid-cols-7 divide-x divide-neutral-200 dark:divide-neutral-700">
+            {weekDays.map((day) => (
+              <div key={day.toISOString()} className="min-h-[600px] flex flex-col">
+                {/* Cabeçalho do dia desktop */}
+                <div className="bg-neutral-50 dark:bg-neutral-800 p-3 border-b border-neutral-200 dark:border-neutral-700">
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1">
+                      {format(day, 'EEE', { locale: ptBR })}
+                    </div>
+                    <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                      {format(day, 'd')}
+                    </div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                      {format(day, 'MMM', { locale: ptBR })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Conteúdo do dia desktop */}
+                <div className="flex-1 p-2">
+                  <WeeklyCalendarByDoctor
+                    day={day}
+                    appointments={filteredData.appointments}
+                    doctors={filteredData.doctors}
+                    selectedDate={selectedDate}
+                    onSelectDate={setSelectedDate}
+                    onSelectSlot={onSelectSlot}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

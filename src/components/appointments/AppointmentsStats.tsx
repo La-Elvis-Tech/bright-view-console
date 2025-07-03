@@ -8,10 +8,10 @@ import {
   TrendingUp, 
   Users, 
   DollarSign,
-  AlertTriangle
+  CalendarClock
 } from 'lucide-react';
 import { SupabaseAppointment } from '@/types/appointment';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, isAfter, addDays } from 'date-fns';
 
 interface AppointmentsStatsProps {
   appointments: SupabaseAppointment[];
@@ -24,6 +24,14 @@ const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({ appointments }) =
   const todayAppointments = appointments.filter(app => 
     startOfDay(new Date(app.scheduled_date)) <= today && today <= endOfDay(new Date(app.scheduled_date))
   );
+  
+  // Próximos agendamentos (hoje e próximos 7 dias)
+  const upcomingAppointments = appointments.filter(app => {
+    const appointmentDate = new Date(app.scheduled_date);
+    const nextWeek = addDays(today, 7);
+    return isAfter(appointmentDate, startOfDay(today)) && appointmentDate <= nextWeek && 
+           ['Agendado', 'Confirmado'].includes(app.status);
+  }).sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime());
   
   const totalRevenue = appointments
     .filter(app => app.status === 'Concluído')
@@ -121,35 +129,45 @@ const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({ appointments }) =
         </CardContent>
       </Card>
 
-      {/* Alertas de Agendamentos */}
-      {todayAppointments.length > 0 && (
-        <Card className="bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50 rounded-lg shadow-sm">
+      {/* Próximos Agendamentos */}
+      {upcomingAppointments.length > 0 && (
+        <Card className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40 border-blue-200 dark:border-blue-800/50 rounded-lg shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg font-bold text-amber-700 dark:text-amber-300">
-              <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400" />
-              Agendamentos de Hoje
+            <CardTitle className="flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-blue-300">
+              <CalendarClock size={18} className="text-blue-600 dark:text-blue-400" />
+              Próximos Agendamentos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {todayAppointments.slice(0, 3).map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-2 bg-white/60 dark:bg-neutral-900/60 rounded-lg">
-                  <div>
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                      {appointment.patient_name}
-                    </span>
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400 ml-2">
-                      - {appointment.exam_types?.name || 'Exame não especificado'}
-                    </span>
+            <div className="grid gap-2">
+              {upcomingAppointments.slice(0, 4).map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-3 bg-white/70 dark:bg-neutral-900/60 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                        {appointment.patient_name}
+                      </span>
+                      <Badge variant="outline" className="text-xs border-blue-200 dark:border-blue-700">
+                        {appointment.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                      {appointment.exam_types?.name || 'Exame não especificado'}
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                    {format(new Date(appointment.scheduled_date), "HH:mm")}
-                  </span>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      {format(new Date(appointment.scheduled_date), "dd/MM")}
+                    </div>
+                    <div className="text-xs text-blue-600 dark:text-blue-400">
+                      {format(new Date(appointment.scheduled_date), "HH:mm")}
+                    </div>
+                  </div>
                 </div>
               ))}
-              {todayAppointments.length > 3 && (
-                <p className="text-sm text-amber-600 dark:text-amber-400 text-center">
-                  +{todayAppointments.length - 3} agendamentos adicionais hoje
+              {upcomingAppointments.length > 4 && (
+                <p className="text-sm text-blue-600 dark:text-blue-400 text-center mt-2 py-2 bg-white/50 dark:bg-neutral-900/40 rounded-lg">
+                  +{upcomingAppointments.length - 4} agendamentos adicionais
                 </p>
               )}
             </div>

@@ -75,13 +75,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "appointment_inventory_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "appointment_inventory_inventory_item_id_fkey"
             columns: ["inventory_item_id"]
             isOneToOne: false
@@ -380,13 +373,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "exam_results_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "exam_results_doctor_id_fkey"
             columns: ["doctor_id"]
@@ -741,6 +727,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          risk_level: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          risk_level?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          risk_level?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           alert_type: string
@@ -796,6 +818,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_compliance: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_encrypted: boolean | null
+          requires_admin: boolean | null
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_encrypted?: boolean | null
+          requires_admin?: boolean | null
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_encrypted?: boolean | null
+          requires_admin?: boolean | null
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       system_settings: {
         Row: {
@@ -860,6 +921,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mfa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          id: string
+          last_used_at: string | null
+          mfa_enabled: boolean | null
+          recovery_email: string | null
+          totp_secret: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          mfa_enabled?: boolean | null
+          recovery_email?: string | null
+          totp_secret?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          mfa_enabled?: boolean | null
+          recovery_email?: string | null
+          totp_secret?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string | null
@@ -895,6 +992,19 @@ export type Database = {
           total_volume_ml: number
           tubes_needed: number
           exam_details: Json
+        }[]
+      }
+      calculate_consumption_forecast: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          item_id: string
+          item_name: string
+          current_stock: number
+          predicted_weekly_consumption: number
+          predicted_daily_consumption: number
+          days_until_shortage: number
+          suggested_reorder_quantity: number
+          confidence_level: number
         }[]
       }
       calculate_detailed_exam_materials: {

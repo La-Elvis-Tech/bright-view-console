@@ -10,6 +10,7 @@ import SystemLogsPanel from "@/components/dashboard/SystemLogsPanel";
 import PredictiveInsights from "@/components/dashboard/PredictiveInsights";
 import InventoryValueWaffle from "@/components/dashboard/InventoryValueWaffle";
 import ExamResultsCalendar from "@/components/dashboard/ExamResultsCalendar";
+import RiskAlertsCard from "@/components/dashboard/RiskAlertsCard";
 import { SkeletonDashboard } from "@/components/ui/skeleton-dashboard";
 
 const Dashboard: React.FC = () => {
@@ -22,7 +23,7 @@ const Dashboard: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
           <p className="text-neutral-600 dark:text-neutral-400">
             Você precisa estar logado para acessar o dashboard.
@@ -64,11 +65,11 @@ const Dashboard: React.FC = () => {
               <InventoryValueWaffle />
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions and Risk Alerts */}
             <div className="lg:col-span-1 xl:col-span-1">
               <div className="space-y-6 h-full">
                 <QuickActionsCard />
-                
+                <RiskAlertsCard />
               </div>
             </div>
           </div>

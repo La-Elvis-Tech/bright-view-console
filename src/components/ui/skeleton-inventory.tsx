@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 
 export function SkeletonInventory() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 md:px-10">
       {/* Header */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-[200px]" />
@@ -16,7 +16,7 @@ export function SkeletonInventory() {
         <CardContent className="p-3 lg:p-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse p-3 lg:p-4 bg-neutral-50/80 dark:bg-neutral-800/40 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40">
+              <div key={i} className="animate-pulse p-3 lg:p-5 bg-neutral-50/80 dark:bg-neutral-800/40 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40">
                 <div className="flex flex-col space-y-3">
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-5 w-5" />

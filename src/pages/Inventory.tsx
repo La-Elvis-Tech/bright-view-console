@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import InventoryTable from '@/components/inventory/InventoryTable';
 import InventoryStats from '@/components/inventory/InventoryStats';
 import InventoryFilters from '@/components/inventory/InventoryFilters';
+import InventoryExportButton from '@/components/inventory/InventoryExportButton';
 import { SkeletonInventory } from '@/components/ui/skeleton-inventory';
 import { useAuthContext } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/inventory';
@@ -165,10 +166,10 @@ const Inventory = () => {
 
         <InventoryStats items={inventoryItems} />
 
-        {/* Filters and Add Button */}
+        {/* Filters and Actions */}
         <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-2">
                 <InventoryFilters
                   searchTerm={searchTerm}
@@ -178,12 +179,16 @@ const Inventory = () => {
                   categories={categories}
                 />
               </div>
-              <div>
+              <div className="flex gap-2">
+                <InventoryExportButton 
+                  items={filteredItems} 
+                  selectedItems={selectedItems} 
+                />
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button className="bg-blue-600 hover:bg-blue-700">
                       <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Item
+                      Adicionar
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -359,6 +364,7 @@ const Inventory = () => {
 
         <InventoryTable
           items={filteredItems}
+          categories={categories}
           selectedItems={selectedItems}
           onSelectItem={handleSelectItem}
           onSelectAll={handleSelectAll}

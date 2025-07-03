@@ -224,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
               <img 
                 src="/logolaelvis.svg" 
                 alt="La Elvis Tech" 
-                className={`${isCollapsed ? 'w-5 h-5' : 'w-6 h-6'} transition-all duration-300`}
+                className={`${isCollapsed ? 'w-5 h-5' : 'w-6 h-6'} transition-all duration-300 grayscale brightness-0 invert-0 dark:invert`}
               />
             </div>
             {!isCollapsed && (

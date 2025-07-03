@@ -7,6 +7,8 @@ import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useIsMobile } from "../hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { QueueManager } from "./queue/QueueManager";
+import { useSystemLoad } from "@/hooks/useSystemLoad";
 import Logo from "/logolaelvis.svg";
 
 const MobileHeader = memo(() => (
@@ -47,8 +49,10 @@ MobileHeader.displayName = 'MobileHeader';
 
 const Layout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showGlobalQueue, setShowGlobalQueue] = useState(false);
   const isMobile = useIsMobile();
   const mainContentRef = useRef<HTMLDivElement>(null);
+  const { isOverloaded } = useSystemLoad();
 
   useEffect(() => {
     if (!mainContentRef.current || isMobile) return;
@@ -60,10 +64,19 @@ const Layout = () => {
     }
   }, [isCollapsed, isMobile]);
 
+  // Monitor global system overload
+  useEffect(() => {
+    setShowGlobalQueue(isOverloaded);
+  }, [isOverloaded]);
+
   const toggleSidebar = () => {
     if (!isMobile) {
       setIsCollapsed(!isCollapsed);
     }
+  };
+
+  const handleGlobalOperationReady = () => {
+    setShowGlobalQueue(false);
   };
 
   return (
@@ -87,10 +100,16 @@ const Layout = () => {
           paddingLeft: isMobile ? "0px" : isCollapsed ? "80px" : "260px",
         }}
       >
-        <div className="p-4 sm:p-6 min-h-full sm:ml-0 md:ml-4 xl:ml-6">
+        <div className="p-2 md:p-6 min-h-full sm:ml-0 md:ml-4 xl:ml-6">
           <Outlet />
         </div>
       </div>
+
+      {/* Global Queue Manager */}
+      <QueueManager
+        isVisible={showGlobalQueue}
+        onOperationReady={handleGlobalOperationReady}
+      />
     </div>
   );
 };

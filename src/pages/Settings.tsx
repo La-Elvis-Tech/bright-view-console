@@ -53,75 +53,88 @@ const Settings = () => {
   };
 
   return (
-    <div ref={pageRef}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            Configurações
-          </h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-1">
-            Ajuste as configurações do sistema
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:block bg-neutral-100 rounded-lg dark:bg-neutral-800 p-0">
-            <ThemeToggle />
+    <div ref={pageRef} className="min-h-screen ">
+      <div className="p-6 max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
+              <div className="p-2 bg-neutral-50 dark:bg-neutral-800/40 rounded-lg">
+                <SettingsIcon className="h-5 w-5 text-neutral-500" />
+              </div>
+              Configurações
+            </h1>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              Ajuste as configurações do sistema e personalize sua experiência
+            </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/20"
-          >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">Sair da conta</span>
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm rounded-lg p-1 border-0 shadow-sm">
+              <ThemeToggle />
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/20 bg-white/60 dark:bg-neutral-900/40 backdrop-blur-sm border-0 shadow-sm"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Sair da conta</span>
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="">
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid mb-8 py-0 bg-neutral-200/70 dark:bg-neutral-800/30 shadow-sm border border-none ${isAdmin() ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-700">
-              <User className="hidden xl:block h-4 w-4" /> Perfil
+          <TabsList className={`bg-white/40 dark:bg-neutral-900/20 backdrop-blur-sm border-0 shadow-sm mb-6 ${isAdmin() ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            <TabsTrigger 
+              value="profile" 
+              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800/60"
+            >
+              <User className="hidden xl:block h-4 w-4" /> 
+              Perfil
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
-              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-700"
+              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800/60"
             >
-              <Calendar className="hidden xl:block h-4 w-4" /> Notificações
+              <Calendar className="hidden xl:block h-4 w-4" /> 
+              Notificações
             </TabsTrigger>
             {isAdmin() && (
               <TabsTrigger
                 value="units"
-                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-700"
+                className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800/60"
               >
-                <Building2 className="hidden xl:block h-4 w-4" /> Unidades
+                <Building2 className="hidden xl:block h-4 w-4" /> 
+                Unidades
               </TabsTrigger>
             )}
-            <TabsTrigger value="security" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-700">
-              <SettingsIcon className="hidden xl:block h-4 w-4" /> Segurança
+            <TabsTrigger 
+              value="security" 
+              className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800/60"
+            >
+              <SettingsIcon className="hidden xl:block h-4 w-4" /> 
+              Segurança
             </TabsTrigger>
           </TabsList>
 
-          <div className="p-2">
-            <TabsContent value="profile" className="mt-0">
-              <LaboratoryProfile />
-            </TabsContent>
+          <TabsContent value="profile" className="mt-0">
+            <LaboratoryProfile />
+          </TabsContent>
 
-            <TabsContent value="notifications" className="mt-0">
-              <NotificationSettings />
-            </TabsContent>
+          <TabsContent value="notifications" className="mt-0">
+            <NotificationSettings />
+          </TabsContent>
 
-            {isAdmin() && (
-              <TabsContent value="units" className="mt-0">
-                <UnitsManagement />
-              </TabsContent>
-            )}
-
-            <TabsContent value="security" className="mt-0">
-              <SecuritySettings />
+          {isAdmin() && (
+            <TabsContent value="units" className="mt-0">
+              <UnitsManagement />
             </TabsContent>
-          </div>
+          )}
+
+          <TabsContent value="security" className="mt-0">
+            <SecuritySettings />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
