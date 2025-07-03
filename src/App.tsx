@@ -21,6 +21,7 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const Simulations = lazy(() => import("./pages/Simulations"));
 const Users = lazy(() => import("./pages/Users"));
 const InviteCodes = lazy(() => import("./pages/InviteCodes"));
+const Chat = lazy(() => import("./pages/Chat"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -113,6 +114,11 @@ const App = () => (
                   <Route path="/invite-codes" element={
                     <Suspense fallback={<PageFallback />}>
                       <InviteCodes />
+                    </Suspense>
+                  } />
+                  <Route path="/chat" element={
+                    <Suspense fallback={<PageFallback />}>
+                      <Chat />
                     </Suspense>
                   } />
                   <Route path="*" element={

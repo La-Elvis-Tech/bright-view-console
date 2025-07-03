@@ -11,6 +11,7 @@ import {
   AlertTriangle, 
   Play,
   Users,
+  Bot,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -44,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
     { icon: AlertTriangle, label: 'Alertas', path: '/alerts' },
     { icon: Play, label: 'Simulações', path: '/simulations' },
     { icon: BarChart3, label: 'Relatórios', path: '/reports' },
+    { icon: Bot, label: 'Chat - Elvinho', path: '/chat' },
     { icon: Users, label: 'Usuários', path: '/users' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
   ];
