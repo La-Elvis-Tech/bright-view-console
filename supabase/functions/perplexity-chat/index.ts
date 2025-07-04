@@ -130,7 +130,7 @@ Se for um comando como /estoque, /consultas-hoje, /relatorio, forneça uma respo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'sonar-deep-research',
         messages: messages,
         temperature: 0.2,
         top_p: 0.9,
@@ -153,7 +153,7 @@ Se for um comando como /estoque, /consultas-hoje, /relatorio, forneça uma respo
 
     return new Response(JSON.stringify({ 
       message: assistantMessage,
-      model: 'llama-3.1-sonar-small-128k-online',
+      model: 'sonar-deep-research',
       usage: data.usage 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
