@@ -123,7 +123,7 @@ const DoctorSchedulePopover: React.FC<DoctorSchedulePopoverProps> = ({
                 {doctor.specialty}
               </div>
             )}
-            <div className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-300">
+            <div className="flex items-center gap-1 overflow-hidden text-xs text-neutral-600 dark:text-neutral-300">
               <Clock className="h-3 w-3" />
               <span>{availableSlots} disponível{availableSlots !== 1 ? 'eis' : ''}</span>
             </div>
@@ -168,11 +168,11 @@ const DoctorSchedulePopover: React.FC<DoctorSchedulePopoverProps> = ({
                   return (
                     <div
                       key={time}
-                      className={`text-xs p-2 rounded border cursor-not-allowed ${getStatusColor(appointment.status)}`}
+                      className={`text-xs p-2 rounded-xl border cursor-not-allowed ${getStatusColor(appointment.status)}`}
                       title={`${appointment.patient_name} - ${appointment.exam_types?.name || 'Exame'}`}
                     >
                       <div className="font-semibold text-center">{time}</div>
-                      <div className="truncate text-xs opacity-90 text-center mt-1">
+                      <div className="truncate text-xs opacity-90 text-center">
                         {appointment.patient_name}
                       </div>
                     </div>

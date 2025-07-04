@@ -131,7 +131,7 @@ const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({ appointments }) =
 
       {/* Próximos Agendamentos */}
       {upcomingAppointments.length > 0 && (
-        <Card className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40 border-blue-200 dark:border-blue-800/50 rounded-lg shadow-sm">
+        <Card className="bg-white/70 dark:bg-neutral-900/60 border-blue-200 dark:border-blue-800/50 rounded-lg shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-blue-300">
               <CalendarClock size={18} className="text-blue-600 dark:text-blue-400" />
@@ -141,7 +141,7 @@ const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({ appointments }) =
           <CardContent>
             <div className="grid gap-2">
               {upcomingAppointments.slice(0, 4).map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-3 bg-white/70 dark:bg-neutral-900/60 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                <div key={appointment.id} className="flex items-center justify-between p-3 bg-neutral-50/80 dark:bg-neutral-900/40 rounded-lg  border border-neutral-100 dark:border-neutral-800/50">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-neutral-700 dark:text-neutral-300">
@@ -156,7 +156,7 @@ const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({ appointments }) =
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       {format(new Date(appointment.scheduled_date), "dd/MM")}
                     </div>
                     <div className="text-xs text-blue-600 dark:text-blue-400">

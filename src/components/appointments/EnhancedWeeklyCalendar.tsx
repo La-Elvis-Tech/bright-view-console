@@ -90,7 +90,7 @@ const EnhancedWeeklyCalendar: React.FC<EnhancedWeeklyCalendarProps> = ({
       {/* Layout responsivo */}
       <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
         {/* Mobile: Layout em stack */}
-        <div className="block lg:hidden">
+        <div className="block xl:hidden">
           <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
             {weekDays.map((day) => (
               <div key={day.toISOString()} className="p-4">
@@ -124,7 +124,7 @@ const EnhancedWeeklyCalendar: React.FC<EnhancedWeeklyCalendarProps> = ({
         </div>
 
         {/* Desktop: Layout em grid */}
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           <div className="grid grid-cols-7 divide-x divide-neutral-200 dark:divide-neutral-700">
             {weekDays.map((day) => (
               <div key={day.toISOString()} className="min-h-[600px] flex flex-col">

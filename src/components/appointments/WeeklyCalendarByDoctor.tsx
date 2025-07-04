@@ -33,7 +33,7 @@ const WeeklyCalendarByDoctor: React.FC<WeeklyCalendarByDoctorProps> = ({
   const isWeekend = getDay(day) === 0 || getDay(day) === 6;
 
   return (
-    <div className="h-full flex flex-col space-y-2 p-2">
+    <div className="h-full flex flex-col space-y-2 p-1">
       {doctors.length > 0 ? (
         <div className="space-y-2">
           {doctors.map((doctor) => (
