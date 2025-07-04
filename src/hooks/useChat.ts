@@ -172,17 +172,42 @@ export const useChat = () => {
     }
   };
 
-  // Gerar resposta do Elvinho de forma profissional
+  // Gerar resposta do Elvinho usando Perplexity AI
   const generateElvinhoResponse = async (userMessage: string, messageType: 'normal' | 'command'): Promise<string> => {
-    const isCommand = messageType === 'command' || userMessage.startsWith('/');
-    
-    if (isCommand) {
-      return handleCommand(userMessage);
-    }
+    try {
+      // Preparar histórico de conversação para contexto
+      const conversationHistory = messages.slice(-6).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
 
-    // Respostas baseadas em contexto
-    const responses = getContextualResponse(userMessage);
-    return responses[Math.floor(Math.random() * responses.length)];
+      const { data, error } = await supabase.functions.invoke('perplexity-chat', {
+        body: {
+          message: userMessage,
+          conversationHistory,
+          messageType
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao chamar edge function:', error);
+        throw error;
+      }
+
+      return data.message || 'Desculpe, não consegui processar sua mensagem.';
+    } catch (error) {
+      console.error('Erro na geração de resposta:', error);
+      
+      // Fallback para respostas locais
+      const isCommand = messageType === 'command' || userMessage.startsWith('/');
+      
+      if (isCommand) {
+        return handleCommand(userMessage);
+      }
+
+      const responses = getContextualResponse(userMessage);
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
   };
 
   const handleCommand = (command: string): string => {

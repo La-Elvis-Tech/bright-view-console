@@ -343,14 +343,14 @@ const Chat = () => {
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Online
+                      Online • IA Perplexity
                     </span>
                   </div>
                   <div className="text-xs text-neutral-500">
-                    Tempo de resposta: ~1.5s
+                    Modelo: llama-3.1-sonar
                   </div>
                   <div className="text-xs text-neutral-500">
-                    Sistema operacional
+                    Respostas inteligentes
                   </div>
                   <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                     Pronto para ajudar!
