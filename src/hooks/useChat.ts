@@ -185,7 +185,8 @@ export const useChat = () => {
         body: {
           message: userMessage,
           conversationHistory,
-          messageType
+          messageType,
+          userId: user?.id
         }
       });
 
