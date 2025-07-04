@@ -19,6 +19,13 @@ serve(async (req) => {
   try {
     const { message, conversationHistory = [], messageType = 'normal', userId } = await req.json();
     
+    console.log('Recebida mensagem:', { message, messageType, userId });
+    console.log('API Keys configuradas:', { 
+      hasPerplexityKey: !!perplexityApiKey, 
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseKey 
+    });
+    
     // Criar cliente Supabase para acessar dados
     const supabase = createClient(supabaseUrl, supabaseKey);
     

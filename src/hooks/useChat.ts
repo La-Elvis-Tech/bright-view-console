@@ -175,6 +175,8 @@ export const useChat = () => {
   // Gerar resposta do Elvinho usando Perplexity AI
   const generateElvinhoResponse = async (userMessage: string, messageType: 'normal' | 'command'): Promise<string> => {
     try {
+      console.log('Tentando gerar resposta com Perplexity:', { userMessage, messageType });
+      
       // Preparar histórico de conversação para contexto
       const conversationHistory = messages.slice(-6).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -190,12 +192,18 @@ export const useChat = () => {
         }
       });
 
+      console.log('Resposta da edge function:', { data, error });
+
       if (error) {
         console.error('Erro ao chamar edge function:', error);
         throw error;
       }
 
-      return data.message || 'Desculpe, não consegui processar sua mensagem.';
+      if (data?.fallback) {
+        console.log('Usando resposta fallback da API');
+      }
+
+      return data?.message || 'Desculpe, não consegui processar sua mensagem.';
     } catch (error) {
       console.error('Erro na geração de resposta:', error);
       
@@ -203,9 +211,11 @@ export const useChat = () => {
       const isCommand = messageType === 'command' || userMessage.startsWith('/');
       
       if (isCommand) {
+        console.log('Usando comando local fallback:', userMessage);
         return handleCommand(userMessage);
       }
 
+      console.log('Usando resposta contextual fallback');
       const responses = getContextualResponse(userMessage);
       return responses[Math.floor(Math.random() * responses.length)];
     }
@@ -214,13 +224,19 @@ export const useChat = () => {
   const handleCommand = (command: string): string => {
     switch (command.toLowerCase()) {
       case '/estoque':
-        return 'Consultando estoque atual... Encontrei 45 itens com estoque baixo e 3 itens próximos ao vencimento. Deseja ver mais detalhes?';
+        return '📦 **RELATÓRIO DE ESTOQUE**\n\n• 45 itens com estoque baixo\n• 3 itens próximos ao vencimento\n• 12 categorias monitoradas\n\n**Posso ajudar com:**\n1) Ver itens críticos\n2) Relatório de movimentação\n3) Previsão de reposição';
       case '/consultas-hoje':
-        return 'Hoje temos 23 consultas agendadas, 18 já realizadas e 5 pendentes. A taxa de ocupação está em 85%.';
+        return '🩺 **CONSULTAS HOJE**\n\n• Total agendadas: 23\n• Realizadas: 18\n• Pendentes: 5\n• Taxa ocupação: 85%\n\n**Ações disponíveis:**\n1) Ver próximas consultas\n2) Status por médico\n3) Relatório de ausências';
       case '/relatorio':
-        return 'Gerando relatório... Esta semana processamos 147 exames, com crescimento de 12% em relação à semana anterior.';
+        return '📊 **RELATÓRIO SEMANAL**\n\n• Exames processados: 147\n• Crescimento: +12%\n• Taxa sucesso: 98.5%\n• Tempo médio: 2.3h\n\n**Relatórios disponíveis:**\n1) Detalhado por tipo\n2) Performance médicos\n3) Análise temporal';
+      case '/alertas':
+        return '🚨 **ALERTAS ATIVOS**\n\n• Críticos: 3\n• Médios: 7\n• Baixos: 12\n\n**Principais alertas:**\n1) Estoque crítico: Reagente ABC\n2) Equipamento manutenção: Centrífuga 02\n3) Temperatura fora do padrão: Geladeira A';
+      case '/resumo':
+        return '📈 **RESUMO GERAL**\n\n**Hoje:**\n• Consultas: 23 (5 pendentes)\n• Exames: 67 processados\n• Alertas: 22 ativos\n• Estoque: 15 itens críticos\n\n**Status geral: ✅ Operacional**';
+      case '/simular':
+        return '🔬 **SIMULAÇÕES DISPONÍVEIS**\n\n1) Previsão de demanda\n2) Cenário de emergência\n3) Otimização de estoque\n4) Capacidade máxima\n\n**Digite o número da simulação desejada**';
       default:
-        return 'Comando não reconhecido. Comandos disponíveis: /estoque, /consultas-hoje, /relatorio';
+        return '❓ **Comando não reconhecido**\n\n**Comandos disponíveis:**\n• `/estoque` - Status do inventário\n• `/consultas-hoje` - Agenda do dia\n• `/relatorio` - Relatórios rápidos\n• `/alertas` - Alertas ativos\n• `/resumo` - Visão geral\n• `/simular` - Simulações';
     }
   };
 

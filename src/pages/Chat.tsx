@@ -29,6 +29,9 @@ const Chat = () => {
     { icon: Database, label: 'Ver Estoque', command: '/estoque' },
     { icon: Clock, label: 'Consultas Hoje', command: '/consultas-hoje' },
     { icon: Zap, label: 'Relatório Rápido', command: '/relatorio' },
+    { icon: User, label: 'Alertas Ativos', command: '/alertas' },
+    { icon: Bot, label: 'Resumo Geral', command: '/resumo' },
+    { icon: Plus, label: 'Simulação', command: '/simular' }
   ];
 
   const scrollToBottom = () => {
@@ -324,12 +327,21 @@ const Chat = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleQuickCommand(cmd.command)}
-                      className="w-full justify-start text-xs h-8 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      className="w-full justify-start text-xs h-8 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
                       <cmd.icon className="h-3 w-3 mr-2" />
                       {cmd.label}
                     </Button>
                   ))}
+                </div>
+                
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
+                    💡 Dica
+                  </h4>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    Use comandos como /estoque ou /resumo para respostas rápidas!
+                  </p>
                 </div>
               </CardContent>
             </Card>
