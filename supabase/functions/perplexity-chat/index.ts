@@ -135,6 +135,8 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
       { role: 'user', content: message }
     ];
 
+    console.log('Enviando para Perplexity:', { model: 'sonar-deep-research', messageCount: messages.length });
+
     // Chamada para Perplexity API
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -143,26 +145,43 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'sonar-deep-research',
         messages: messages,
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: 1000,
         return_images: false,
         return_related_questions: false
       }),
     });
 
+    console.log('Status da resposta Perplexity:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Erro da API: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Erro da API Perplexity:', { status: response.status, error: errorText });
+      throw new Error(`Erro da API Perplexity: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    console.log('Dados recebidos da Perplexity:', { hasChoices: !!data.choices, choicesLength: data.choices?.length });
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Estrutura de resposta inválida:', data);
+      throw new Error('Resposta da API em formato inválido');
+    }
 
-    return new Response(JSON.stringify({ 
+    const assistantMessage = data.choices[0].message.content;
+    console.log('Mensagem do assistente extraída:', { messageLength: assistantMessage?.length });
+
+    const result = { 
       message: assistantMessage,
-      model: 'sonar-deep-research'
-    }), {
+      model: 'sonar-deep-research',
+      success: true
+    };
+
+    console.log('Retornando resultado:', { hasMessage: !!result.message, model: result.model });
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
