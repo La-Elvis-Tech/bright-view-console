@@ -20,77 +20,113 @@ serve(async (req) => {
     
     console.log('Recebida mensagem:', { message, messageType, userId });
     
+    // Verificar se o assunto é relacionado ao laboratório
+    const laboratoryTopics = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade/i;
+    const isLabRelated = laboratoryTopics.test(message) || messageType === 'command';
+    
+    if (!isLabRelated) {
+      return new Response(JSON.stringify({ 
+        message: "Desculpe, sou especializado apenas em gestão laboratorial. Posso ajudar com estoque, consultas, exames, relatórios e outras atividades do laboratório. Como posso auxiliar você?",
+        filtered: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     // Criar cliente Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
     let contextData = '';
     
-    // Busca de estoque
-    if (/estoque|inventário|material/i.test(message)) {
-      const { data: stockData } = await supabase
+    // Sempre buscar dados básicos do sistema
+    const [stockData, alertData, appointmentData, categoriesData] = await Promise.all([
+      // Estoque crítico
+      supabase
         .from('inventory_items')
-        .select('name, current_stock, min_stock')
+        .select('name, current_stock, min_stock, unit_measure')
         .lt('current_stock', supabase.raw('min_stock'))
-        .limit(10);
+        .eq('active', true)
+        .limit(10),
       
-      if (stockData?.length) {
-        contextData += `\nITENS COM ESTOQUE BAIXO:\n${stockData.map(item => 
-          `- ${item.name}: ${item.current_stock} unidades (mínimo: ${item.min_stock})`
-        ).join('\n')}`;
-      }
-    }
-    
-    // Busca de alertas
-    if (/alerta|aviso/i.test(message)) {
-      const { data: alertData } = await supabase
+      // Alertas ativos
+      supabase
         .from('stock_alerts')
-        .select('title, priority, status')
+        .select('title, priority, status, alert_type')
         .eq('status', 'active')
-        .limit(5);
+        .limit(5),
       
-      if (alertData?.length) {
-        contextData += `\nALERTAS ATIVOS:\n${alertData.map(alert => 
-          `- [${alert.priority}] ${alert.title}`
-        ).join('\n')}`;
-      }
-    }
-    
-    // Busca de agendamentos (corrigido)
-    if (/agendamento|consulta|appointment/i.test(message)) {
-      const today = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
-      const { data: appointmentData } = await supabase
+      // Agendamentos de hoje
+      supabase
         .from('appointments')
         .select('patient_name, scheduled_date, status')
-        .gte('scheduled_date', `${today}T00:00:00`)
-        .lte('scheduled_date', `${today}T23:59:59`)
-        .limit(10);
-      
-      if (appointmentData?.length) {
-        contextData += `\nAGENDAMENTOS HOJE:\n${appointmentData.map(apt => {
-          const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-          return `- ${apt.patient_name} às ${time} (${apt.status})`;
-        }).join('\n')}`;
-      }
+        .gte('scheduled_date', new Date().toISOString().split('T')[0])
+        .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+        .limit(10),
+        
+      // Categorias de inventário
+      supabase
+        .from('inventory_categories')
+        .select('name, description')
+        .limit(10)
+    ]);
+
+    // Montar contexto com dados reais
+    if (stockData.data?.length) {
+      contextData += `\n📦 ESTOQUE CRÍTICO (${stockData.data.length} itens):\n${stockData.data.map(item => 
+        `• ${item.name}: ${item.current_stock} ${item.unit_measure} (mín: ${item.min_stock})`
+      ).join('\n')}\n`;
+    }
+    
+    if (alertData.data?.length) {
+      contextData += `\n🚨 ALERTAS ATIVOS (${alertData.data.length}):\n${alertData.data.map(alert => 
+        `• [${alert.priority.toUpperCase()}] ${alert.title}`
+      ).join('\n')}\n`;
+    }
+    
+    if (appointmentData.data?.length) {
+      contextData += `\n📅 CONSULTAS HOJE (${appointmentData.data.length}):\n${appointmentData.data.map(apt => {
+        const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        return `• ${apt.patient_name} às ${time} - ${apt.status}`;
+      }).join('\n')}\n`;
+    }
+    
+    if (categoriesData.data?.length) {
+      contextData += `\n📂 CATEGORIAS DISPONÍVEIS:\n${categoriesData.data.map(cat => 
+        `• ${cat.name}${cat.description ? ` - ${cat.description}` : ''}`
+      ).join('\n')}\n`;
     }
 
-    // Contexto do sistema
+    // Contexto do sistema com dados reais
     const laboratoryContext = `
-[CONTEXTO DO SISTEMA]
-Você é o Elvinho, assistente de gestão laboratorial.
-Dados atuais do sistema: ${contextData || 'Nenhum dado relevante encontrado'}
+[ELVINHO - ASSISTENTE LABORATORIAL]
+Você é o Elvinho, assistente inteligente especializado em gestão laboratorial.
 
-[REGRAS]
-- Responda APENAS sobre tópicos laboratoriais
-- Seja objetivo e profissional
-- Ofereça opções de ação quando possível
+[DADOS DO SISTEMA ATUAL]
+${contextData || 'Sistema operacional - aguardando consultas específicas'}
 
-[CAPACIDADES]
-✅ Análise de estoque
-✅ Gestão de agendamentos
-✅ Geração de relatórios
-✅ Suporte técnico`;
+[REGRAS IMPORTANTES]
+- Responda APENAS sobre gestão laboratorial
+- Use os dados reais do sistema fornecidos acima
+- Seja preciso, objetivo e profissional
+- Ofereça ações práticas baseadas nos dados
+- Se não tiver dados específicos, explique como obter
+
+[SUAS CAPACIDADES]
+✅ Consulta de estoque em tempo real
+✅ Análise de alertas e problemas
+✅ Gestão de agendamentos e consultas
+✅ Relatórios e estatísticas
+✅ Suporte técnico especializado
+✅ Recomendações baseadas em dados
+
+[COMANDOS RÁPIDOS DISPONÍVEIS]
+/estoque - Status detalhado do inventário
+/consultas-hoje - Agendamentos do dia
+/alertas - Problemas ativos do sistema
+/relatorio - Relatórios e métricas
+/resumo - Visão geral do laboratório`;
 
     // Preparar mensagens para a API
     const messages = [
@@ -107,10 +143,12 @@ Dados atuais do sistema: ${contextData || 'Nenhum dado relevante encontrado'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'sonar-deep-research',
+        model: 'llama-3.1-sonar-small-128k-online',
         messages: messages,
-        temperature: 0.2,
-        max_tokens: 1500
+        temperature: 0.3,
+        max_tokens: 800,
+        return_images: false,
+        return_related_questions: false
       }),
     });
 

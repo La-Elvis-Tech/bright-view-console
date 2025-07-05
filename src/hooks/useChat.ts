@@ -175,14 +175,16 @@ export const useChat = () => {
   // Gerar resposta do Elvinho usando Perplexity AI
   const generateElvinhoResponse = async (userMessage: string, messageType: 'normal' | 'command'): Promise<string> => {
     try {
-      console.log('Tentando gerar resposta com Perplexity:', { userMessage, messageType });
+      console.log('🤖 Elvinho gerando resposta:', { userMessage, messageType });
       
-      // Preparar histórico de conversação para contexto
-      const conversationHistory = messages.slice(-6).map(msg => ({
+      // Preparar histórico de conversação limitado
+      const conversationHistory = messages.slice(-4).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
 
+      console.log('📡 Chamando edge function...');
+      
       const { data, error } = await supabase.functions.invoke('perplexity-chat', {
         body: {
           message: userMessage,
@@ -192,51 +194,157 @@ export const useChat = () => {
         }
       });
 
-      console.log('Resposta da edge function:', { data, error });
+      console.log('✅ Resposta recebida:', { success: !!data, hasError: !!error, filtered: data?.filtered });
 
       if (error) {
-        console.error('Erro ao chamar edge function:', error);
+        console.error('❌ Erro na edge function:', error);
         throw error;
       }
 
-      if (data?.fallback) {
-        console.log('Usando resposta fallback da API');
+      // Se foi filtrado por assunto não relacionado
+      if (data?.filtered) {
+        return data.message;
       }
 
-      return data?.message || 'Desculpe, não consegui processar sua mensagem.';
-    } catch (error) {
-      console.error('Erro na geração de resposta:', error);
+      return data?.message || 'Desculpe, houve um problema técnico. Tente novamente.';
       
-      // Fallback para respostas locais
+    } catch (error) {
+      console.error('💥 Erro na comunicação com Elvinho:', error);
+      
+      // Fallback melhorado
       const isCommand = messageType === 'command' || userMessage.startsWith('/');
       
       if (isCommand) {
-        console.log('Usando comando local fallback:', userMessage);
+        console.log('🔄 Usando comando local como fallback');
         return handleCommand(userMessage);
       }
 
-      console.log('Usando resposta contextual fallback');
-      const responses = getContextualResponse(userMessage);
-      return responses[Math.floor(Math.random() * responses.length)];
+      // Resposta de erro mais útil
+      return `Desculpe, estou com dificuldades técnicas no momento. 
+
+Você pode tentar:
+• Usar comandos rápidos como /estoque ou /resumo
+• Reformular sua pergunta de forma mais específica
+• Aguardar alguns segundos e tentar novamente
+
+Como posso ajudar de outra forma?`;
     }
   };
 
   const handleCommand = (command: string): string => {
     switch (command.toLowerCase()) {
       case '/estoque':
-        return '📦 **RELATÓRIO DE ESTOQUE**\n\n• 45 itens com estoque baixo\n• 3 itens próximos ao vencimento\n• 12 categorias monitoradas\n\n**Posso ajudar com:**\n1) Ver itens críticos\n2) Relatório de movimentação\n3) Previsão de reposição';
+        return `📦 **RELATÓRIO DE ESTOQUE**
+
+🔍 **Status Atual:**
+• Consultando itens com estoque baixo...
+• Verificando prazos de validade...
+• Analisando movimentações recentes...
+
+💡 **Dica:** Pergunte "quais itens estão com estoque baixo?" para dados em tempo real!
+
+**Posso ajudar com:**
+• Consulta de itens específicos
+• Relatório de movimentação
+• Previsão de reposição
+• Análise por categoria`;
+
       case '/consultas-hoje':
-        return '🩺 **CONSULTAS HOJE**\n\n• Total agendadas: 23\n• Realizadas: 18\n• Pendentes: 5\n• Taxa ocupação: 85%\n\n**Ações disponíveis:**\n1) Ver próximas consultas\n2) Status por médico\n3) Relatório de ausências';
+        return `🩺 **AGENDA DO DIA**
+
+📅 **Consultando agendamentos de hoje...**
+• Verificando consultas confirmadas
+• Checando horários disponíveis
+• Analisando ocupação médica
+
+💡 **Dica:** Pergunte "quantas consultas temos hoje?" para informações atualizadas!
+
+**Ações disponíveis:**
+• Ver próximas consultas
+• Status por médico
+• Relatório de ausências
+• Reagendamentos necessários`;
+
       case '/relatorio':
-        return '📊 **RELATÓRIO SEMANAL**\n\n• Exames processados: 147\n• Crescimento: +12%\n• Taxa sucesso: 98.5%\n• Tempo médio: 2.3h\n\n**Relatórios disponíveis:**\n1) Detalhado por tipo\n2) Performance médicos\n3) Análise temporal';
+        return `📊 **RELATÓRIOS DISPONÍVEIS**
+
+📈 **Tipos de Relatório:**
+• Relatório de estoque
+• Performance de consultas
+• Análise de exames
+• Alertas e incidentes
+• Movimentação financeira
+
+💡 **Dica:** Seja específico! "Relatório de estoque semanal" ou "Performance do mês"
+
+**Como solicitar:**
+• Especifique o período desejado
+• Mencione métricas importantes
+• Indique formato preferido`;
+
       case '/alertas':
-        return '🚨 **ALERTAS ATIVOS**\n\n• Críticos: 3\n• Médios: 7\n• Baixos: 12\n\n**Principais alertas:**\n1) Estoque crítico: Reagente ABC\n2) Equipamento manutenção: Centrífuga 02\n3) Temperatura fora do padrão: Geladeira A';
+        return `🚨 **SISTEMA DE ALERTAS**
+
+⚡ **Verificando alertas ativos...**
+• Estoque crítico
+• Equipamentos em manutenção
+• Vencimentos próximos
+• Anomalias no sistema
+
+💡 **Dica:** Pergunte "que alertas temos ativos?" para lista completa!
+
+**Tipos de Alerta:**
+• 🔴 Críticos (ação imediata)
+• 🟡 Médios (atenção necessária)
+• 🟢 Informativos (monitoramento)`;
+
       case '/resumo':
-        return '📈 **RESUMO GERAL**\n\n**Hoje:**\n• Consultas: 23 (5 pendentes)\n• Exames: 67 processados\n• Alertas: 22 ativos\n• Estoque: 15 itens críticos\n\n**Status geral: ✅ Operacional**';
-      case '/simular':
-        return '🔬 **SIMULAÇÕES DISPONÍVEIS**\n\n1) Previsão de demanda\n2) Cenário de emergência\n3) Otimização de estoque\n4) Capacidade máxima\n\n**Digite o número da simulação desejada**';
+        return `📈 **PAINEL EXECUTIVO**
+
+🏥 **Status do Laboratório:**
+• Consultando indicadores principais...
+• Analisando performance operacional...
+• Verificando alertas críticos...
+
+💡 **Dica:** Para dados específicos, pergunte "qual o status geral do laboratório?"
+
+**Métricas Principais:**
+• Consultas realizadas/agendadas
+• Estoque crítico
+• Alertas ativos
+• Performance por unidade`;
+
+      case '/ajuda':
+      case '/help':
+        return `🤖 **ELVINHO - GUIA RÁPIDO**
+
+**Como usar:**
+• Faça perguntas naturais sobre o laboratório
+• Use comandos / para respostas rápidas
+• Seja específico para melhores resultados
+
+**Exemplos de perguntas:**
+• "Quais itens estão com estoque baixo?"
+• "Quantas consultas temos hoje?"
+• "Há alertas críticos ativos?"
+• "Qual fornecedor do item X?"
+
+**Comandos disponíveis:**
+• /estoque • /consultas-hoje • /alertas
+• /relatorio • /resumo • /ajuda`;
+
       default:
-        return '❓ **Comando não reconhecido**\n\n**Comandos disponíveis:**\n• `/estoque` - Status do inventário\n• `/consultas-hoje` - Agenda do dia\n• `/relatorio` - Relatórios rápidos\n• `/alertas` - Alertas ativos\n• `/resumo` - Visão geral\n• `/simular` - Simulações';
+        return `❓ **Comando não reconhecido: ${command}**
+
+**Comandos disponíveis:**
+• \`/estoque\` - Status do inventário
+• \`/consultas-hoje\` - Agenda do dia  
+• \`/relatorio\` - Relatórios disponíveis
+• \`/alertas\` - Alertas do sistema
+• \`/resumo\` - Painel executivo
+• \`/ajuda\` - Este guia
+
+💡 **Dica:** Você também pode fazer perguntas naturais como "quantos itens estão em falta?" ou "qual o status das consultas?"`;
     }
   };
 
