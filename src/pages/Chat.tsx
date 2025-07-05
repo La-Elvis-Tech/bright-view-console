@@ -26,12 +26,12 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickCommands = [
-    { icon: Database, label: 'Ver Estoque', command: '/estoque' },
-    { icon: Clock, label: 'Consultas Hoje', command: '/consultas-hoje' },
-    { icon: Zap, label: 'Relatório Rápido', command: '/relatorio' },
-    { icon: User, label: 'Alertas Ativos', command: '/alertas' },
-    { icon: Bot, label: 'Resumo Geral', command: '/resumo' },
-    { icon: Plus, label: 'Simulação', command: '/simular' }
+    { icon: Database, label: 'Ver Estoque', text: 'Quais itens estão com estoque baixo?' },
+    { icon: Clock, label: 'Consultas Hoje', text: 'Quantas consultas temos hoje?' },
+    { icon: Zap, label: 'Relatório Rápido', text: 'Gere um relatório geral do laboratório' },
+    { icon: User, label: 'Alertas Ativos', text: 'Quais alertas temos ativos no momento?' },
+    { icon: Bot, label: 'Resumo Geral', text: 'Qual o status geral do laboratório?' },
+    { icon: Plus, label: 'Ajuda', text: 'Como posso usar o sistema?' }
   ];
 
   const scrollToBottom = () => {
@@ -58,8 +58,7 @@ const Chat = () => {
       if (!newConversation) return;
     }
 
-    const messageType = inputValue.startsWith('/') ? 'command' : 'normal';
-    await sendMessage(inputValue, messageType);
+    await sendMessage(inputValue);
     setInputValue('');
   };
 
@@ -69,8 +68,8 @@ const Chat = () => {
     }
   };
 
-  const handleQuickCommand = (command: string) => {
-    setInputValue(command);
+  const handleQuickCommand = (text: string) => {
+    setInputValue(text);
   };
 
   const handleNewChat = async () => {
@@ -276,7 +275,7 @@ const Chat = () => {
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
-                          placeholder="Digite sua mensagem ou use comandos como /estoque..."
+                          placeholder="Digite sua mensagem sobre o laboratório..."
                           className="flex-1"
                           disabled={isTyping || loading}
                         />
@@ -326,7 +325,7 @@ const Chat = () => {
                       key={index}
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleQuickCommand(cmd.command)}
+                      onClick={() => handleQuickCommand(cmd.text)}
                       className="w-full justify-start text-xs h-8 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
                       <cmd.icon className="h-3 w-3 mr-2" />
@@ -335,14 +334,14 @@ const Chat = () => {
                   ))}
                 </div>
                 
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
-                    💡 Dica
-                  </h4>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    Use comandos como /estoque ou /resumo para respostas rápidas!
-                  </p>
-                </div>
+                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                   <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
+                     💡 Dica
+                   </h4>
+                   <p className="text-xs text-blue-600 dark:text-blue-400">
+                     Clique nos botões acima para inserir perguntas prontas!
+                   </p>
+                 </div>
               </CardContent>
             </Card>
 
@@ -358,9 +357,9 @@ const Chat = () => {
                       Online • IA Perplexity
                     </span>
                   </div>
-                  <div className="text-xs text-neutral-500">
-                    Modelo: llama-3.1-sonar
-                  </div>
+                   <div className="text-xs text-neutral-500">
+                     Modelo: sonar-deep-research
+                   </div>
                   <div className="text-xs text-neutral-500">
                     Respostas inteligentes
                   </div>

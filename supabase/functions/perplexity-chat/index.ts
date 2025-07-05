@@ -21,8 +21,8 @@ serve(async (req) => {
     console.log('Recebida mensagem:', { message, messageType, userId });
     
     // Verificar se o assunto é relacionado ao laboratório
-    const laboratoryTopics = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade/i;
-    const isLabRelated = laboratoryTopics.test(message) || messageType === 'command';
+    const laboratoryTopics = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade|oi|olá|hello|ajuda|help/i;
+    const isLabRelated = laboratoryTopics.test(message);
     
     if (!isLabRelated) {
       return new Response(JSON.stringify({ 
@@ -121,12 +121,11 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
 ✅ Suporte técnico especializado
 ✅ Recomendações baseadas em dados
 
-[COMANDOS RÁPIDOS DISPONÍVEIS]
-/estoque - Status detalhado do inventário
-/consultas-hoje - Agendamentos do dia
-/alertas - Problemas ativos do sistema
-/relatorio - Relatórios e métricas
-/resumo - Visão geral do laboratório`;
+[INSTRUÇÕES DE RESPOSTA]
+- Seja conversacional e amigável
+- Forneça informações específicas quando disponível
+- Se não houver dados específicos, sugira como obter as informações
+- Mantenha foco exclusivo em assuntos laboratoriais`;
 
     // Preparar mensagens para a API
     const messages = [
