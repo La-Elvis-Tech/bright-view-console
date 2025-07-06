@@ -10,6 +10,40 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY')!;
 
+// Rate limiter para controle de custos
+class CostLimiter {
+  private usage: Map<string, { count: number; resetTime: number }> = new Map();
+  private dailyLimit = 20; // 20 mensagens por usuário por dia
+  
+  canProceed(userId: string): boolean {
+    const now = Date.now();
+    const dayStart = new Date().setHours(0, 0, 0, 0);
+    
+    const userUsage = this.usage.get(userId);
+    if (!userUsage || now > userUsage.resetTime) {
+      this.usage.set(userId, { count: 1, resetTime: dayStart + 86400000 });
+      return true;
+    }
+    
+    if (userUsage.count >= this.dailyLimit) {
+      return false;
+    }
+    
+    userUsage.count++;
+    return true;
+  }
+  
+  getRemainingRequests(userId: string): number {
+    const userUsage = this.usage.get(userId);
+    if (!userUsage || Date.now() > userUsage.resetTime) {
+      return this.dailyLimit;
+    }
+    return Math.max(0, this.dailyLimit - userUsage.count);
+  }
+}
+
+const costLimiter = new CostLimiter();
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,10 +54,21 @@ serve(async (req) => {
     
     console.log('🔄 Processando mensagem:', { message, userId });
     
+    // Verificar limite de custos
+    if (!costLimiter.canProceed(userId)) {
+      const remaining = costLimiter.getRemainingRequests(userId);
+      return new Response(JSON.stringify({ 
+        message: `Limite diário atingido! Você pode fazer mais ${remaining} perguntas amanhã. Isso ajuda a controlar os custos do sistema.`,
+        limited: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     // Aceitar qualquer mensagem relacionada ao laboratório (regex mais ampla)
     const labKeywords = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade|item|stock|alert|appointment|doctor|patient|exam|inventory|supply|lab|medicine|health|saúde|medicamento|clínica|hospital|teste|resultado|amostra|coleta|análise|bioquímica|hematologia|microbiologia|oi|olá|hello|hi|ajuda|help|como|what|o que|qual|quais|quantos|quantas|resumo|status|situação|\/|relatorio|consultas|hoje|baixo/i;
     
-    const isLabRelated = labKeywords.test(message) || message.startsWith('/') || message.length < 50; // Aceitar comandos e mensagens curtas
+    const isLabRelated = labKeywords.test(message) || message.startsWith('/') || message.length < 50;
     
     if (!isLabRelated) {
       console.log('❌ Mensagem filtrada:', message);
@@ -39,124 +84,99 @@ serve(async (req) => {
     
     // Criar cliente Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
-    let contextData = '';
     
-    // Buscar dados básicos do sistema em tempo real
-    try {
-      console.log('📊 Buscando dados do sistema...');
-      
-      const [stockData, alertData, appointmentData, categoriesData] = await Promise.all([
-        // Estoque crítico
-        supabase
+    // Fazer consultas diretas ao banco quando necessário
+    let dbData = '';
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('estoque') || lowerMessage.includes('baixo') || lowerMessage.includes('falta')) {
+      try {
+        const { data: lowStock } = await supabase
           .from('inventory_items')
           .select('name, current_stock, min_stock, unit_measure')
           .lt('current_stock', supabase.raw('min_stock'))
           .eq('active', true)
-          .limit(10),
+          .limit(5);
         
-        // Alertas ativos
-        supabase
-          .from('stock_alerts')
-          .select('title, priority, status, alert_type')
-          .eq('status', 'active')
-          .limit(5),
-        
-        // Agendamentos de hoje
-        supabase
+        if (lowStock?.length) {
+          dbData = `📦 ESTOQUE CRÍTICO:\n${lowStock.map(item => 
+            `• ${item.name}: ${item.current_stock} ${item.unit_measure} (mín: ${item.min_stock})`
+          ).join('\n')}\n`;
+        } else {
+          dbData = '✅ Nenhum item com estoque crítico no momento.\n';
+        }
+      } catch (error) {
+        console.error('Erro ao consultar estoque:', error);
+      }
+    }
+
+    if (lowerMessage.includes('consulta') || lowerMessage.includes('agendamento') || lowerMessage.includes('hoje')) {
+      try {
+        const { data: appointments } = await supabase
           .from('appointments')
           .select('patient_name, scheduled_date, status')
           .gte('scheduled_date', new Date().toISOString().split('T')[0])
           .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
-          .limit(10),
-          
-        // Categorias de inventário
-        supabase
-          .from('inventory_categories')
-          .select('name, description')
-          .limit(10)
-      ]);
-
-      console.log('📈 Dados coletados:', {
-        stock: stockData.data?.length || 0,
-        alerts: alertData.data?.length || 0,
-        appointments: appointmentData.data?.length || 0,
-        categories: categoriesData.data?.length || 0
-      });
-
-      // Montar contexto com dados reais
-      if (stockData.data?.length) {
-        contextData += `\n📦 ESTOQUE CRÍTICO (${stockData.data.length} itens):\n${stockData.data.map(item => 
-          `• ${item.name}: ${item.current_stock} ${item.unit_measure} (mín: ${item.min_stock})`
-        ).join('\n')}\n`;
+          .limit(5);
+        
+        if (appointments?.length) {
+          dbData += `📅 CONSULTAS HOJE:\n${appointments.map(apt => {
+            const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            return `• ${apt.patient_name} às ${time} - ${apt.status}`;
+          }).join('\n')}\n`;
+        } else {
+          dbData += '📅 Nenhuma consulta agendada para hoje.\n';
+        }
+      } catch (error) {
+        console.error('Erro ao consultar agendamentos:', error);
       }
-      
-      if (alertData.data?.length) {
-        contextData += `\n🚨 ALERTAS ATIVOS (${alertData.data.length}):\n${alertData.data.map(alert => 
-          `• [${alert.priority.toUpperCase()}] ${alert.title}`
-        ).join('\n')}\n`;
-      }
-      
-      if (appointmentData.data?.length) {
-        contextData += `\n📅 CONSULTAS HOJE (${appointmentData.data.length}):\n${appointmentData.data.map(apt => {
-          const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-          return `• ${apt.patient_name} às ${time} - ${apt.status}`;
-        }).join('\n')}\n`;
-      }
-      
-      if (categoriesData.data?.length) {
-        contextData += `\n📂 CATEGORIAS DISPONÍVEIS:\n${categoriesData.data.map(cat => 
-          `• ${cat.name}${cat.description ? ` - ${cat.description}` : ''}`
-        ).join('\n')}\n`;
-      }
-      
-      console.log('✅ Contexto montado:', contextData ? 'com dados' : 'vazio');
-    } catch (dbError) {
-      console.error('❌ Erro ao buscar dados:', dbError);
-      contextData = 'Sistema operacional - aguardando consultas específicas';
     }
 
-    // Contexto do sistema com dados reais
-    const laboratoryContext = `
-[ELVINHO - ASSISTENTE LABORATORIAL]
-Você é o Elvinho, assistente inteligente especializado em gestão laboratorial.
+    if (lowerMessage.includes('alerta')) {
+      try {
+        const { data: alerts } = await supabase
+          .from('stock_alerts')
+          .select('title, priority, status')
+          .eq('status', 'active')
+          .limit(3);
+        
+        if (alerts?.length) {
+          dbData += `🚨 ALERTAS ATIVOS:\n${alerts.map(alert => 
+            `• [${alert.priority.toUpperCase()}] ${alert.title}`
+          ).join('\n')}\n`;
+        } else {
+          dbData += '✅ Nenhum alerta ativo no momento.\n';
+        }
+      } catch (error) {
+        console.error('Erro ao consultar alertas:', error);
+      }
+    }
 
-[DADOS DO SISTEMA ATUAL]
-${contextData || 'Sistema operacional - aguardando consultas específicas'}
+    // Contexto simplificado com dados reais
+    const laboratoryContext = `Você é o Elvinho, assistente do laboratório.
 
-[REGRAS IMPORTANTES]
-- Responda APENAS sobre gestão laboratorial
-- Use os dados reais do sistema fornecidos acima
-- Seja preciso, objetivo e profissional
-- Ofereça ações práticas baseadas nos dados
-- Se não tiver dados específicos, explique como obter
+${dbData || 'Sistema operacional - pronto para consultas.'}
 
-[SUAS CAPACIDADES]
-✅ Consulta de estoque em tempo real
-✅ Análise de alertas e problemas
-✅ Gestão de agendamentos e consultas
-✅ Relatórios e estatísticas
-✅ Suporte técnico especializado
-✅ Recomendações baseadas em dados
-
-[INSTRUÇÕES DE RESPOSTA]
-- Seja conversacional e amigável
-- Forneça informações específicas quando disponível
-- Se não houver dados específicos, sugira como obter as informações
-- Mantenha foco exclusivo em assuntos laboratoriais`;
+INSTRUÇÕES:
+- Seja CONCISO e OBJETIVO (máximo 150 palavras)
+- Use os dados acima para responder
+- Seja direto e prático
+- Foque no essencial
+- Responda apenas sobre laboratório`;
 
     // Preparar mensagens para a API
     const messages = [
       { role: 'system', content: laboratoryContext },
-      ...conversationHistory.slice(-8),
+      ...conversationHistory.slice(-3), // Histórico ainda mais reduzido
       { role: 'user', content: message }
     ];
 
     console.log('🔄 Enviando para Perplexity API...');
 
-    // Chamada para Perplexity API
+    // Chamada para Perplexity API com modelo mais barato
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -164,10 +184,10 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'sonar-deep-research',
+        model: 'llama-3.1-sonar-small-128k-online', // Modelo mais barato
         messages: messages,
-        temperature: 0.3,
-        max_tokens: 1000,
+        temperature: 0.2,
+        max_tokens: 150, // Respostas ainda mais curtas
         return_images: false,
         return_related_questions: false
       }),
@@ -194,7 +214,7 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
 
     const result = { 
       message: assistantMessage,
-      model: 'sonar-deep-research',
+      model: 'llama-3.1-sonar-small-128k-online',
       success: true
     };
 
