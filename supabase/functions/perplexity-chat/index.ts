@@ -16,15 +16,17 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory = [], messageType = 'normal', userId } = await req.json();
+    const { message, conversationHistory = [], userId } = await req.json();
     
-    console.log('Recebida mensagem:', { message, messageType, userId });
+    console.log('🔄 Processando mensagem:', { message, userId });
     
-    // Verificar se o assunto é relacionado ao laboratório
-    const laboratoryTopics = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade|oi|olá|hello|ajuda|help/i;
-    const isLabRelated = laboratoryTopics.test(message);
+    // Aceitar qualquer mensagem relacionada ao laboratório (regex mais ampla)
+    const labKeywords = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade|item|stock|alert|appointment|doctor|patient|exam|inventory|supply|lab|medicine|health|saúde|medicamento|clínica|hospital|teste|resultado|amostra|coleta|análise|bioquímica|hematologia|microbiologia|oi|olá|hello|hi|ajuda|help|como|what|o que|qual|quais|quantos|quantas|resumo|status|situação|\/|relatorio|consultas|hoje|baixo/i;
+    
+    const isLabRelated = labKeywords.test(message) || message.startsWith('/') || message.length < 50; // Aceitar comandos e mensagens curtas
     
     if (!isLabRelated) {
+      console.log('❌ Mensagem filtrada:', message);
       return new Response(JSON.stringify({ 
         message: "Desculpe, sou especializado apenas em gestão laboratorial. Posso ajudar com estoque, consultas, exames, relatórios e outras atividades do laboratório. Como posso auxiliar você?",
         filtered: true
@@ -33,69 +35,87 @@ serve(async (req) => {
       });
     }
     
+    console.log('✅ Mensagem aprovada para processamento');
+    
     // Criar cliente Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
     let contextData = '';
     
-    // Sempre buscar dados básicos do sistema
-    const [stockData, alertData, appointmentData, categoriesData] = await Promise.all([
-      // Estoque crítico
-      supabase
-        .from('inventory_items')
-        .select('name, current_stock, min_stock, unit_measure')
-        .lt('current_stock', supabase.raw('min_stock'))
-        .eq('active', true)
-        .limit(10),
+    // Buscar dados básicos do sistema em tempo real
+    try {
+      console.log('📊 Buscando dados do sistema...');
       
-      // Alertas ativos
-      supabase
-        .from('stock_alerts')
-        .select('title, priority, status, alert_type')
-        .eq('status', 'active')
-        .limit(5),
-      
-      // Agendamentos de hoje
-      supabase
-        .from('appointments')
-        .select('patient_name, scheduled_date, status')
-        .gte('scheduled_date', new Date().toISOString().split('T')[0])
-        .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
-        .limit(10),
+      const [stockData, alertData, appointmentData, categoriesData] = await Promise.all([
+        // Estoque crítico
+        supabase
+          .from('inventory_items')
+          .select('name, current_stock, min_stock, unit_measure')
+          .lt('current_stock', supabase.raw('min_stock'))
+          .eq('active', true)
+          .limit(10),
         
-      // Categorias de inventário
-      supabase
-        .from('inventory_categories')
-        .select('name, description')
-        .limit(10)
-    ]);
+        // Alertas ativos
+        supabase
+          .from('stock_alerts')
+          .select('title, priority, status, alert_type')
+          .eq('status', 'active')
+          .limit(5),
+        
+        // Agendamentos de hoje
+        supabase
+          .from('appointments')
+          .select('patient_name, scheduled_date, status')
+          .gte('scheduled_date', new Date().toISOString().split('T')[0])
+          .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+          .limit(10),
+          
+        // Categorias de inventário
+        supabase
+          .from('inventory_categories')
+          .select('name, description')
+          .limit(10)
+      ]);
 
-    // Montar contexto com dados reais
-    if (stockData.data?.length) {
-      contextData += `\n📦 ESTOQUE CRÍTICO (${stockData.data.length} itens):\n${stockData.data.map(item => 
-        `• ${item.name}: ${item.current_stock} ${item.unit_measure} (mín: ${item.min_stock})`
-      ).join('\n')}\n`;
-    }
-    
-    if (alertData.data?.length) {
-      contextData += `\n🚨 ALERTAS ATIVOS (${alertData.data.length}):\n${alertData.data.map(alert => 
-        `• [${alert.priority.toUpperCase()}] ${alert.title}`
-      ).join('\n')}\n`;
-    }
-    
-    if (appointmentData.data?.length) {
-      contextData += `\n📅 CONSULTAS HOJE (${appointmentData.data.length}):\n${appointmentData.data.map(apt => {
-        const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
-        return `• ${apt.patient_name} às ${time} - ${apt.status}`;
-      }).join('\n')}\n`;
-    }
-    
-    if (categoriesData.data?.length) {
-      contextData += `\n📂 CATEGORIAS DISPONÍVEIS:\n${categoriesData.data.map(cat => 
-        `• ${cat.name}${cat.description ? ` - ${cat.description}` : ''}`
-      ).join('\n')}\n`;
+      console.log('📈 Dados coletados:', {
+        stock: stockData.data?.length || 0,
+        alerts: alertData.data?.length || 0,
+        appointments: appointmentData.data?.length || 0,
+        categories: categoriesData.data?.length || 0
+      });
+
+      // Montar contexto com dados reais
+      if (stockData.data?.length) {
+        contextData += `\n📦 ESTOQUE CRÍTICO (${stockData.data.length} itens):\n${stockData.data.map(item => 
+          `• ${item.name}: ${item.current_stock} ${item.unit_measure} (mín: ${item.min_stock})`
+        ).join('\n')}\n`;
+      }
+      
+      if (alertData.data?.length) {
+        contextData += `\n🚨 ALERTAS ATIVOS (${alertData.data.length}):\n${alertData.data.map(alert => 
+          `• [${alert.priority.toUpperCase()}] ${alert.title}`
+        ).join('\n')}\n`;
+      }
+      
+      if (appointmentData.data?.length) {
+        contextData += `\n📅 CONSULTAS HOJE (${appointmentData.data.length}):\n${appointmentData.data.map(apt => {
+          const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          return `• ${apt.patient_name} às ${time} - ${apt.status}`;
+        }).join('\n')}\n`;
+      }
+      
+      if (categoriesData.data?.length) {
+        contextData += `\n📂 CATEGORIAS DISPONÍVEIS:\n${categoriesData.data.map(cat => 
+          `• ${cat.name}${cat.description ? ` - ${cat.description}` : ''}`
+        ).join('\n')}\n`;
+      }
+      
+      console.log('✅ Contexto montado:', contextData ? 'com dados' : 'vazio');
+    } catch (dbError) {
+      console.error('❌ Erro ao buscar dados:', dbError);
+      contextData = 'Sistema operacional - aguardando consultas específicas';
     }
 
     // Contexto do sistema com dados reais
@@ -130,11 +150,11 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
     // Preparar mensagens para a API
     const messages = [
       { role: 'system', content: laboratoryContext },
-      ...conversationHistory.slice(-10),
+      ...conversationHistory.slice(-8),
       { role: 'user', content: message }
     ];
 
-    console.log('Enviando para Perplexity:', { model: 'sonar-deep-research', messageCount: messages.length });
+    console.log('🔄 Enviando para Perplexity API...');
 
     // Chamada para Perplexity API
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -153,24 +173,24 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
       }),
     });
 
-    console.log('Status da resposta Perplexity:', response.status);
+    console.log('📡 Status da resposta Perplexity:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro da API Perplexity:', { status: response.status, error: errorText });
+      console.error('❌ Erro da API Perplexity:', { status: response.status, error: errorText });
       throw new Error(`Erro da API Perplexity: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Dados recebidos da Perplexity:', { hasChoices: !!data.choices, choicesLength: data.choices?.length });
+    console.log('📦 Dados recebidos:', { hasChoices: !!data.choices, choicesLength: data.choices?.length });
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Estrutura de resposta inválida:', data);
+      console.error('💥 Estrutura de resposta inválida:', data);
       throw new Error('Resposta da API em formato inválido');
     }
 
     const assistantMessage = data.choices[0].message.content;
-    console.log('Mensagem do assistente extraída:', { messageLength: assistantMessage?.length });
+    console.log('✅ Mensagem extraída:', { messageLength: assistantMessage?.length });
 
     const result = { 
       message: assistantMessage,
@@ -178,16 +198,16 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
       success: true
     };
 
-    console.log('Retornando resultado:', { hasMessage: !!result.message, model: result.model });
+    console.log('🎯 Retornando resultado bem-sucedido');
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Erro:', error);
+    console.error('💥 Erro geral:', error);
     return new Response(JSON.stringify({ 
-      message: "Desculpe, estou com dificuldades técnicas. Como posso ajudar?",
+      message: "Desculpe, estou com dificuldades técnicas. Tente reformular sua pergunta sobre o laboratório.",
       error: true
     }), {
       status: 200,

@@ -16,7 +16,7 @@ export interface ChatMessage {
   conversation_id: string;
   content: string;
   sender: 'user' | 'elvinho';
-  message_type: 'normal' | 'command';
+  message_type: 'normal';
   created_at: string;
 }
 
@@ -113,6 +113,8 @@ export const useChat = () => {
     if (!user || !currentConversation) return;
 
     try {
+      console.log('📤 Enviando mensagem:', content);
+
       // Adicionar mensagem do usuário
       const userMessage = {
         conversation_id: currentConversation.id,
@@ -127,12 +129,17 @@ export const useChat = () => {
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('❌ Erro ao salvar mensagem do usuário:', userError);
+        throw userError;
+      }
 
       setMessages(prev => [...prev, userMsgData as ChatMessage]);
 
-      // Resposta do Elvinho via Perplexity
+      // Gerar resposta do Elvinho
       setIsTyping(true);
+      console.log('🤖 Gerando resposta...');
+      
       const elvinhoResponse = await generateElvinhoResponse(content);
       
       const elvinhoMessage = {
@@ -148,7 +155,10 @@ export const useChat = () => {
         .select()
         .single();
 
-      if (elvinhoError) throw elvinhoError;
+      if (elvinhoError) {
+        console.error('❌ Erro ao salvar mensagem do Elvinho:', elvinhoError);
+        throw elvinhoError;
+      }
 
       setMessages(prev => [...prev, elvinhoMsgData as ChatMessage]);
 
@@ -159,7 +169,7 @@ export const useChat = () => {
         .eq('id', currentConversation.id);
 
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('💥 Erro ao enviar mensagem:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível enviar a mensagem.',
@@ -173,26 +183,28 @@ export const useChat = () => {
   // Gerar resposta do Elvinho usando Perplexity AI
   const generateElvinhoResponse = async (userMessage: string): Promise<string> => {
     try {
-      console.log('🤖 Elvinho gerando resposta:', { userMessage });
+      console.log('🔄 Chamando edge function com mensagem:', userMessage);
       
       // Preparar histórico de conversação limitado
-      const conversationHistory = messages.slice(-4).map(msg => ({
+      const conversationHistory = messages.slice(-6).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
 
-      console.log('📡 Chamando edge function...');
-      
       const { data, error } = await supabase.functions.invoke('perplexity-chat', {
         body: {
           message: userMessage,
           conversationHistory,
-          messageType: 'normal',
           userId: user?.id
         }
       });
 
-      console.log('✅ Resposta recebida:', { success: !!data, hasError: !!error, filtered: data?.filtered });
+      console.log('📡 Resposta da edge function:', { 
+        success: !!data, 
+        hasError: !!error, 
+        filtered: data?.filtered,
+        messageLength: data?.message?.length 
+      });
 
       if (error) {
         console.error('❌ Erro na edge function:', error);
@@ -204,16 +216,15 @@ export const useChat = () => {
         return data.message;
       }
 
-      return data?.message || 'Desculpe, houve um problema técnico. Tente novamente.';
+      return data?.message || 'Desculpe, houve um problema técnico. Tente reformular sua pergunta.';
       
     } catch (error) {
       console.error('💥 Erro na comunicação com Elvinho:', error);
       
-      // Resposta de erro mais útil
       return `Desculpe, estou com dificuldades técnicas no momento. 
 
 Você pode tentar:
-• Reformular sua pergunta de forma mais específica
+• Reformular sua pergunta sobre o laboratório
 • Aguardar alguns segundos e tentar novamente
 
 Como posso ajudar de outra forma?`;

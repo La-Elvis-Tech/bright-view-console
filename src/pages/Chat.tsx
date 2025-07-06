@@ -235,11 +235,6 @@ const Chat = () => {
                                   : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'
                               }`}>
                                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                {message.message_type === 'command' && (
-                                  <Badge variant="secondary" className="mt-2 text-xs">
-                                    Comando
-                                  </Badge>
-                                )}
                               </div>
                               <p className="text-xs text-neutral-500 mt-1">
                                 {new Date(message.created_at).toLocaleTimeString('pt-BR')}
