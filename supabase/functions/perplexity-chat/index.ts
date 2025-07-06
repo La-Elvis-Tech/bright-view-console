@@ -184,10 +184,10 @@ INSTRUÇÕES:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online', // Modelo mais barato
+        model: 'llama-3.1-sonar-large-128k-online',
         messages: messages,
         temperature: 0.2,
-        max_tokens: 150, // Respostas ainda mais curtas
+        max_tokens: 200,
         return_images: false,
         return_related_questions: false
       }),
@@ -214,7 +214,7 @@ INSTRUÇÕES:
 
     const result = { 
       message: assistantMessage,
-      model: 'llama-3.1-sonar-small-128k-online',
+      model: 'llama-3.1-sonar-large-128k-online',
       success: true
     };
 

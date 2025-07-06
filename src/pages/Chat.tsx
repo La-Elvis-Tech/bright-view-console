@@ -77,62 +77,40 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="p-2 md:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
-            <div className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-              <Bot className="h-5 w-5 text-blue-500" />
-            </div>
-            Chat com Elvinho
-          </h1>
-          <p className="text-neutral-600 dark:text-neutral-400">
-            Seu assistente inteligente para gestão laboratorial
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-background">
+      <div className="h-screen flex flex-col max-w-6xl mx-auto">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4">
           {/* Conversations Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    Conversas
-                  </h3>
+            <Card className="h-full">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium">Conversas</h3>
                   <Button 
                     onClick={handleNewChat}
                     size="sm" 
                     variant="ghost"
-                    className="h-8 w-8 p-0"
+                    className="h-7 w-7 p-0"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </Button>
                 </div>
                 
-                <ScrollArea className="h-[300px] lg:h-[500px]">
-                  <div className="space-y-2">
+                <ScrollArea className="h-[calc(100vh-8rem)]">
+                  <div className="space-y-1">
                     {conversations.map((conversation) => (
                       <div
                         key={conversation.id}
-                        className={`group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                        className={`group flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                           currentConversation?.id === conversation.id
-                            ? 'bg-blue-50 dark:bg-blue-950/20'
-                            : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+                            ? 'bg-primary/10'
+                            : 'hover:bg-muted/50'
                         }`}
                         onClick={() => selectConversation(conversation)}
                       >
-                        <MessageCircle className="h-4 w-4 text-neutral-400 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                          <p className="text-sm truncate">
                             {conversation.title}
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            {formatDistanceToNow(new Date(conversation.updated_at), { 
-                              addSuffix: true, 
-                              locale: ptBR 
-                            })}
                           </p>
                         </div>
                         <Button
@@ -142,26 +120,24 @@ const Chat = () => {
                           }}
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                         >
-                          <Trash2 className="h-3 w-3 text-red-500" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     ))}
                     
                     {conversations.length === 0 && (
-                      <div className="text-center py-8">
-                        <MessageCircle className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
-                        <p className="text-sm text-neutral-500">
-                          Nenhuma conversa ainda
+                      <div className="text-center py-4">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Nenhuma conversa
                         </p>
                         <Button 
                           onClick={handleNewChat} 
                           size="sm" 
-                          variant="outline" 
-                          className="mt-2"
+                          variant="outline"
                         >
-                          Iniciar Chat
+                          Novo Chat
                         </Button>
                       </div>
                     )}
@@ -173,36 +149,27 @@ const Chat = () => {
 
           {/* Chat Area */}
           <div className="lg:col-span-2">
-            <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60 h-[calc(100vh-16rem)]">
+            <Card className="h-full flex flex-col">
               <CardContent className="p-0 h-full flex flex-col">
                 {currentConversation ? (
                   <>
                     {/* Chat Header */}
-                    <div className="border-b border-neutral-200 dark:border-neutral-700 p-4">
-                      <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <div className="border-b p-3">
+                      <h4 className="font-medium truncate">
                         {currentConversation.title}
                       </h4>
-                      <p className="text-xs text-neutral-500">
-                        Conversa com Elvinho • {formatDistanceToNow(new Date(currentConversation.created_at), { 
-                          addSuffix: true, 
-                          locale: ptBR 
-                        })}
-                      </p>
                     </div>
 
                     {/* Messages */}
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-4">
+                    <ScrollArea className="flex-1 p-3">
+                      <div className="space-y-3">
                         {messages.length === 0 && (
-                          <div className="text-center py-8">
-                            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-3">
-                              <Bot className="h-6 w-6 text-white" />
+                          <div className="text-center py-6">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center mx-auto mb-2">
+                              <Bot className="h-5 w-5 text-primary-foreground" />
                             </div>
-                            <p className="text-neutral-600 dark:text-neutral-400 mb-2">
-                              Olá! Eu sou o Elvinho, seu assistente de laboratório.
-                            </p>
-                            <p className="text-sm text-neutral-500">
-                              Como posso ajudar você hoje?
+                            <p className="text-sm text-muted-foreground">
+                              Olá! Como posso ajudar?
                             </p>
                           </div>
                         )}
@@ -210,50 +177,45 @@ const Chat = () => {
                         {messages.map((message) => (
                           <div
                             key={message.id}
-                            className={`flex items-start gap-3 ${
+                            className={`flex gap-2 ${
                               message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
                             }`}
                           >
-                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                              message.sender === 'user' 
-                                 ? 'bg-blue-500' 
-                                 : 'bg-blue-500'
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              message.sender === 'user' ? 'bg-primary' : 'bg-muted'
                             }`}>
                               {message.sender === 'user' ? (
-                                <User className="h-4 w-4 text-white" />
+                                <User className="h-3 w-3" />
                               ) : (
-                                <Bot className="h-4 w-4 text-white" />
+                                <Bot className="h-3 w-3" />
                               )}
                             </div>
                             
-                            <div className={`flex-1 max-w-[80%] ${
+                            <div className={`flex-1 max-w-[85%] ${
                               message.sender === 'user' ? 'text-right' : 'text-left'
                             }`}>
-                              <div className={`inline-block p-3 rounded-lg ${
+                              <div className={`inline-block p-2 rounded-lg text-sm ${
                                 message.sender === 'user'
-                                  ? 'bg-blue-500 text-white'
-                                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted'
                               }`}>
-                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                <p className="whitespace-pre-wrap">{message.content}</p>
                               </div>
-                              <p className="text-xs text-neutral-500 mt-1">
-                                {new Date(message.created_at).toLocaleTimeString('pt-BR')}
-                              </p>
                             </div>
                           </div>
                         ))}
                         
                         {/* Typing Indicator */}
                         {isTyping && (
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                              <Bot className="h-4 w-4 text-white" />
+                          <div className="flex gap-2">
+                            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                              <Bot className="h-3 w-3" />
                             </div>
-                            <div className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg">
+                            <div className="bg-muted p-2 rounded-lg">
                               <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"></div>
+                                <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                               </div>
                             </div>
                           </div>
@@ -264,13 +226,13 @@ const Chat = () => {
                     </ScrollArea>
 
                     {/* Input Area */}
-                    <div className="border-t border-neutral-200 dark:border-neutral-700 p-4">
+                    <div className="border-t p-3">
                       <div className="flex gap-2">
                         <Input
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
-                          placeholder="Digite sua mensagem sobre o laboratório..."
+                          placeholder="Digite sua pergunta..."
                           className="flex-1"
                           disabled={isTyping || loading}
                         />
@@ -287,17 +249,17 @@ const Chat = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
-                       <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-4">
-                         <Bot className="h-8 w-8 text-white" />
+                       <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center mx-auto mb-3">
+                         <Bot className="h-6 w-6 text-primary-foreground" />
                        </div>
-                       <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-                         Bem-vindo ao Chat!
+                       <h3 className="text-base font-medium mb-2">
+                         Chat com Elvinho
                        </h3>
-                       <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-                         Selecione uma conversa ou inicie um novo chat
+                       <p className="text-sm text-muted-foreground mb-3">
+                         Inicie uma nova conversa
                        </p>
-                       <Button onClick={handleNewChat}>
-                         <Plus className="h-4 w-4 mr-2" />
+                       <Button onClick={handleNewChat} size="sm">
+                         <Plus className="h-4 w-4 mr-1" />
                          Novo Chat
                        </Button>
                     </div>
@@ -307,60 +269,29 @@ const Chat = () => {
             </Card>
           </div>
 
-          {/* Quick Commands & Status Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
-              <CardContent className="p-4">
-                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-                  Comandos Rápidos
-                </h3>
-                <div className="space-y-2">
+          {/* Quick Commands Sidebar */}
+          <div className="lg:col-span-1">
+            <Card className="h-full">
+              <CardContent className="p-3">
+                <h3 className="text-sm font-medium mb-3">Perguntas Rápidas</h3>
+                <div className="space-y-1">
                   {quickCommands.map((cmd, index) => (
                     <Button
                       key={index}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleQuickCommand(cmd.text)}
-                      className="w-full justify-start text-xs h-8 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="w-full justify-start text-xs h-7"
                     >
-                      <cmd.icon className="h-3 w-3 mr-2" />
+                      <cmd.icon className="h-3 w-3 mr-1" />
                       {cmd.label}
                     </Button>
                   ))}
                 </div>
                 
-                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                   <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
-                     💡 Dica
-                   </h4>
-                   <p className="text-xs text-blue-600 dark:text-blue-400">
-                     Clique nos botões acima para inserir perguntas prontas!
-                   </p>
-                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800/60">
-              <CardContent className="p-4">
-                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-                  Status do Elvinho
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Online • IA Perplexity
-                    </span>
-                  </div>
-                   <div className="text-xs text-neutral-500">
-                     Modelo: sonar-deep-research
-                   </div>
-                  <div className="text-xs text-neutral-500">
-                    Respostas inteligentes
-                  </div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                    Pronto para ajudar!
-                  </div>
+                <div className="mt-4 p-2 bg-muted/50 rounded text-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mx-auto mb-1"></div>
+                  <p className="text-xs text-muted-foreground">Elvinho Online</p>
                 </div>
               </CardContent>
             </Card>
