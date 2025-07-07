@@ -164,7 +164,7 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'sonar-deep-research',
+        model: 'r1-1776',
         messages: messages,
         temperature: 0.3,
         max_tokens: 1000,
@@ -194,7 +194,7 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
 
     const result = { 
       message: assistantMessage,
-      model: 'sonar-deep-research',
+      model: 'r1-1776',
       success: true
     };
 
