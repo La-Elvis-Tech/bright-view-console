@@ -79,11 +79,11 @@ const Chat = () => {
         {/* Header */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
+            <div className="p-2 bg-stone-100/60 dark:bg-stone-800/30 rounded-xl">
               <img 
-                src="/logolaelvis.svg" 
+                src="/elvinho.png" 
                 alt="Elvinho" 
-                className="h-6 w-6"
+                className="h-6 w-6 dark:invert"
               />
             </div>
             <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
@@ -95,10 +95,10 @@ const Chat = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr_320px] lg:grid-cols-3 gap-6">
           {/* Conversations Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
+            <Card className="bg-white/80 dark:bg-stone-900/40 backdrop-blur-md border-stone-200/50 dark:border-stone-700/30 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -119,10 +119,10 @@ const Chat = () => {
                     {conversations.map((conversation) => (
                       <div
                         key={conversation.id}
-                        className={`group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                        className={`group flex items-center gap-2 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
                           currentConversation?.id === conversation.id
-                            ? 'bg-blue-50 dark:bg-blue-950/30'
-                            : 'bg-neutral-50/80 dark:bg-neutral-800/30 hover:bg-neutral-100 dark:hover:bg-neutral-800/40'
+                            ? 'bg-stone-100 dark:bg-stone-800/40 border border-stone-200 dark:border-stone-600/30'
+                            : 'bg-stone-50/60 dark:bg-stone-800/20 hover:bg-stone-100/80 dark:hover:bg-stone-800/30'
                         }`}
                         onClick={() => selectConversation(conversation)}
                       >
@@ -177,16 +177,16 @@ const Chat = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60 h-[calc(100vh-16rem)]">
+          <div className="lg:col-span-1 xl:col-span-1">
+            <Card className="bg-white/85 dark:bg-stone-900/30 backdrop-blur-md border-stone-200/40 dark:border-stone-700/20 shadow-sm h-[calc(100vh-16rem)]">
               <CardContent className="p-0 h-full flex flex-col">
                 {currentConversation ? (
                   <>
                     {/* Chat Header */}
-                    <div className="border-b border-neutral-200/60 dark:border-neutral-800/60 p-4">
+                    <div className="border-b border-stone-200/40 dark:border-stone-700/20 p-5">
                       <div className="flex items-center gap-3">
-                        <div className="bg-blue-500/10 dark:bg-blue-950/20 p-2 rounded-lg">
-                          <MessageCircle className="h-4 w-4 text-blue-500" />
+                        <div className="bg-stone-100/60 dark:bg-stone-800/30 p-2.5 rounded-xl">
+                          <MessageCircle className="h-4 w-4 text-stone-600 dark:text-stone-400" />
                         </div>
                         <div>
                           <h4 className="font-medium text-neutral-900 dark:text-neutral-100 text-sm">
@@ -207,11 +207,11 @@ const Chat = () => {
                       <div className="space-y-6">
                         {messages.length === 0 && (
                           <div className="text-center py-8">
-                            <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                            <div className="w-20 h-20 rounded-2xl bg-stone-100/60 dark:bg-stone-800/30 flex items-center justify-center mx-auto mb-6">
                               <img 
-                                src="/logolaelvis.svg" 
+                                src="/elvinho.png" 
                                 alt="Elvinho" 
-                                className="h-10 w-10"
+                                className="h-12 w-12 dark:invert"
                               />
                             </div>
                             <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -239,27 +239,27 @@ const Chat = () => {
                             <div className={`flex items-start gap-3 max-w-[85%] ${
                               message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
                             }`}>
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                              <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${
                                 message.sender === 'user' 
-                                  ? 'bg-blue-500' 
-                                  : 'bg-blue-500/20'
+                                  ? 'bg-stone-600 dark:bg-stone-500' 
+                                  : 'bg-stone-100/80 dark:bg-stone-800/60'
                               }`}>
                                 {message.sender === 'user' ? (
                                   <User className="h-4 w-4 text-white" />
                                 ) : (
                                   <img 
-                                    src="/logolaelvis.svg" 
+                                    src="/elvinho.png" 
                                     alt="Elvinho" 
-                                    className="h-4 w-4"
+                                    className="h-5 w-5 dark:invert"
                                   />
                                 )}
                               </div>
                               
                               <div>
-                                <div className={`p-3 rounded-lg ${
+                                <div className={`p-4 rounded-2xl ${
                                   message.sender === 'user'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-neutral-100/80 dark:bg-neutral-800/60 text-neutral-900 dark:text-neutral-100'
+                                    ? 'bg-stone-600 dark:bg-stone-500 text-white'
+                                    : 'bg-stone-100/70 dark:bg-stone-800/40 text-stone-900 dark:text-stone-100'
                                 }`}>
                                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                 </div>
@@ -281,14 +281,14 @@ const Chat = () => {
                         {/* Typing Indicator */}
                         {isTyping && (
                           <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-stone-100/80 dark:bg-stone-800/60 flex items-center justify-center">
                               <img 
-                                src="/logolaelvis.svg" 
+                                src="/elvinho.png" 
                                 alt="Elvinho" 
-                                className="h-4 w-4"
+                                className="h-5 w-5 dark:invert"
                               />
                             </div>
-                            <div className="bg-neutral-100/80 dark:bg-neutral-800/60 p-3 rounded-lg">
+                            <div className="bg-stone-100/70 dark:bg-stone-800/40 p-4 rounded-2xl">
                               <div className="flex space-x-1">
                                 <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                                 <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -310,14 +310,14 @@ const Chat = () => {
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="Digite sua mensagem sobre o laboratório..."
-                          className="flex-1 bg-white dark:bg-neutral-900/40 border-neutral-200/60 dark:border-neutral-800/60"
+                          className="flex-1 bg-white/90 dark:bg-stone-900/40 border-stone-200/50 dark:border-stone-700/30 rounded-xl"
                           disabled={isTyping || loading}
                         />
                         <Button 
                           onClick={handleSendMessage} 
                           disabled={!inputValue.trim() || isTyping || loading}
                           size="icon"
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          className="bg-stone-600 hover:bg-stone-700 dark:bg-stone-500 dark:hover:bg-stone-600 text-white rounded-xl"
                         >
                           <Send className="h-4 w-4" />
                         </Button>
@@ -327,11 +327,11 @@ const Chat = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full">
                      <div className="text-center p-6">
-                        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-20 h-20 rounded-2xl bg-stone-100/60 dark:bg-stone-800/30 flex items-center justify-center mx-auto mb-6">
                           <img 
-                            src="/logolaelvis.svg" 
+                            src="/elvinho.png" 
                             alt="Elvinho" 
-                            className="h-10 w-10"
+                            className="h-12 w-12 dark:invert"
                           />
                         </div>
                        <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -340,10 +340,10 @@ const Chat = () => {
                        <p className="text-neutral-600 dark:text-neutral-400 mb-4">
                          Selecione uma conversa ou inicie um novo chat
                        </p>
-                       <Button 
-                         onClick={handleNewChat}
-                         className="bg-blue-500 hover:bg-blue-600 text-white"
-                       >
+                        <Button 
+                          onClick={handleNewChat}
+                          className="bg-stone-600 hover:bg-stone-700 dark:bg-stone-500 dark:hover:bg-stone-600 text-white rounded-xl"
+                        >
                          <Plus className="h-4 w-4 mr-2" />
                          Novo Chat
                        </Button>
@@ -355,28 +355,35 @@ const Chat = () => {
           </div>
 
           {/* Quick Commands & Status Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="h-4 w-4 text-blue-500" />
-                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+          <div className="lg:col-span-1 space-y-6 hidden xl:block">
+            <Card className="bg-white/85 dark:bg-stone-900/30 backdrop-blur-md border-stone-200/40 dark:border-stone-700/20 shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="h-4 w-4 text-stone-600 dark:text-stone-400" />
+                  <h3 className="text-sm font-medium text-stone-900 dark:text-stone-100">
                     Comandos Rápidos
                   </h3>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   {quickCommands.map((cmd, index) => (
                     <Button
                       key={index}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleQuickCommand(cmd.text)}
-                      className="h-20 text-xs hover:bg-neutral-100/80 dark:hover:bg-neutral-800/40 transition-colors border border-neutral-200/40 dark:border-neutral-700/40 flex flex-col items-center justify-center gap-2 p-2 text-center"
+                      className="h-16 text-xs hover:bg-stone-100/60 dark:hover:bg-stone-800/30 transition-all duration-200 border border-stone-200/30 dark:border-stone-700/20 flex items-center justify-start gap-3 p-3 text-left rounded-xl"
                     >
-                      <div className="bg-blue-500/10 dark:bg-blue-950/20 p-2 rounded-lg">
-                        <cmd.icon className="h-4 w-4 text-blue-500" />
+                      <div className="bg-stone-100/60 dark:bg-stone-800/30 p-2 rounded-lg flex-shrink-0">
+                        <cmd.icon className="h-4 w-4 text-stone-600 dark:text-stone-400" />
                       </div>
-                      <span>{cmd.label}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-stone-900 dark:text-stone-100 font-medium text-sm">
+                          {cmd.label}
+                        </div>
+                        <div className="text-stone-500 dark:text-stone-400 text-xs mt-0.5 truncate">
+                          {cmd.text.substring(0, 30)}...
+                        </div>
+                      </div>
                     </Button>
                   ))}
                 </div>
@@ -392,39 +399,63 @@ const Chat = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <img 
-                    src="/logolaelvis.svg" 
-                    alt="Elvinho" 
-                    className="h-4 w-4"
-                  />
-                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    Status do Elvinho
+            <Card className="bg-white/85 dark:bg-stone-900/30 backdrop-blur-md border-stone-200/40 dark:border-stone-700/20 shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bot className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                    Status do Sistema
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 bg-neutral-100/50 dark:bg-neutral-800/30 p-3 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40">
-                    <div className="bg-blue-500/10 dark:bg-blue-950/20 p-2 rounded-lg">
-                      <Bot className="h-4 w-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                        IA Perplexity • Online
-                      </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                        Pronto para ajudar!
-                      </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-stone-600 dark:text-stone-400">Elvinho</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Online</span>
                     </div>
                   </div>
-                  
-                  <div className="bg-neutral-100/50 dark:bg-neutral-800/30 p-3 rounded-lg border border-neutral-200/40 dark:border-neutral-700/40">
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Modelo: sonar-deep-research
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-stone-600 dark:text-stone-400">Conexão</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Estável</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-stone-600 dark:text-stone-400">Base de Dados</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Conectado</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/85 dark:bg-stone-900/30 backdrop-blur-md border-stone-200/40 dark:border-stone-700/20 shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <h3 className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                    Insights Rápidos
+                  </h3>
+                </div>
+                <div className="space-y-3 text-xs">
+                  <div className="bg-stone-100/60 dark:bg-stone-800/30 p-3 rounded-xl">
+                    <p className="text-stone-700 dark:text-stone-300 font-medium flex items-center gap-1">
+                      💡 Dica
                     </p>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                      Respostas inteligentes
+                    <p className="text-stone-600 dark:text-stone-400 mt-1.5 leading-relaxed">
+                      Use comandos como "mostrar estoque baixo" para relatórios rápidos
+                    </p>
+                  </div>
+                  <div className="bg-amber-50/60 dark:bg-amber-950/20 p-3 rounded-xl">
+                    <p className="text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
+                      ⚡ Performance
+                    </p>
+                    <p className="text-amber-600 dark:text-amber-400 mt-1.5 leading-relaxed">
+                      O Elvinho consulta primeiro os dados locais para responder mais rápido
                     </p>
                   </div>
                 </div>
