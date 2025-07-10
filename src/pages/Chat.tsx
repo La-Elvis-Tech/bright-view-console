@@ -80,7 +80,11 @@ const Chat = () => {
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Bot className="h-5 w-5 text-blue-500" />
+              <img 
+                src="/logolaelvis.svg" 
+                alt="Elvinho" 
+                className="h-6 w-6"
+              />
             </div>
             <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
               Chat com Elvinho
@@ -203,15 +207,25 @@ const Chat = () => {
                       <div className="space-y-6">
                         {messages.length === 0 && (
                           <div className="text-center py-8">
-                            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-3">
-                              <Bot className="h-6 w-6 text-blue-500" />
+                            <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                              <img 
+                                src="/logolaelvis.svg" 
+                                alt="Elvinho" 
+                                className="h-10 w-10"
+                              />
                             </div>
+                            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                              Olá! Eu sou o Elvinho 🤖
+                            </h3>
                             <p className="text-neutral-600 dark:text-neutral-400 mb-2">
-                              Olá! Eu sou o Elvinho, seu assistente de laboratório.
+                              Seu assistente inteligente de laboratório
                             </p>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                              Como posso ajudar você hoje?
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                              Posso ajudar com estoque, consultas, relatórios e muito mais!
                             </p>
+                            <div className="text-xs text-neutral-400 dark:text-neutral-500">
+                              💡 Use os comandos rápidos ou digite sua pergunta
+                            </div>
                           </div>
                         )}
 
@@ -233,7 +247,11 @@ const Chat = () => {
                                 {message.sender === 'user' ? (
                                   <User className="h-4 w-4 text-white" />
                                 ) : (
-                                  <Bot className="h-4 w-4 text-blue-500" />
+                                  <img 
+                                    src="/logolaelvis.svg" 
+                                    alt="Elvinho" 
+                                    className="h-4 w-4"
+                                  />
                                 )}
                               </div>
                               
@@ -264,7 +282,11 @@ const Chat = () => {
                         {isTyping && (
                           <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                              <Bot className="h-4 w-4 text-blue-500" />
+                              <img 
+                                src="/logolaelvis.svg" 
+                                alt="Elvinho" 
+                                className="h-4 w-4"
+                              />
                             </div>
                             <div className="bg-neutral-100/80 dark:bg-neutral-800/60 p-3 rounded-lg">
                               <div className="flex space-x-1">
@@ -304,10 +326,14 @@ const Chat = () => {
                   </>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center p-6">
-                       <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
-                         <Bot className="h-8 w-8 text-blue-500" />
-                       </div>
+                     <div className="text-center p-6">
+                        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                          <img 
+                            src="/logolaelvis.svg" 
+                            alt="Elvinho" 
+                            className="h-10 w-10"
+                          />
+                        </div>
                        <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                          Bem-vindo ao Chat!
                        </h3>
@@ -369,7 +395,11 @@ const Chat = () => {
             <Card className="bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm border-neutral-200/60 dark:border-neutral-800/60">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <img 
+                    src="/logolaelvis.svg" 
+                    alt="Elvinho" 
+                    className="h-4 w-4"
+                  />
                   <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     Status do Elvinho
                   </h3>

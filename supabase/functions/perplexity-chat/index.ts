@@ -10,6 +10,82 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY')!;
 
+// Sistema de respostas automáticas inteligentes
+async function checkForAutomaticResponse(message: string, supabase: any): Promise<string | null> {
+  const lowerMessage = message.toLowerCase();
+  
+  // Padrões de consulta específicos que podem ser respondidos automaticamente
+  if (lowerMessage.includes('estoque baixo') || lowerMessage.includes('itens com estoque baixo')) {
+    const { data } = await supabase
+      .from('inventory_items')
+      .select('name, current_stock, min_stock, unit_measure')
+      .lt('current_stock', supabase.raw('min_stock'))
+      .eq('active', true)
+      .limit(10);
+    
+    if (data && data.length > 0) {
+      return `📦 **Itens com Estoque Baixo** (${data.length} encontrados):\n\n${data.map(item => 
+        `• **${item.name}**: ${item.current_stock} ${item.unit_measure} (mínimo: ${item.min_stock})`
+      ).join('\n')}\n\n💡 Recomendo verificar a necessidade de reposição destes itens.`;
+    } else {
+      return "✅ **Estoque Normal**\n\nTodos os itens estão com estoque adequado no momento!";
+    }
+  }
+  
+  if (lowerMessage.includes('consultas hoje') || lowerMessage.includes('agendamentos hoje')) {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('appointments')
+      .select('patient_name, scheduled_date, status')
+      .gte('scheduled_date', today)
+      .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+      .order('scheduled_date', { ascending: true });
+    
+    if (data && data.length > 0) {
+      return `📅 **Consultas de Hoje** (${data.length} agendadas):\n\n${data.map(apt => {
+        const time = new Date(apt.scheduled_date).toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        return `• **${apt.patient_name}** às ${time} - ${apt.status}`;
+      }).join('\n')}`;
+    } else {
+      return "📅 **Nenhuma consulta agendada para hoje**\n\nA agenda está livre!";
+    }
+  }
+  
+  if (lowerMessage.includes('alertas ativos') || lowerMessage.includes('alertas')) {
+    const { data } = await supabase
+      .from('stock_alerts')
+      .select('title, priority, alert_type, created_at')
+      .eq('status', 'active')
+      .order('priority', { ascending: false })
+      .limit(10);
+    
+    if (data && data.length > 0) {
+      return `🚨 **Alertas Ativos** (${data.length} encontrados):\n\n${data.map(alert => 
+        `• **[${alert.priority.toUpperCase()}]** ${alert.title}`
+      ).join('\n')}\n\n⚠️ Recomendo verificar e resolver estes alertas.`;
+    } else {
+      return "✅ **Nenhum alerta ativo**\n\nTodos os sistemas estão funcionando normalmente!";
+    }
+  }
+  
+  if (lowerMessage.includes('status geral') || lowerMessage.includes('resumo geral')) {
+    const [stockData, alertData, appointmentData] = await Promise.all([
+      supabase.from('inventory_items').select('id', { count: 'exact' }).eq('active', true),
+      supabase.from('stock_alerts').select('id', { count: 'exact' }).eq('status', 'active'),
+      supabase.from('appointments').select('id', { count: 'exact' })
+        .gte('scheduled_date', new Date().toISOString().split('T')[0])
+        .lt('scheduled_date', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+    ]);
+    
+    return `📊 **Status Geral do Laboratório**\n\n• **Itens no Inventário**: ${stockData.count || 0} ativos\n• **Alertas Ativos**: ${alertData.count || 0}\n• **Consultas Hoje**: ${appointmentData.count || 0}\n\n${alertData.count === 0 ? '✅ Sistema operando normalmente' : '⚠️ Verificar alertas pendentes'}`;
+  }
+  
+  return null; // Nenhuma resposta automática encontrada
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,15 +96,15 @@ serve(async (req) => {
     
     console.log('🔄 Processando mensagem:', { message, userId });
     
-    // Aceitar qualquer mensagem relacionada ao laboratório (regex mais ampla)
+    // Aceitar qualquer mensagem relacionada ao laboratório
     const labKeywords = /estoque|inventário|material|exame|consulta|agendamento|paciente|médico|relatório|alerta|laboratório|análise|sangue|tubo|reagente|equipamento|fornecedor|categoria|unidade|item|stock|alert|appointment|doctor|patient|exam|inventory|supply|lab|medicine|health|saúde|medicamento|clínica|hospital|teste|resultado|amostra|coleta|análise|bioquímica|hematologia|microbiologia|oi|olá|hello|hi|ajuda|help|como|what|o que|qual|quais|quantos|quantas|resumo|status|situação|\/|relatorio|consultas|hoje|baixo/i;
     
-    const isLabRelated = labKeywords.test(message) || message.startsWith('/') || message.length < 50; // Aceitar comandos e mensagens curtas
+    const isLabRelated = labKeywords.test(message) || message.startsWith('/') || message.length < 50;
     
     if (!isLabRelated) {
       console.log('❌ Mensagem filtrada:', message);
       return new Response(JSON.stringify({ 
-        message: "Desculpe, sou especializado apenas em gestão laboratorial. Posso ajudar com estoque, consultas, exames, relatórios e outras atividades do laboratório. Como posso auxiliar você?",
+        message: "Olá! Eu sou o Elvinho 🤖\n\nSou especializado em gestão laboratorial e posso ajudar com:\n• Consultas de estoque e inventário\n• Agendamentos e consultas\n• Relatórios e estatísticas\n• Alertas e problemas\n• Gestão de materiais e equipamentos\n\nComo posso auxiliar você hoje?",
         filtered: true
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -39,6 +115,19 @@ serve(async (req) => {
     
     // Criar cliente Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // SISTEMA DE RESPOSTA AUTOMÁTICA INTELIGENTE
+    const autoResponse = await checkForAutomaticResponse(message, supabase);
+    if (autoResponse) {
+      console.log('🤖 Resposta automática ativada');
+      return new Response(JSON.stringify({ 
+        message: autoResponse,
+        automatic: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     let contextData = '';
     
     // Buscar dados básicos do sistema em tempo real
@@ -164,12 +253,13 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'r1-1776',
+        model: 'llama-3.1-sonar-large-128k-online',
         messages: messages,
         temperature: 0.3,
-        max_tokens: 1000,
+        max_tokens: 800,
         return_images: false,
-        return_related_questions: false
+        return_related_questions: false,
+        search_recency_filter: 'month'
       }),
     });
 
@@ -194,7 +284,7 @@ ${contextData || 'Sistema operacional - aguardando consultas específicas'}
 
     const result = { 
       message: assistantMessage,
-      model: 'r1-1776',
+      model: 'llama-3.1-sonar-large-128k-online',
       success: true
     };
 
